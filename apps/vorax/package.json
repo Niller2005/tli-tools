@@ -1,0 +1,15 @@
+{
+  "name": "@tli/vorax",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "tui": "bun scripts/tui.ts",
+    "build:web": "bun scripts/build-web.mjs",
+    "typecheck": "tsc -p ."
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.9.0",
+    "@types/node": "latest"
+  }
+}

@@ -12,7 +12,7 @@
     "skipLibCheck": true,
     "noEmit": true,
     "isolatedModules": true,
-    "types": ["vite/client", "vitest/globals", "node"],
+    "types": ["bun", "node"],
     "baseUrl": ".",
     "paths": { "@/*": ["src/*"] }
   },
