@@ -19,6 +19,18 @@
         "typescript": "^5.9.0",
       },
     },
+    "apps/tracker": {
+      "name": "@tli/tracker-tui",
+      "dependencies": {
+        "@tli/gamelog": "workspace:*",
+        "@tli/tracker": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@types/node": "latest",
+        "typescript": "^5.9.0",
+      },
+    },
     "apps/vorax": {
       "name": "@tli/vorax",
       "dependencies": {
@@ -69,6 +81,14 @@
     "packages/png": {
       "name": "@tli/png",
     },
+    "packages/tracker": {
+      "name": "@tli/tracker",
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@types/node": "latest",
+        "typescript": "^5.9.0",
+      },
+    },
   },
   "packages": {
     "@tli/capture": ["@tli/capture@workspace:packages/capture"],
@@ -80,6 +100,10 @@
     "@tli/ocr": ["@tli/ocr@workspace:packages/ocr"],
 
     "@tli/png": ["@tli/png@workspace:packages/png"],
+
+    "@tli/tracker": ["@tli/tracker@workspace:packages/tracker"],
+
+    "@tli/tracker-tui": ["@tli/tracker-tui@workspace:apps/tracker"],
 
     "@tli/vorax": ["@tli/vorax@workspace:apps/vorax"],
 

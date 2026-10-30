@@ -25,6 +25,28 @@ dashboard can show a tool's minigame as open or closed, and Warden can leave the
 closed instead of reading a board that is not there. The log only has those lines when the game writes its own lines
 (Esc → Account Related → Enable Log); without them the tools carry on as before.
 
+## The loot tracker's pieces
+
+The tracker ([`apps/tracker`](../apps/tracker), [`packages/tracker`](../packages/tracker)) reads the same log file, but
+for the loot instead of the board. It works out four things:
+
+1. **Where the player is.** The game says which level it is in, with a type: the hideout is type 0, a map is type 3
+   (and the harder tiers 25 and 27). A run is the time between entering a map and leaving it, and the map's path
+   says which map it is.
+2. **What the player has.** The game says what is in each slot of the bag. A slot's count is absolute, so the change
+   is the difference against what was there before. The game writes those changes in blocks that say what caused
+   them: `PickItem` and `PickItems` are loot, `Spv3Open` is the cost of opening a map, and the rest is the game
+   moving things around. The tracker keeps the bag, so the net worth can be worked out.
+3. **What things are worth.** When the player looks an item up on the exchange, the prices of the listings come back
+   in the log. The tracker keeps the tenth of them, which is close to what a quick sale gets, and the player can set
+   a price by hand.
+4. **What a run was worth.** The loot of a run, at those prices, minus the tax the exchange takes (12.5% of
+   everything but FE) and, when the player wants it, the cost of opening the map.
+
+The log can be hundreds of megabytes, so it is read in pieces and never held in memory all at once. The tracker keeps
+its place in the file, so it can be stopped and started again and carry on where it left off; a log that was truncated
+or rotated is read from its beginning again.
+
 ## Warden's pieces
 
 All under `apps/warden/ts/src`:

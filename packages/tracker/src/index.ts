@@ -1,0 +1,27 @@
+// The Torchlight: Infinite loot tracker.
+//
+// The tracker reads the game's log file and works out what the player picked up on each trip into
+// a map, what it is worth, and what the player has.
+//
+//   import { Tracker, ItemNames } from '@tli/tracker'
+//
+//   const names = await ItemNames.load()
+//   const tracker = new Tracker({ names })
+//   tracker.feed(lines)
+//
+// The parts: `parse` reads the log's lines, `inventory` keeps the bag, `runs` splits the log into
+// runs, `prices` keeps what the exchange said, `valuation` turns loot into FE, `engine` ties them
+// together and `store` saves the result.
+
+export { Tracker, LOOT_PROTOS, COST_PROTOS, MONEY_PROTOS, MAX_RUNS, STATE_VERSION } from './engine'
+export type { Stats, TrackerOptions, SavedRun, SavedState } from './engine'
+export { parseLine, logTime, zoneOf, type Fact } from './parse'
+export { Inventory, BAG_PAGES, type Delta } from './inventory'
+export { RunSegmenter, MAP_LEVEL_TYPES, type Run } from './runs'
+export { PriceStore, referencePrice, type PriceInfo } from './prices'
+export { ExchangeParser, FE_ITEM, parseQuote, parseRequest, type Quote } from './exchange'
+export { valueOf, durationOf, perHour, TRADE_TAX, type Value } from './valuation'
+export { ItemNames, ITEM_TABLE_PATH, userItemsPath, configDir, dataDir, dataPath, type ItemEntry } from './items'
+export { LogReader, readTail, TAIL_BYTES, type Batch } from './log'
+export { loadTracker, saveTracker, statePath, STATE_FILE, type SavedTracker } from './store'
+export { zoneName, ZONE_NAMES } from './zones'

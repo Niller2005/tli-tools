@@ -33,10 +33,12 @@ files under `apps/warden` are GPL-3.0-only, files under `apps/vorax` are MIT.
 | `apps/dashboard` | Terminal launcher: pick the tools to run |
 | `apps/vorax` | Vorax / Surgical Preparation helper: reads the board, shows the best move |
 | `apps/warden` | Tartarus prison board advisor: reads the board, recommends the next move |
+| `apps/tracker` | Loot tracker: reads the game's log, shows what each map run gave and what it is worth |
 | `packages/png` | PNG decode and encode |
 | `packages/capture` | Game window capture on Linux (Niri, `grim`, or a custom command) |
 | `packages/gamelog` | The game's log file: where it is and which minigame it says is open |
 | `packages/ocr` | `tesseract` runner and TSV parser |
+| `packages/tracker` | The log parsing behind the loot tracker: the bag, the runs, the prices |
 
 The game's log (`UE_game.log`) says which minigame is on screen: the dashboard shows that as a badge next to each tool,
 and Warden waits for the Tartarus board instead of looking at the game window while it is closed. The log only has
@@ -65,6 +67,8 @@ Or run a tool directly:
 | `bun run vorax` | Vorax Helper TUI |
 | `bun run warden` | Warden TUI |
 | `bun run warden:cli -- read\|solve\|capture\|bench …` | Warden command line |
+| `bun run tracker` | Loot tracker TUI |
+| `bun run tracker:report` | Loot report as a csv file |
 | `bun run test` | Warden test suite |
 | `bun run typecheck` | Typecheck all apps |
 
@@ -74,8 +78,9 @@ Or run a tool directly:
 |----------|-----|
 | [Getting started](docs/tutorial-getting-started.md) | A first run of each tool, step by step |
 | [Other compositors](docs/how-to-other-compositors.md) | Running without Niri |
+| [Tracking your loot](docs/how-to-track-your-loot.md) | The loot tracker: the log, the prices, the report |
 | [Adding a tool to the dashboard](apps/dashboard/README.md#adding-a-tool) | One entry in `src/tools.ts` |
 | [How the tools work](docs/explanation-how-it-works.md) | Capture, reader, solver, the Rust port, the Windows apps |
 
-See [`apps/vorax/README.md`](apps/vorax/README.md) and [`apps/warden/LINUX.md`](apps/warden/LINUX.md) for each tool's
-options and keys.
+See [`apps/vorax/README.md`](apps/vorax/README.md), [`apps/warden/LINUX.md`](apps/warden/LINUX.md) and
+[`apps/tracker/README.md`](apps/tracker/README.md) for each tool's options and keys.

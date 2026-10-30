@@ -1,0 +1,334 @@
+// The tracker: it reads the log and keeps what the player has, what they picked up and what it is
+// worth.
+//
+// The log is a stream of lines; the tracker takes them one at a time and keeps:
+//   - the bag (what the player has), so the net worth can be worked out
+//   - the runs (what was picked up in each trip into a map), so the profit per run can be
+//   - the prices the exchange told it about, so the loot can be valued
+//
+// The lines the game writes its item changes in come in blocks that say what caused them:
+// `PickItem`/`PickItems` are loot, `Spv3Open` is the cost of opening a map, `XchgReceive` is money
+// from the exchange, and everything else is the game moving things around.
+
+import { ExchangeParser, FE_ITEM, type Quote } from './exchange'
+import { Inventory, type Delta } from './inventory'
+import { ItemNames } from './items'
+import { parseLine, zoneOf, type Fact } from './parse'
+import { PriceStore } from './prices'
+import { RunSegmenter, type Run } from './runs'
+import { durationOf, perHour, valueOf, type Value } from './valuation'
+
+/** The protocol blocks that mean the items changed because the player picked them up. */
+export const LOOT_PROTOS: Record<string, true> = { PickItem: true, PickItems: true }
+
+/** The protocol blocks that mean the items changed because a map was opened. */
+export const COST_PROTOS: Record<string, true> = { Spv3Open: true, ClimbTowerOpen: true }
+
+/** The protocol blocks that mean the player got money from the exchange. */
+export const MONEY_PROTOS: Record<string, true> = { XchgReceive: true }
+
+/** How many finished runs the tracker keeps. */
+export const MAX_RUNS = 500
+
+/** What the tracker worked out. */
+export interface Stats {
+  /** how many runs there were */
+  runs: number
+  /** how long the player was in maps, in ms */
+  totalTime: number
+  /** the average run's length, in ms */
+  avgRunTime: number
+  /** the FE that was picked up in maps */
+  fe: number
+  /** what all the loot was worth */
+  lootValue: number
+  /** the FE picked up in an hour of maps */
+  fePerHour: number
+  /** the FE picked up in a run, on average */
+  fePerRun: number
+  /** what the player has, at the prices the tracker knows */
+  netWorth: number
+}
+
+/** How the tracker is set up. */
+export interface TrackerOptions {
+  /** the names of the items */
+  names?: ItemNames
+  /** whether the trade tax counts against the value (on by default) */
+  taxed?: boolean
+  /** whether the cost of a map counts against the profit (off by default) */
+  mapCosts?: boolean
+}
+
+/** A run, as it is saved. */
+export interface SavedRun {
+  id: number
+  zone: string
+  name: string
+  levelId: number
+  start: number
+  end: number | null
+  loot: [number, number][]
+  cost: [number, number][]
+  fe: number
+}
+
+/** Everything the tracker keeps, as it is saved. */
+export interface SavedState {
+  version: number
+  /** the runs that are done */
+  runs: SavedRun[]
+  /** the run that is going on */
+  current: SavedRun | null
+  /** the bag */
+  slots: { key: string; item: number; num: number; uuid: string | null }[]
+  instances: { uuid: string; item: number; page: number; slot: number; num: number }[]
+  /** the prices that were learned */
+  prices: [number, { price: number; samples: number; listings: number; at: number }][]
+  /** the prices the player set */
+  overrides: [number, number][]
+  /** the number the next run gets */
+  nextRunId: number
+  /** whether the trade tax counts against the value */
+  taxed: boolean
+  /** whether the cost of a map counts against the profit */
+  mapCosts: boolean
+}
+
+/** The version of the saved file this code writes. */
+export const STATE_VERSION = 1
+
+/** The tracker. */
+export class Tracker {
+  /** the bag */
+  readonly inventory = new Inventory()
+  /** the prices the tracker knows */
+  readonly prices = new PriceStore()
+  /** the runs that are done, oldest first */
+  readonly runs: Run[] = []
+  /** the names of the items */
+  readonly names: ItemNames
+  /** whether the trade tax counts against the value */
+  taxed: boolean
+  /** whether the cost of a map counts against the profit */
+  mapCosts: boolean
+
+  private readonly segmenter = new RunSegmenter()
+  private readonly exchange = new ExchangeParser()
+  /** the protocol block the log is in, if any */
+  private proto: string | null = null
+  /** when the last line came, in ms */
+  private lastAt = 0
+
+  constructor(opts: TrackerOptions = {}) {
+    this.names = opts.names ?? new ItemNames({})
+    this.taxed = opts.taxed ?? true
+    this.mapCosts = opts.mapCosts ?? false
+  }
+
+  /** When the last line came, in ms. */
+  get at(): number {
+    return this.lastAt
+  }
+
+  /** The run that is going on, if there is one. */
+  get currentRun(): Run | null {
+    return this.segmenter.currentRun
+  }
+
+  /** The FE the player has. */
+  get fe(): number {
+    return this.inventory.count(FE_ITEM)
+  }
+
+  /** Reads a batch of lines. */
+  feed(lines: Iterable<string>): void {
+    for (const line of lines) this.feedLine(line)
+  }
+
+  /** Reads one line. */
+  feedLine(line: string): void {
+    const quote = this.exchange.feed(line)
+    if (quote !== null) {
+      this.learnPrice(quote)
+      return
+    }
+
+    const fact = parseLine(line)
+    if (fact === null) return
+    this.lastAt = fact.at
+    this.apply(fact)
+  }
+
+  /** Acts on what a line said. */
+  private apply(fact: Fact): void {
+    switch (fact.t) {
+      case 'level': {
+        const ended = this.segmenter.level(fact.ltype, fact.lid, fact.at)
+        if (ended !== null) this.finish(ended)
+        return
+      }
+      case 'path':
+        this.segmenter.path(zoneOf(fact.path))
+        return
+      case 'proto':
+        this.proto = fact.start ? fact.name : null
+        return
+      case 'pageReset': {
+        const deltas = this.inventory.resetPage(fact.page)
+        this.takeDeltas(deltas)
+        return
+      }
+      case 'bagSet': {
+        const deltas = this.inventory.set(fact.page, fact.slot, fact.item, fact.num, fact.uuid, fact.op)
+        this.takeDeltas(deltas)
+        return
+      }
+      case 'bagClear': {
+        const deltas = this.inventory.clear(fact.page, fact.slot, fact.uuid)
+        this.takeDeltas(deltas)
+        return
+      }
+    }
+  }
+
+  /** A run is over. */
+  private finish(run: Run): void {
+    this.runs.push(run)
+    while (this.runs.length > MAX_RUNS) this.runs.shift()
+  }
+
+  /** What the changes to the bag mean: loot, cost or money. */
+  private takeDeltas(deltas: Delta[]): void {
+    if (deltas.length === 0) return
+    const proto = this.proto
+    for (const d of deltas) {
+      if (proto === null) continue
+      if (LOOT_PROTOS[proto] === true) {
+        if (d.delta > 0) {
+          this.segmenter.loot(d.item, d.delta)
+          if (d.item === FE_ITEM) this.segmenter.fe(d.delta)
+        }
+        continue
+      }
+      if (COST_PROTOS[proto] === true) {
+        if (d.delta < 0) this.segmenter.cost(d.item, -d.delta)
+        continue
+      }
+      if (MONEY_PROTOS[proto] === true && d.item === FE_ITEM && d.delta > 0) {
+        this.segmenter.fe(d.delta)
+      }
+    }
+  }
+
+  /** Keeps what the exchange said about an item. */
+  private learnPrice(quote: Quote): void {
+    this.prices.learn(quote.item, quote.prices, this.lastAt)
+  }
+
+  /** What a run was worth. */
+  valueOfRun(run: Run): Value {
+    const loot = valueOf(run.loot, (i) => this.prices.price(i), this.taxed)
+    const cost = this.mapCosts
+      ? valueOf(run.cost, (i) => this.prices.price(i), false).gross
+      : 0
+    return {
+      gross: loot.gross - cost,
+      tax: loot.tax,
+      net: loot.net - cost,
+      fe: loot.fe,
+    }
+  }
+
+  /** What the player has now. */
+  netWorth(): number {
+    return valueOf(this.inventory.totals(), (i) => this.prices.price(i), this.taxed).net
+  }
+
+  /** What the tracker worked out. */
+  stats(now = Date.now()): Stats {
+    let totalTime = 0
+    let fe = 0
+    let lootValue = 0
+    for (const run of this.runs) {
+      totalTime += durationOf(run.start, run.end, now)
+      fe += run.fe
+      lootValue += this.valueOfRun(run).gross
+    }
+    const current = this.segmenter.currentRun
+    if (current !== null) {
+      totalTime += durationOf(current.start, null, now)
+      fe += current.fe
+      lootValue += this.valueOfRun(current).gross
+    }
+    const runs = this.runs.length + (current !== null ? 1 : 0)
+    return {
+      runs,
+      totalTime,
+      avgRunTime: runs === 0 ? 0 : totalTime / runs,
+      fe,
+      lootValue,
+      fePerHour: perHour(fe, totalTime),
+      fePerRun: runs === 0 ? 0 : fe / runs,
+      netWorth: this.netWorth(),
+    }
+  }
+
+  /** Everything the tracker keeps, as it is saved. */
+  snapshot(): SavedState {
+    const save = (run: Run): SavedRun => ({
+      id: run.id,
+      zone: run.zone,
+      name: run.name,
+      levelId: run.levelId,
+      start: run.start,
+      end: run.end,
+      loot: [...run.loot],
+      cost: [...run.cost],
+      fe: run.fe,
+    })
+    const prices = this.prices.snapshot()
+    const current = this.segmenter.currentRun
+    const last = this.runs[this.runs.length - 1]
+    return {
+      version: STATE_VERSION,
+      runs: this.runs.map(save),
+      current: current === null ? null : save(current),
+      slots: this.inventory.snapshot(),
+      instances: this.inventory.instancesSnapshot(),
+      prices: prices.learned,
+      overrides: prices.overrides,
+      nextRunId: (last?.id ?? 0) + 1,
+      taxed: this.taxed,
+      mapCosts: this.mapCosts,
+    }
+  }
+
+  /** Puts a saved tracker back. */
+  restore(state: SavedState): void {
+    this.inventory.restore(state.slots, state.instances)
+    this.prices.restore(state.prices, state.overrides)
+    this.taxed = state.taxed
+    this.mapCosts = state.mapCosts
+    this.runs.length = 0
+    for (const saved of state.runs) this.runs.push(fromSaved(saved))
+    this.segmenter.setNextId(state.nextRunId)
+    const current = state.current
+    if (current !== null) this.segmenter.restoreCurrent(fromSaved(current))
+  }
+}
+
+/** A saved run, as a run. */
+function fromSaved(saved: SavedRun): Run {
+  return {
+    id: saved.id,
+    zone: saved.zone,
+    name: saved.name,
+    levelId: saved.levelId,
+    start: saved.start,
+    end: saved.end,
+    loot: new Map(saved.loot),
+    cost: new Map(saved.cost),
+    fe: saved.fe,
+  }
+}
