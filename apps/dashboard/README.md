@@ -23,9 +23,24 @@ bun src/main.ts        # from apps/dashboard
   so you can read any error.
 - A tool whose required programs (`bun`, `tesseract`, ...) are not installed shows what is missing and does not start.
 
+## The status badges
+
+A tool that reads a minigame shows what the game's log says about it:
+
+| Badge | Meaning |
+|-------|---------|
+| `● open` (green) | the minigame is on screen |
+| `○ closed` (dim) | it is not |
+| `? unknown` (dim) | the log says nothing about it |
+
+The log itself can also be missing (`log: missing`) or have none of the game's own lines (`log: enable log`: turn on
+Esc → Account Related → Enable Log in the game). The badges are refreshed about once a second while the dashboard is
+up; a running tool has the terminal, so the log is not watched then.
+
 ## Adding a tool
 
 Add an entry to `TOOLS` in [`src/tools.ts`](src/tools.ts): an id, a name, a description, the command and its working
-directory, and the programs it needs on `PATH`. It then shows up in the list.
+directory, and the programs it needs on `PATH`. It then shows up in the list. A tool that reads a minigame also names
+it in `game` (`vorax` or `warden`), so it gets a status badge.
 
 No dependencies: the interface is plain ANSI.

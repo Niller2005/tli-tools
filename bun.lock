@@ -10,8 +10,12 @@
       "bin": {
         "tli": "src/main.ts",
       },
+      "dependencies": {
+        "@tli/gamelog": "workspace:*",
+      },
       "devDependencies": {
         "@types/bun": "latest",
+        "@types/node": "latest",
         "typescript": "^5.9.0",
       },
     },
@@ -19,6 +23,7 @@
       "name": "@tli/vorax",
       "dependencies": {
         "@tli/capture": "workspace:*",
+        "@tli/gamelog": "workspace:*",
         "@tli/ocr": "workspace:*",
         "@tli/png": "workspace:*",
       },
@@ -32,6 +37,7 @@
       "name": "@tli/warden",
       "dependencies": {
         "@tli/capture": "workspace:*",
+        "@tli/gamelog": "workspace:*",
         "@tli/ocr": "workspace:*",
         "@tli/png": "workspace:*",
       },
@@ -47,6 +53,16 @@
         "@tli/png": "workspace:*",
       },
     },
+    "packages/gamelog": {
+      "name": "@tli/gamelog",
+      "dependencies": {
+        "@tli/capture": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@types/node": "latest",
+      },
+    },
     "packages/ocr": {
       "name": "@tli/ocr",
     },
@@ -58,6 +74,8 @@
     "@tli/capture": ["@tli/capture@workspace:packages/capture"],
 
     "@tli/dashboard": ["@tli/dashboard@workspace:apps/dashboard"],
+
+    "@tli/gamelog": ["@tli/gamelog@workspace:packages/gamelog"],
 
     "@tli/ocr": ["@tli/ocr@workspace:packages/ocr"],
 

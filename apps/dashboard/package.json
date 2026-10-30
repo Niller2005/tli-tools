@@ -7,8 +7,12 @@
     "start": "bun src/main.ts",
     "typecheck": "tsc -p ."
   },
+  "dependencies": {
+    "@tli/gamelog": "workspace:*"
+  },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/node": "latest",
     "typescript": "^5.9.0"
   }
 }

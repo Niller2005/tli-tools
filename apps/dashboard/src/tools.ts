@@ -1,5 +1,6 @@
 // The tools the dashboard can start. Add a tool here and it shows up in the list.
 import { join } from 'node:path'
+import type { GameName } from '@tli/gamelog'
 
 const ROOT = join(import.meta.dir, '..', '..', '..')
 
@@ -12,6 +13,8 @@ export interface Tool {
   cwd: string
   /** programs it needs on PATH */
   needs: string[]
+  /** the minigame the tool reads, when the game log says whether it is open */
+  game?: GameName
 }
 
 export const TOOLS: Tool[] = [
@@ -22,6 +25,7 @@ export const TOOLS: Tool[] = [
     command: ['bun', 'scripts/tui.ts'],
     cwd: join(ROOT, 'apps/vorax'),
     needs: ['bun', 'tesseract'],
+    game: 'vorax',
   },
   {
     id: 'warden',
@@ -30,6 +34,7 @@ export const TOOLS: Tool[] = [
     command: ['bun', 'run', 'tui'],
     cwd: join(ROOT, 'apps/warden'),
     needs: ['bun', 'tesseract'],
+    game: 'warden',
   },
 ]
 
