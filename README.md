@@ -62,5 +62,7 @@ Or run a tool directly:
 | `bun run test` | Warden test suite |
 | `bun run typecheck` | Typecheck all apps |
 
+New here? Start with the [getting-started tutorial](docs/tutorial-getting-started.md).
+
 See [`apps/vorax/README.md`](apps/vorax/README.md) and [`apps/warden/LINUX.md`](apps/warden/LINUX.md) for each tool's
 options and keys.
