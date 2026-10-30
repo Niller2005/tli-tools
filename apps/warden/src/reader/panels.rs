@@ -530,7 +530,18 @@ pub fn read_panels_titled(img: &Rgba, title: &Rgba) -> Panels {
     } else {
         let found = buttons(&cards);
         p.decision = found.iter().map(|b| b.0).collect();
-        let doors = doors(&cards, |x| reread(img, x));
+        // The decision buttons share the doors' row: with buttons on screen there are no door cards.
+        let mut doors = if found.is_empty() { doors(&cards, |x| reread(img, x)) } else { Vec::new() };
+        let read = |d: &[(Option<u8>, i32)]| d.iter().filter(|c| c.0.is_some()).count();
+        if found.is_empty() {
+            // The row read as a whole can drown the labels in the cards' art (closed doors, with tesseract): their
+            // strip alone, at the larger scale the rereads use, reads "Go to Cell 12".
+            const LABELS: Rect = Rect::new(360, 840, 1160, 80);
+            let strip = self::doors(&ocr(img, LABELS, 2.5), |x| reread(img, x));
+            if read(&strip) > read(&doors) {
+                doors = strip;
+            }
+        }
         if has(&heading, "Select an Objective", 0.75) {
             // Without brackets or a target glow nothing is picked: the board
             // shows between the pick and the next screen.

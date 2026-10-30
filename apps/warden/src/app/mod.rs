@@ -4,6 +4,8 @@
 pub mod runlog;
 pub mod session;
 pub mod settings;
+#[cfg(not(windows))]
+pub mod niri;
 #[cfg(windows)]
 pub mod share;
 #[cfg(windows)]

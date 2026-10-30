@@ -102,7 +102,7 @@ impl Rgba {
 }
 
 /// Decodes a PNG into RGBA at its own size.
-fn decode_png_raw(bytes: &[u8]) -> Result<Rgba, String> {
+pub fn decode_png_raw(bytes: &[u8]) -> Result<Rgba, String> {
     let mut decoder = png::Decoder::new(std::io::Cursor::new(bytes));
     decoder.set_transformations(png::Transformations::normalize_to_color8());
     let mut reader = decoder.read_info().map_err(|e| e.to_string())?;
