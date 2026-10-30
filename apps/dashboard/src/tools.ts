@@ -36,6 +36,14 @@ export const TOOLS: Tool[] = [
     needs: ['bun', 'tesseract'],
     game: 'warden',
   },
+  {
+    id: 'tracker',
+    name: 'Loot Tracker',
+    description: "Reads the game's log and shows what each map run gave and what it is worth.",
+    command: ['bun', 'src/tui.ts'],
+    cwd: join(ROOT, 'apps/tracker'),
+    needs: ['bun'],
+  },
 ]
 
 /** The programs a tool needs that are not installed. */

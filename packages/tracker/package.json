@@ -1,0 +1,19 @@
+{
+  "name": "@tli/tracker",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc -p .",
+    "items": "bun scripts/generate-items.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "latest",
+    "typescript": "^5.9.0"
+  }
+}

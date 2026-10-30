@@ -8,7 +8,9 @@
     "vorax": "bun run --cwd apps/vorax tui",
     "warden": "bun run --cwd apps/warden tui",
     "warden:cli": "bun run --cwd apps/warden cli",
-    "test": "bun run --cwd apps/warden test && bun run --cwd packages/gamelog test",
-    "typecheck": "bun run --cwd apps/warden typecheck && bun run --cwd apps/dashboard typecheck && bun run --cwd apps/vorax typecheck"
+    "tracker": "bun run --cwd apps/tracker tui",
+    "tracker:report": "bun run --cwd apps/tracker report",
+    "test": "bun run --cwd apps/warden test && bun run --cwd packages/gamelog test && bun run --cwd packages/tracker test",
+    "typecheck": "bun run --cwd apps/warden typecheck && bun run --cwd apps/dashboard typecheck && bun run --cwd packages/tracker typecheck && bun run --cwd apps/tracker typecheck && bun run --cwd apps/vorax typecheck"
   }
 }

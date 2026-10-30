@@ -1,0 +1,19 @@
+{
+  "name": "@tli/tracker-tui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "tui": "bun src/tui.ts",
+    "report": "bun src/report.ts",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@tli/gamelog": "workspace:*",
+    "@tli/tracker": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "latest",
+    "typescript": "^5.9.0"
+  }
+}
