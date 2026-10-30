@@ -1,0 +1,259 @@
+//! The app session without saved frames: the auto read's fingerprint and
+//! watch, the days clock, the Consume targets and Avenger's Casket meals,
+//! and the solve run on any number of threads. A port of the pure parts of
+//! the Rust crate's tests/session.rs; the tests on saved frames are in
+//! session-frames.test.ts, session-flow.test.ts and
+//! session-instruments.test.ts.
+
+import { expect, test } from 'bun:test'
+
+import {
+  casketMeals,
+  consumeTargets,
+  DaysClock,
+  differs,
+  fingerprint,
+  HELD_BLOCKS,
+  MAX_WAIT,
+  RECHECK,
+  SETTLE,
+  Watch,
+} from '@/app/session'
+import { blankModel, type CellModel } from '@/board/board'
+import { Rgba } from '@/reader/mod'
+import { Rollouts } from '@/solver/solve'
+import { TUNED } from '@/solver/mod'
+import { buildBoard } from './common'
+
+/** The auto read fingerprint: the same frame matches, a changed region or
+ * another grid size differs. */
+test('the fingerprint differs', () => {
+  const [w, h] = [1280, 720]
+  const data = new Uint8Array(w * h * 4)
+  for (let i = 0; i < w * h; i++) {
+    const [x, y] = [i % w, Math.floor(i / w)]
+    data.set([x % 256, y % 256, (x + y) % 256, 255], i * 4)
+  }
+  const frame = new Rgba(w, h, data)
+  const print = fingerprint(frame)
+  expect(print.length).toBe(64 * 36)
+  expect(differs(print, fingerprint(new Rgba(w, h, data.slice())))).toBe(false)
+
+  // A 120 x 90 white patch, about the size of a cell.
+  const changed = new Rgba(w, h, data.slice())
+  for (let y = 300; y < 390; y++) {
+    for (let x = 600; x < 720; x++) changed.data.fill(255, (y * w + x) * 4, (y * w + x) * 4 + 3)
+  }
+  expect(differs(print, fingerprint(changed))).toBe(true)
+  expect(differs(print, print.slice(0, print.length - 1))).toBe(true)
+})
+
+/** A print of all `gray`, with the first `changed` blocks at 255. */
+function print(gray: number, changed: number): Uint8Array {
+  const p = new Uint8Array(64 * 36).fill(gray)
+  p.fill(255, 0, changed)
+  return p
+}
+
+/** A print of all `gray`, with `n` blocks at 255 starting at block `from`. */
+function noisy(gray: number, from: number, n: number): Uint8Array {
+  const p = new Uint8Array(64 * 36).fill(gray)
+  p.fill(255, from, from + n)
+  return p
+}
+
+/** The numbers 0 to `n` - 1. */
+function upTo(n: number): number[] {
+  return Array.from({ length: n }, (_, k) => k)
+}
+
+/** Auto read waits for [`SETTLE`] matching samples, reads a screen once and
+ * ignores a hover-sized change. */
+test('watch reads settled screens once', () => {
+  const w = new Watch()
+  // The screen keeps changing: no read.
+  for (const g of [0, 50, 100, 150, 200]) expect(w.sample(print(g, 0))).toBe(false)
+  // It settles: read after SETTLE samples matching the one before.
+  for (let k = 0; k < SETTLE - 1; k++) expect(w.sample(print(200, 0))).toBe(false)
+  expect(w.sample(print(200, 0))).toBe(true)
+  // A hover glow under the threshold: no second read.
+  for (let k = 0; k < 5; k++) {
+    expect(w.sample(print(200, 0))).toBe(false)
+    expect(w.sample(print(200, 2))).toBe(false)
+  }
+  // The same screen again, past RECHECK samples: never read again.
+  expect(upTo(RECHECK + 20).every(() => !w.sample(print(200, 0)))).toBe(true)
+  // Another screen: read once it settles, after SETTLE samples.
+  const reads = upTo(SETTLE + 3).map(() => w.sample(print(10, 0)))
+  expect(reads.indexOf(true)).toBe(SETTLE)
+  expect(reads.filter((r) => r).length).toBe(1)
+})
+
+/** A lasting change under the threshold, such as an incident marker on a
+ * cell, is read once [`RECHECK`] samples passed since the last read, then
+ * not again. */
+test('watch rechecks a small change', () => {
+  const w = new Watch()
+  expect(upTo(SETTLE + 1).filter(() => w.sample(print(200, 0))).length).toBe(1)
+  expect(differs(print(200, 0), print(200, 2))).toBe(false)
+  const reads = upTo(RECHECK).map(() => w.sample(print(200, 2)))
+  expect(reads.indexOf(true)).toBe(RECHECK - 1)
+  expect(reads.filter((r) => r).length).toBe(1)
+  expect(upTo(40).every(() => !w.sample(print(200, 2)))).toBe(true)
+})
+
+/** A screen marked read, or the sample after `adoptNext`, is not read
+ * again. */
+test('watch markRead suppresses', () => {
+  let w = new Watch()
+  w.markRead(print(80, 0))
+  expect(upTo(SETTLE + 3).every(() => !w.sample(print(80, 0)))).toBe(true)
+
+  w = new Watch()
+  w.adoptNext()
+  expect(upTo(SETTLE + 3).every(() => !w.sample(print(30, 0)))).toBe(true)
+  expect(upTo(SETTLE + 3).filter(() => w.sample(print(90, 0))).length).toBe(1)
+})
+
+/** The sample after `readNext` is read whatever it shows, once. */
+test('watch readNext reads once', () => {
+  const w = new Watch()
+  w.markRead(print(80, 0))
+  expect(w.sample(print(80, 0))).toBe(false)
+  w.readNext()
+  expect(w.sample(print(80, 0))).toBe(true)
+  expect(upTo(SETTLE + 3).every(() => !w.sample(print(80, 0)))).toBe(true)
+})
+
+/** A new screen with an animation that moves up to [`HELD_BLOCKS`] blocks a
+ * sample settles and is read; the next screen change is read too. */
+test('watch reads a noisy screen', () => {
+  // The animation's 12 blocks make two prints differ but hold.
+  expect(differs(noisy(120, 0, 6), noisy(120, 6, 6))).toBe(true)
+  expect(12).toBeLessThanOrEqual(HELD_BLOCKS)
+  const w = new Watch()
+  expect(upTo(SETTLE + 1).filter(() => w.sample(print(40, 0))).length).toBe(1)
+  // A screen change, then an animation that moves 2 x 6 blocks every sample.
+  expect(w.sample(print(120, 0))).toBe(false)
+  let reads = upTo(SETTLE).map((k) => w.sample(noisy(120, 6 * (k % 2), 6)))
+  expect(reads.at(-1)).toBe(true)
+  // Another screen, with the same animation: read once it settles.
+  expect(w.sample(noisy(200, 0, 6))).toBe(false)
+  reads = upTo(SETTLE).map((k) => w.sample(noisy(200, 6 * (k % 2), 6)))
+  expect(reads.at(-1)).toBe(true)
+})
+
+/** A screen whose edges pulse by more than [`HELD_BLOCKS`] blocks every
+ * sample never settles: it is read after [`MAX_WAIT`] samples anyway. */
+test('watch reads a pulsing screen after MAX_WAIT', () => {
+  const w = new Watch()
+  w.markRead(print(40, 0))
+  const reads = upTo(MAX_WAIT + 1).map((k) => w.sample(noisy(120, 40 * (k % 2), 40)))
+  expect(reads.indexOf(true)).toBe(MAX_WAIT)
+})
+
+/** The days clock: the counter only counts down, so a lone higher read is a
+ * misread and the same higher value on two readings in a row is a new run. */
+test('the days clock', () => {
+  const c = new DaysClock()
+  expect(c.update(null)).toBe(null) // nothing read yet
+  expect(c.update(14)).toBe(14)
+  expect(c.update(null)).toBe(14) // a hidden counter keeps the count
+  expect(c.update(14)).toBe(14)
+  expect(c.update(12)).toBe(12)
+  expect(c.update(15)).toBe(12) // a lone higher read
+  expect(c.update(11)).toBe(11)
+  expect(c.update(20)).toBe(11)
+  expect(c.update(null)).toBe(11) // a missing read breaks the pair
+  expect(c.update(20)).toBe(11)
+  expect(c.update(5)).toBe(5) // a different value breaks the pair
+  expect(c.update(20)).toBe(5)
+  expect(c.update(20)).toBe(20) // the same higher read twice: a new run
+  expect(c.update(0)).toBe(0)
+})
+
+/** The targets of a Consume target pick: the jawed cells among the board
+ * read's, with a warning on the eater's cell when the two differ; the board
+ * read's when no jaws read or none of them is among its own. */
+test('consume targets restrict and warn', () => {
+  expect(consumeTargets([3, 7], [], 2)).toEqual([[3, 7], null])
+  expect(consumeTargets([7, 3], [3, 7], 2)).toEqual([[7, 3], null])
+
+  let [targets, w] = consumeTargets([3, 7], [3, 4], 2)
+  expect(targets).toEqual([3])
+  expect(w?.cell).toBe(2)
+  expect(w?.kind).toBe('read')
+  expect(w?.text).toBe(
+    'The Consume targets on screen are cells 04 and 05 and the board read allows cells 04 and 08: check the eater in cell 03 and those cells.'
+  )
+
+  ;[targets, w] = consumeTargets([7], [3, 4, 11], 2)
+  expect(targets).toEqual([7])
+  expect(w?.text.startsWith('The Consume targets on screen are cells 04, 05 and 12 and the board read allows cell 08:')).toBe(true)
+
+  ;[targets, w] = consumeTargets([], [3], 2)
+  expect(targets).toEqual([])
+  expect(w?.text).toContain('cell 04 and the board read allows none:')
+})
+
+/** Avenger's Casket's meal on a Consume target screen: a jawed cell the
+ * board holds as locked takes the eater's rarity and a beast it eats. The
+ * player's report consume-target-cell2.png: an Ultimate Rat in 07 bit, the
+ * Casket opened 02, and the meal (an Ultimate Mammoth, what a Rat eats)
+ * stayed locked. A Mammoth eats Lions and Wolves: the read beast when it is
+ * one of them, else a Lion with a warning on the cell. */
+test('casket meal on a locked cell', () => {
+  const inmate = (beast: 'mammoth' | 'lion' | 'wolf' | 'rat', tier: number): CellModel => ({
+    kind: 'inmate',
+    beast,
+    tier,
+    ivory: false,
+    prey: null,
+    event: null,
+  })
+  const board = blankModel()
+  board.warden = 6
+  board.cells[6] = inmate('rat', 4)
+  board.cells[2] = inmate('mammoth', 1)
+  const read = structuredClone(board)
+  read.cells[1] = inmate('wolf', 0)
+  read.cells[2] = inmate('lion', 0)
+
+  let m = structuredClone(board)
+  expect(casketMeals(m, read, [1, 2])).toEqual([])
+  expect(m.cells[1]).toEqual(inmate('mammoth', 4))
+  expect(m.cells[2]).toEqual(board.cells[2]) // a jawed inmate stays as the board has it
+
+  board.cells[6] = inmate('mammoth', 3)
+  read.cells[1] = inmate('wolf', 0)
+  m = structuredClone(board)
+  expect(casketMeals(m, read, [1])).toEqual([])
+  expect(m.cells[1]).toEqual(inmate('wolf', 3))
+
+  read.cells[1] = inmate('rat', 0)
+  m = structuredClone(board)
+  const warnings = casketMeals(m, read, [1])
+  expect(m.cells[1]).toEqual(inmate('lion', 3))
+  expect(warnings.length).toBe(1)
+  expect(warnings[0].cell).toBe(1)
+  expect(warnings[0].text.startsWith('Check cell 02: a new Inmate from ')).toBe(true)
+})
+
+/** The rollouts rank the same on any thread count and in any steps. */
+test('rollouts are the same on any thread count', () => {
+  const [st, problems] = buildBoard('ratway.json')
+  expect(problems).toEqual([])
+  const ranked = (threads: number) => {
+    const r = new Rollouts(st, 7, TUNED)
+    expect(r.runOn(60, threads)).toBe(60)
+    return r.ranking()
+  }
+  const one = ranked(1)
+  expect(one.length).toBeGreaterThan(2)
+  expect(ranked(4)).toEqual(one)
+  // In steps, with a thread count that does not divide the rounds.
+  const r = new Rollouts(st, 7, TUNED)
+  r.run(25)
+  r.runOn(35, 3)
+  expect(r.ranking()).toEqual(one)
+})

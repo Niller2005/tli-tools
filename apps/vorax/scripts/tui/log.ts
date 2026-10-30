@@ -3,7 +3,7 @@ import { closeSync, openSync, readFileSync, readSync, statSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
 import type { FileLike } from '@/reader/live/logFollower'
-import { STEAM_APP } from './capture'
+import { STEAM_APP } from '@tli/capture'
 
 const LOG_IN_GAME = ['UE_game', 'TorchLight', 'Saved', 'Logs', 'UE_game.log']
 const mtime = (p: string) => { try { const s = statSync(p); return s.isFile() ? s.mtimeMs : null } catch { return null } }

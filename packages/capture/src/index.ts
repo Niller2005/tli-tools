@@ -1,11 +1,9 @@
 // A picture of the game window on Linux. Default: Niri (`niri msg action screenshot-window --id N`, the window alone,
-// even behind others, the clipboard untouched). Any other compositor: --capture-cmd 'cmd … {out}' writes a PNG of the
-// game to {out}.
+// even behind others, the clipboard untouched). Any other compositor: a command that writes a PNG of the game to {out}.
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import type { Img } from '@/reader/scan/pixels'
-import { decodePng } from '../png'
+import { decodePngClamped, type Image } from '@tli/png'
 
 export const STEAM_APP = '1974050'
 
@@ -13,7 +11,7 @@ export interface Capture {
   /** the capture's state for the header: which window, or why there is none */
   status(): string
   /** a picture of the game window; throws when there is none */
-  grab(): Promise<Img>
+  grab(): Promise<Image<Uint8ClampedArray>>
   close(): void
 }
 
@@ -40,12 +38,12 @@ async function readWhole(path: string): Promise<Buffer> {
 }
 
 export function createCapture(o: { title: RegExp; command?: string }): Capture {
-  const dir = mkdtempSync(join(tmpdir(), 'vorax-'))
+  const dir = mkdtempSync(join(tmpdir(), 'tli-capture-'))
   let n = 0
   let state = 'looking for the game window'
   const nextPath = () => join(dir, `shot${++n}.png`)
   const finish = async (path: string) => {
-    try { return decodePng(await readWhole(path)) } finally { rmSync(path, { force: true }) }
+    try { return decodePngClamped(await readWhole(path)) } finally { rmSync(path, { force: true }) }
   }
 
   if (o.command) {
@@ -86,7 +84,7 @@ export function createCapture(o: { title: RegExp; command?: string }): Capture {
     const p = Bun.spawn(['grim', '-l', '0', '-o', output, '-'], { stdout: 'pipe', stderr: 'pipe' })
     const [bytes, err] = await Promise.all([new Response(p.stdout).arrayBuffer(), new Response(p.stderr).text()])
     if ((await p.exited) !== 0) throw new Error(`grim failed: ${err.trim()}`)
-    return decodePng(Buffer.from(bytes))
+    return decodePngClamped(Buffer.from(bytes))
   }
   const niriShot = async (id: number) => {
     const out = nextPath()

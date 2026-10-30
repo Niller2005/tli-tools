@@ -7,6 +7,11 @@
     "build:web": "bun scripts/build-web.mjs",
     "typecheck": "tsc -p ."
   },
+  "dependencies": {
+    "@tli/capture": "workspace:*",
+    "@tli/ocr": "workspace:*",
+    "@tli/png": "workspace:*"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "typescript": "^5.9.0",

@@ -4,7 +4,14 @@
   "type": "module",
   "scripts": {
     "test": "bun test",
-    "typecheck": "tsc -p ts"
+    "typecheck": "tsc -p ts",
+    "tui": "bun ts/src/bin/warden-tui.ts",
+    "cli": "bun ts/src/bin/warden-cli.ts"
+  },
+  "dependencies": {
+    "@tli/capture": "workspace:*",
+    "@tli/ocr": "workspace:*",
+    "@tli/png": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",
