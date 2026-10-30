@@ -13,9 +13,19 @@
         "typescript": "^5.9.0",
       },
     },
+    "apps/warden": {
+      "name": "@tli/warden",
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@types/node": "latest",
+        "typescript": "^5.9.0",
+      },
+    },
   },
   "packages": {
     "@tli/vorax": ["@tli/vorax@workspace:apps/vorax"],
+
+    "@tli/warden": ["@tli/warden@workspace:apps/warden"],
 
     "@types/bun": ["@types/bun@1.4.4", "", { "dependencies": { "bun-types": "1.4.4" } }, "sha512-9wkRDXUXK124pEnAutE6n/l18j+i9GC5IAHK8TmX/2nlySETmky0OU6yL5U8pW1AoKh++AN9auDCr647BfurjQ=="],
 
