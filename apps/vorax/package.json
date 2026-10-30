@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@tli/capture": "workspace:*",
+    "@tli/gamelog": "workspace:*",
     "@tli/ocr": "workspace:*",
     "@tli/png": "workspace:*"
   },

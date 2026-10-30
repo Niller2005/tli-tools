@@ -3,15 +3,21 @@
 //! screenshot-window), reads the board when the screen changes and shows the
 //! move it recommends. Never clicks or types in the game.
 //!
-//!   warden-tui [--title TEXT] [--rollouts N]
+//!   warden-tui [--title TEXT] [--rollouts N] [--no-log]
 //!   warden-tui --image <frame.png> [--rollouts N]    read one screenshot, print, exit
 //!
 //! Keys: r read now, q quit.
+//!
+//! The game's log says whether the Tartarus board is on screen: while it is
+//! closed the game window is not looked at, and the board is read as soon as
+//! it opens. Without the log (or with `--no-log`) the window is watched as
+//! before.
 //!
 //! A port of src/bin/warden-tui.rs. The window is taken with `@tli/capture`,
 //! which holds the Rust `app/niri.rs` logic.
 
 import { createCapture } from '@tli/capture'
+import { logHint, watchMinigames } from '@tli/gamelog'
 import { asBytes } from '@tli/png'
 import { Session, Watch, fingerprint } from '@/app/session'
 import type { CellModel, EventMark, Model } from '@/board/board'
@@ -37,10 +43,11 @@ interface Args {
   title: string
   rollouts: number
   image: string | null
+  noLog: boolean
 }
 
 function args(): Args {
-  const a: Args = { title: 'Torchlight', rollouts: 1600, image: null }
+  const a: Args = { title: 'Torchlight', rollouts: 1600, image: null, noLog: false }
   const argv = process.argv.slice(2)
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -64,9 +71,12 @@ function args(): Args {
         a.image = value
         break
       }
+      case '--no-log':
+        a.noLog = true
+        break
       default:
         throw new Error(
-          `unexpected argument ${arg}; usage: warden-tui [--title TEXT] [--rollouts N] | warden-tui --image <frame.png>`,
+          `unexpected argument ${arg}; usage: warden-tui [--title TEXT] [--rollouts N] [--no-log] | warden-tui --image <frame.png>`,
         )
     }
   }
@@ -145,7 +155,11 @@ async function run(): Promise<void> {
 async function live(session: Session, a: Args, pressed: number[] | null): Promise<void> {
   const watch = new Watch()
   const capture = createCapture({ title: new RegExp(escapeRegExp(a.title), 'i') })
+  // the game's log says whether the board is on screen; without it (the log is
+  // missing, or it has no detail) the window is watched as before
+  const log = a.noLog ? null : watchMinigames()
   let next = performance.now()
+  let wasClosed = false
   try {
     for (;;) {
       let now = false
@@ -154,20 +168,30 @@ async function live(session: Session, a: Args, pressed: number[] | null): Promis
         if (k === 0x71 || k === 3) return
         if (k === 0x72) now = true
       }
+      const view = log === null ? null : log.state()
+      const closed = view !== null && view.warden === 'closed'
+      if (wasClosed && !closed) watch.readNext() // the board opened: read it now
+      wasClosed = closed
       let captureNote: string
-      try {
-        const frame = asRgba(await capture.grab())
-        captureNote = `${frame.w} x ${frame.h}`
-        const print = fingerprint(frame)
-        if (now) {
-          watch.markRead(print)
-          session.readLive(frame)
-        } else if (watch.sample(print)) {
-          session.readLive(frame)
+      if (closed && !now) {
+        captureNote = 'board closed (waiting for the Tartarus board)'
+      } else {
+        try {
+          const frame = asRgba(await capture.grab())
+          captureNote = `${frame.w} x ${frame.h}`
+          const print = fingerprint(frame)
+          if (now) {
+            watch.markRead(print)
+            session.readLive(frame)
+          } else if (watch.sample(print)) {
+            session.readLive(frame)
+          }
+        } catch (e) {
+          captureNote = e instanceof Error ? e.message : String(e)
         }
-      } catch (e) {
-        captureNote = e instanceof Error ? e.message : String(e)
       }
+      const hint = view === null ? null : logHint(view.log)
+      if (hint !== null) captureNote += `  ${DIM}${hint}${RESET}`
       session.poll()
       if (session.wantsReread()) watch.readNext()
       let out = '\x1b[H'
@@ -181,6 +205,7 @@ async function live(session: Session, a: Args, pressed: number[] | null): Promis
     }
   } finally {
     capture.close()
+    log?.close()
   }
 }
 

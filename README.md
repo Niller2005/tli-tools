@@ -21,7 +21,7 @@ here (imported with `git subtree`).
 - **Warden** was originally a Rust app. It is being ported to TypeScript here, and the Rust source stays in
   `apps/warden/src` until the port fully replaces it (the Windows window is not ported). The port is checked against
   the Rust output for the engine, solver and reader.
-- The shared packages (`png`, `capture`, `ocr`) were factored out of code written for those two projects.
+- The shared packages (`png`, `capture`, `ocr`, `gamelog`) were factored out of code written for those two projects.
 
 Each app keeps its own licence (see the `LICENSE` file in its folder). The repository root has no licence of its own:
 files under `apps/warden` are GPL-3.0-only, files under `apps/vorax` are MIT.
@@ -35,7 +35,13 @@ files under `apps/warden` are GPL-3.0-only, files under `apps/vorax` are MIT.
 | `apps/warden` | Tartarus prison board advisor: reads the board, recommends the next move |
 | `packages/png` | PNG decode and encode |
 | `packages/capture` | Game window capture on Linux (Niri, `grim`, or a custom command) |
+| `packages/gamelog` | The game's log file: where it is and which minigame it says is open |
 | `packages/ocr` | `tesseract` runner and TSV parser |
+
+The game's log (`UE_game.log`) says which minigame is on screen: the dashboard shows that as a badge next to each tool,
+and Warden waits for the Tartarus board instead of looking at the game window while it is closed. The log only has
+those lines when the game writes its own lines (Esc → Account Related → Enable Log); without them the tools carry on
+as before.
 
 ## Requirements
 

@@ -19,6 +19,12 @@ Both tools do the same four things:
 Vorax also follows the game's log file, which tells it when a move happened, so it knows when to take the next
 picture. Warden samples the screen about four times a second and reads again when the picture changes.
 
+The log also says which minigame is on screen, because the game names the pages it opens: the Tartarus board is
+`S16BoardMain` and the Vorax game is `S13GamePlayMain`. `@tli/gamelog` reads those lines out of the log, so the
+dashboard can show a tool's minigame as open or closed, and Warden can leave the game window alone while the board is
+closed instead of reading a board that is not there. The log only has those lines when the game writes its own lines
+(Esc → Account Related → Enable Log); without them the tools carry on as before.
+
 ## Warden's pieces
 
 All under `apps/warden/ts/src`:
@@ -47,9 +53,9 @@ Rust version is faster if you need many rollouts.
 
 ## Why there are shared packages
 
-PNG decoding, window capture and running `tesseract` were written twice, once per tool. They live in
-[`packages/`](../packages) so there is one copy. Game-specific code, such as each game's engine and random numbers,
-stays in its app on purpose.
+PNG decoding, window capture and running `tesseract` were written twice, once per tool, and finding the game's log was
+written twice as well. They live in [`packages/`](../packages) so there is one copy. Game-specific code, such as each
+game's engine and random numbers, stays in its app on purpose.
 
 ## The Windows apps
 
