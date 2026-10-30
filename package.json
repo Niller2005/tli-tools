@@ -1,5 +1,14 @@
 {
   "name": "tli-tools",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"]
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "start": "bun run --cwd apps/dashboard start",
+    "dashboard": "bun run --cwd apps/dashboard start",
+    "vorax": "bun run --cwd apps/vorax tui",
+    "warden": "bun run --cwd apps/warden tui",
+    "warden:cli": "bun run --cwd apps/warden cli",
+    "test": "bun run --cwd apps/warden test",
+    "typecheck": "bun run --cwd apps/warden typecheck && bun run --cwd apps/dashboard typecheck && bun run --cwd apps/vorax typecheck"
+  }
 }
