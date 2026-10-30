@@ -13,6 +13,7 @@ pub fn language() -> Option<String> {
 
 /// Why the game can't be read: Windows has no English OCR language. None
 /// when it has one.
+#[cfg(windows)]
 pub fn problem() -> Option<String> {
     // Settings can show English with its OCR feature removed (debloated Windows 10).
     const ADD: &str = "in PowerShell as administrator run Add-WindowsCapability -Online -Name Language.OCR~~~en-US~0.0.1.0, then restart the app";
@@ -23,7 +24,14 @@ pub fn problem() -> Option<String> {
     }
 }
 
+/// Why the game can't be read: the `tesseract` program is missing. None when it is there.
+#[cfg(not(windows))]
+pub fn problem() -> Option<String> {
+    language().is_none().then(|| "tesseract is not installed, so nothing can be read (Arch: pacman -S tesseract tesseract-data-eng).".to_string())
+}
+
 /// "en", "en-US", "en-GB"...
+#[cfg(windows)]
 fn is_english(tag: &str) -> bool {
     tag.to_ascii_lowercase().starts_with("en")
 }
@@ -225,13 +233,128 @@ mod imp {
 
 #[cfg(not(windows))]
 mod imp {
-    use super::Rgba;
+    //! The `tesseract` program (English data), one process per region.
+    use super::{Rgba, luma};
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+    use std::sync::LazyLock;
 
-    pub fn recognize_all(imgs: Vec<Option<Rgba>>) -> Vec<Vec<(String, [f32; 4])>> {
-        vec![Vec::new(); imgs.len()]
-    }
+    type Lines = Vec<(String, [f32; 4])>;
+
+    static FOUND: LazyLock<bool> = LazyLock::new(|| Command::new("tesseract").arg("--version").stdout(Stdio::null()).stderr(Stdio::null()).status().is_ok_and(|s| s.success()));
 
     pub fn language() -> Option<String> {
-        None
+        FOUND.then(|| "en".to_string())
+    }
+
+    /// The lines of each image with their boxes (x, y, w, h) in its pixels;
+    /// none for a missing image or a failed read. The images are read at once.
+    pub fn recognize_all(imgs: Vec<Option<Rgba>>) -> Vec<Lines> {
+        std::thread::scope(|s| {
+            let jobs: Vec<_> = imgs.iter().map(|img| s.spawn(move || img.as_ref().map(recognize).unwrap_or_default())).collect();
+            jobs.into_iter().map(|j| j.join().unwrap_or_default()).collect()
+        })
+    }
+
+    /// Radius of the neighbourhood a letter is measured against, in the OCR input's pixels.
+    const AROUND: usize = 16;
+
+    /// Dark text on white from the game's light text: each pixel's brightness above its neighbourhood's, so thin
+    /// light letters stand out whatever art or glow is behind them (tesseract reads the raw grey badly there).
+    fn local_contrast(img: &Rgba) -> Vec<u8> {
+        let (w, h) = (img.w, img.h);
+        let grey: Vec<u8> = img.data.as_chunks::<4>().0.iter().map(luma).collect();
+        // Summed-area table: the mean of any box in four reads.
+        let mut sum = vec![0u32; (w + 1) * (h + 1)];
+        for y in 0..h {
+            let mut row = 0u32;
+            for x in 0..w {
+                row += u32::from(grey[y * w + x]);
+                sum[(y + 1) * (w + 1) + x + 1] = sum[y * (w + 1) + x + 1] + row;
+            }
+        }
+        let mut above = vec![0u8; w * h];
+        let mut hist = [0usize; 256];
+        for y in 0..h {
+            let (y0, y1) = (y.saturating_sub(AROUND), (y + AROUND + 1).min(h));
+            for x in 0..w {
+                let (x0, x1) = (x.saturating_sub(AROUND), (x + AROUND + 1).min(w));
+                let total = sum[y1 * (w + 1) + x1] + sum[y0 * (w + 1) + x0] - sum[y0 * (w + 1) + x1] - sum[y1 * (w + 1) + x0];
+                let mean = total / ((x1 - x0) * (y1 - y0)) as u32;
+                let a = (i32::from(grey[y * w + x]) - mean as i32).clamp(0, 255) as u8;
+                above[y * w + x] = a;
+                hist[a as usize] += 1;
+            }
+        }
+        // The brightest letters (the 99.8th percentile) become black, the rest in proportion: a faint caption keeps its
+        // strokes and a bright one doesn't saturate into blobs.
+        let mut acc = 0;
+        let top = hist.iter().position(|&c| { acc += c; acc * 1000 >= w * h * 998 }).unwrap_or(255).max(24) as f32;
+        above.iter().map(|&a| (255.0 - a as f32 * 255.0 / top).clamp(0.0, 255.0) as u8).collect()
+    }
+
+    fn encode(img: &Rgba) -> Option<Vec<u8>> {
+        let mut out = Vec::new();
+        let mut encoder = png::Encoder::new(&mut out, img.w as u32, img.h as u32);
+        encoder.set_color(png::ColorType::Grayscale);
+        encoder.set_depth(png::BitDepth::Eight);
+        let mut writer = encoder.write_header().ok()?;
+        let grey = local_contrast(img);
+        writer.write_image_data(&grey).ok()?;
+        writer.finish().ok()?;
+        Some(out)
+    }
+
+    fn recognize(img: &Rgba) -> Lines {
+        let Some(png) = encode(img) else { return Vec::new() };
+        let Ok(mut child) = Command::new("tesseract")
+            .args(["stdin", "stdout", "--psm", "6", "-l", "eng", "tsv"])
+            .env("OMP_THREAD_LIMIT", "1")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .spawn()
+        else {
+            return Vec::new();
+        };
+        // The image goes in from another thread so a full pipe can't stall the read.
+        let stdin = child.stdin.take();
+        let writer = std::thread::spawn(move || {
+            if let Some(mut stdin) = stdin {
+                let _ = stdin.write_all(&png);
+            }
+        });
+        let output = child.wait_with_output();
+        let _ = writer.join();
+        output.map(|o| parse(&String::from_utf8_lossy(&o.stdout))).unwrap_or_default()
+    }
+
+    /// The lines of tesseract's TSV: its words grouped by block, paragraph and line.
+    fn parse(tsv: &str) -> Lines {
+        let mut lines: Vec<((u32, u32, u32), String, [f32; 4])> = Vec::new();
+        for row in tsv.lines().skip(1) {
+            let f: Vec<&str> = row.splitn(12, '\t').collect();
+            if f.len() < 12 || f[0] != "5" || f[11].trim().is_empty() || f[10].parse::<f32>().is_ok_and(|c| c < 0.0) {
+                continue;
+            }
+            let n = |i: usize| f[i].parse::<f32>().unwrap_or(0.0);
+            let key = (f[2].parse().unwrap_or(0), f[3].parse().unwrap_or(0), f[4].parse().unwrap_or(0));
+            let (x0, y0, x1, y1) = (n(6), n(7), n(6) + n(8), n(7) + n(9));
+            // Words far apart in one row (three cards' names across a screen) are separate lines, as Windows OCR gives them.
+            let near = |l: &((u32, u32, u32), String, [f32; 4])| x0 - (l.2[0] + l.2[2]) <= 2.0 * n(9).max(12.0);
+            match lines.last_mut().filter(|l| l.0 == key && near(l)) {
+                Some(l) => {
+                    l.1.push(' ');
+                    l.1.push_str(f[11].trim());
+                    let (lx1, ly1) = (l.2[0] + l.2[2], l.2[1] + l.2[3]);
+                    l.2[0] = l.2[0].min(x0);
+                    l.2[1] = l.2[1].min(y0);
+                    l.2[2] = lx1.max(x1) - l.2[0];
+                    l.2[3] = ly1.max(y1) - l.2[1];
+                }
+                None => lines.push((key, f[11].trim().to_string(), [x0, y0, x1 - x0, y1 - y0])),
+            }
+        }
+        lines.into_iter().map(|(_, text, rect)| (text, rect)).collect()
     }
 }

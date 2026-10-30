@@ -29,6 +29,25 @@ Don't run the game or the helper as administrator: Windows then refuses the help
 The tray icon (by the clock) has the settings: the advice to show, your target score, game speed, the highlight,
 and from which round you play on your own (round 11, the protocols, by default).
 
+## Linux (terminal)
+`scripts/tui.ts` is a terminal version for Linux: no overlay, the same reader and advice. It follows the game's log, takes a
+picture of the game window after every move (and watches the window for changes when the log has no detail lines),
+reads the board and shows the move, the chance of reaching your target and the next-best options.
+
+```
+bun scripts/tui.ts
+```
+
+- Needs [Bun](https://bun.sh) and `tesseract` with the English data (Arch: `pacman -S tesseract tesseract-data-eng`).
+- The game (Steam / Proton) is found through your Steam libraries; the window through `niri msg`. A fullscreen game that is
+  its workspace's active window is captured with `grim` (silent). Otherwise the picture comes from
+  `niri msg action screenshot-window`, which Niri always announces with a "Screenshot captured" notification (it can't be
+  turned off): keep the game the active window on its screen (run the TUI on another monitor or workspace).
+- Other compositors: `--capture-cmd='<command that writes a PNG of the game to {out}>'`.
+- Keys: `r` read now · `t` target (600k, 700k, 925k, 1.12M) · `d` deep check on/off · `q` quit.
+- Options: `--log=<UE_game.log>`, `--game-title=<regex>`, `--target=<score>`, `--no-deep`.
+- `bun scripts/tui.ts --image=shot.png` reads one screenshot, prints the advice and exits.
+
 ## The overlay
 The overlay is the Windows app's card that sits over the game while you play, so you never have to switch windows.
 

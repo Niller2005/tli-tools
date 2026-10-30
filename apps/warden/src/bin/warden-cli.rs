@@ -10,6 +10,10 @@
 //!   warden-cli --version
 
 use std::path::Path;
+#[cfg(windows)]
+use warden::app::capture::{capture, time_frames};
+#[cfg(not(windows))]
+use warden::app::niri::{capture, time_frames};
 use std::process::ExitCode;
 use warden::board::{Model, build_state};
 use warden::engine::data::Tool;
@@ -90,9 +94,9 @@ fn run_capture(args: &[String]) -> Result<ExitCode, String> {
         return Err(USAGE.to_string());
     };
     let img = match frames {
-        None => warden::app::capture::capture(title)?,
+        None => capture(title)?,
         Some(n) => {
-            let (img, times) = warden::app::capture::time_frames(title, n)?;
+            let (img, times) = time_frames(title, n)?;
             let ms = |d: &std::time::Duration| d.as_secs_f64() * 1000.0;
             let after = &times[1..];
             out!("first frame {:.1} ms (opens the session)", ms(&times[0]));
