@@ -5,8 +5,23 @@
     "": {
       "name": "tli-tools",
     },
+    "apps/dashboard": {
+      "name": "@tli/dashboard",
+      "bin": {
+        "tli": "src/main.ts",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "typescript": "^5.9.0",
+      },
+    },
     "apps/vorax": {
       "name": "@tli/vorax",
+      "dependencies": {
+        "@tli/capture": "workspace:*",
+        "@tli/ocr": "workspace:*",
+        "@tli/png": "workspace:*",
+      },
       "devDependencies": {
         "@types/bun": "latest",
         "@types/node": "latest",
@@ -15,14 +30,39 @@
     },
     "apps/warden": {
       "name": "@tli/warden",
+      "dependencies": {
+        "@tli/capture": "workspace:*",
+        "@tli/ocr": "workspace:*",
+        "@tli/png": "workspace:*",
+      },
       "devDependencies": {
         "@types/bun": "latest",
         "@types/node": "latest",
         "typescript": "^5.9.0",
       },
     },
+    "packages/capture": {
+      "name": "@tli/capture",
+      "dependencies": {
+        "@tli/png": "workspace:*",
+      },
+    },
+    "packages/ocr": {
+      "name": "@tli/ocr",
+    },
+    "packages/png": {
+      "name": "@tli/png",
+    },
   },
   "packages": {
+    "@tli/capture": ["@tli/capture@workspace:packages/capture"],
+
+    "@tli/dashboard": ["@tli/dashboard@workspace:apps/dashboard"],
+
+    "@tli/ocr": ["@tli/ocr@workspace:packages/ocr"],
+
+    "@tli/png": ["@tli/png@workspace:packages/png"],
+
     "@tli/vorax": ["@tli/vorax@workspace:apps/vorax"],
 
     "@tli/warden": ["@tli/warden@workspace:apps/warden"],

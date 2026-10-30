@@ -2,11 +2,49 @@
 //! the JSON comparison of the engine's and the JS's states.
 
 import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { asArray, asNumber, asObject } from '@/engine/data'
 import { Params, stateFromJson, type State } from '@/engine/state'
+import { apply, type Action } from '@/engine/actions'
+import { buildState, modelFromJson } from '@/board/board'
+import { TUNED, decide } from '@/solver/mod'
+import { start } from '@/solver/bench'
 
 /** The recorded fixtures of apps/warden/tests/fixtures. */
 const fixtures = new URL('../../tests/fixtures/', import.meta.url)
+
+/** The fixture boards of apps/warden/tests/boards. */
+const boards = new URL('../../tests/boards/', import.meta.url)
+
+/** The fixture board tests/boards/`name` as JSON. */
+export function rawBoard(name: string): Record<string, unknown> {
+  const text = readFileSync(new URL(name, boards), 'utf8')
+  return JSON.parse(text) as Record<string, unknown>
+}
+
+/** The state built from the fixture board `name` (seed 1) and its problems. */
+export function buildBoard(name: string): [State, string[]] {
+  return buildState(modelFromJson(rawBoard(name)), 1)
+}
+
+/** Plays game `k` of seed 1 as the bench plays it (its strategy dice, the
+ * default params) and returns every action `decide` picked, in order, with
+ * the final state; `at(i, state)` sees the state before decision `i`. */
+export function strategyGame(k: number, at: (step: number, state: State) => void): [Action[], State] {
+  const [initial, rng] = start(1, k, [])
+  let st = initial
+  const picks: Action[] = []
+  for (let i = 0; i < 2000; i++) {
+    if (st.phase === 'ended') break
+    at(picks.length, st)
+    const action = decide(st, TUNED, rng)
+    if (action === null) break
+    picks.push(action)
+    const out = apply(st, action)
+    if (!out.ok && !(action.type !== 'end' && apply(st, { type: 'end' }).ok)) break
+  }
+  return [picks, st]
+}
 
 /** One recorded JS move. */
 export interface TraceStep {
@@ -113,4 +151,28 @@ export function firstDiff(path: string, a: unknown, b: unknown): string | null {
   }
   if (deepEqual(a, b)) return null
   return `${path}: rust ${show(a)} / js ${show(b)}`
+}
+
+/** The saved frames, trainingdata/s16 (git-ignored). */
+export function frames(): string {
+  return fileURLToPath(new URL('../../trainingdata/s16/', import.meta.url))
+}
+
+/** Reads that matched out of those checked, with the misses described. */
+export class Tally {
+  ok = 0
+  total = 0
+  misses: string[] = []
+
+  /** Counts a read, and describes it when it did not match. */
+  check(ok: boolean, miss: () => string): void {
+    this.total += 1
+    if (ok) this.ok += 1
+    else this.misses.push(miss())
+  }
+
+  /** The share of the reads that matched, in percent. */
+  pct(): number {
+    return (100 * this.ok) / Math.max(this.total, 1)
+  }
 }

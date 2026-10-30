@@ -1,0 +1,14 @@
+{
+  "name": "@tli/dashboard",
+  "private": true,
+  "type": "module",
+  "bin": { "tli": "src/main.ts" },
+  "scripts": {
+    "start": "bun src/main.ts",
+    "typecheck": "tsc -p ."
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.9.0"
+  }
+}

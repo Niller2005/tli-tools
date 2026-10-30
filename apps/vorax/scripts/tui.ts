@@ -16,11 +16,12 @@ import type { Img } from '@/reader/scan/pixels'
 import { newTracker, trackInstruments } from '@/reader/track'
 import type { Reading } from '@/reader/types'
 import { instrumentAdvice, quick, type HelperInput } from '@/web/helper'
-import { decodePng } from './png'
+import { decodePngClamped } from '@tli/png'
+import { tesseractFound } from '@tli/ocr'
+import { createCapture, type Capture } from '@tli/capture'
 import { createAdvisor } from './tui/advice'
-import { createCapture, type Capture } from './tui/capture'
 import { fileHandle, findLog } from './tui/log'
-import { readWithTesseract, tesseractFound } from './tui/ocr'
+import { readWithTesseract } from './tui/ocr'
 import { createReader } from './tui/read'
 import { render, TARGETS, type Board, type View } from './tui/render'
 
@@ -167,7 +168,7 @@ async function readPicture(img: Img, trigger: string): Promise<'new' | 'same' | 
 
 const image = arg('image')
 if (image) {
-  const result = await readPicture(decodePng(readFileSync(image)), 'manual')
+  const result = await readPicture(decodePngClamped(readFileSync(image)), 'manual')
   view.capture = image; view.log = '-'
   if (view.board && (view.aheadPending || view.deep)) {
     // wait for the look-ahead and the deep check to finish

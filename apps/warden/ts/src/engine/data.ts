@@ -21,8 +21,9 @@ export type Beast = (typeof BEAST_KEYS)[number]
 export const BEASTS: readonly Beast[] = BEAST_KEYS
 
 /** The index of a species in the data's species list. */
+const BEAST_INDEX: Record<Beast, number> = { mammoth: 0, lion: 1, wolf: 2, rat: 3 }
 export function beastIndex(beast: Beast): number {
-  return BEAST_KEYS.indexOf(beast)
+  return BEAST_INDEX[beast]
 }
 
 /** Torture Instruments by the engine's short ids (TOOL_KEYS). */

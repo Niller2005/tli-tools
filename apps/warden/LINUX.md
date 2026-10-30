@@ -9,6 +9,17 @@ target/release/warden-tui                       # follow the running game
 target/release/warden-tui --image frame.png     # read one screenshot, print, exit
 ```
 
+The same program runs from TypeScript, without the Rust build:
+
+```
+bun run tui                                      # follow the running game
+bun run tui --image frame.png                    # read one screenshot, print, exit
+bun run cli solve frame.png --seed 1 --rollouts 400
+```
+
+`bun run tui` and `bun run cli` are the scripts in `package.json`; they run `ts/src/bin/warden-tui.ts` and
+`ts/src/bin/warden-cli.ts`. They need `bun` and the same `tesseract` as the Rust build.
+
 - Needs `tesseract` with the English data (Arch: `pacman -S tesseract tesseract-data-eng`). It replaces Windows OCR.
 - The game window is found through `niri msg` (app id `steam_app_1974050`, else a title containing "Torchlight";
   `--title TEXT` changes that). A **fullscreen** game on a visible workspace is captured with `grim` (silent, about
