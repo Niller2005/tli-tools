@@ -204,7 +204,7 @@ if (flag('runs')) {
   for (const run of tracker.runs) {
     const worth = tracker.valueOfRun(run)
     console.log(
-      `  #${String(run.id).padStart(3)} ${run.name.padEnd(42)} ${mins(run.end! - run.start).padStart(7)} ` +
+      `  #${String(run.id).padStart(3)} ${run.kind.padEnd(6)} ${run.name.padEnd(42)} ${mins(run.end! - run.start).padStart(7)} ` +
         `${worth.gross.toFixed(1).padStart(9)} FE  ${run.loot.size} items`,
     )
   }

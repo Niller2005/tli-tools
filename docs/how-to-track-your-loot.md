@@ -66,6 +66,11 @@ fetch when you sell it. Selling costs 12.5% of everything but FE, so `t` turns t
 A run is the time between entering a map and leaving it. The map's cost — the beacon and the resonance that
 opening it takes — is kept with the run; `c` says whether it counts against the profit.
 
+A visit to the Tartarus prison is a run too. The board opens in the town and the challenge it leads into is
+a level of its own, so the run begins with the board and ends when you leave the prison. The list of the runs
+says *prison* next to those runs, and the loot of the prison is worth what the prices say, like the loot of
+any other map. Looking at the board without a challenge is not a run, so it does not add one.
+
 ## The prices
 
 The tracker learns prices from the exchange: when you look an item up in the game, the prices of the listings come
@@ -133,6 +138,9 @@ home folder. To write one without the screen:
 ```
 bun run tracker:report --out=loot.csv
 ```
+
+Every line of the report says what kind of run it is about: `map` for a trip into a map, `prison` for a visit
+to the Tartarus prison.
 
 ## Start again later
 
