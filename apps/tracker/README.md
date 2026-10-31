@@ -123,7 +123,7 @@ The game writes `UE_game.log` while it runs. The tracker reads:
   |------|------------|
   | 0 | the hideout, the town |
   | 3 | a map |
-  | 16, 17, 27 | maps of the other seasons |
+  | 16, 17, 27 | maps the tracker follows; the logs of this machine have not shown them |
   | 19 | the Fateful Contest, which the Arcana tracker follows |
   | 25 | the harder tier of a map |
   | 28 | the Tartarus prison |
