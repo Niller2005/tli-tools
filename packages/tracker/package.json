@@ -9,7 +9,9 @@
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc -p .",
-    "items": "bun scripts/generate-items.ts"
+    "items": "bun scripts/generate-items.ts",
+    "items:scrape": "bun scripts/scrape-tlidb.ts",
+    "items:coverage": "bun scripts/coverage.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",

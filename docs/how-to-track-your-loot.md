@@ -92,8 +92,10 @@ beginning. A log that was truncated (the game was restarted) or rotated is read 
 
 ## Name the items yourself
 
-The tracker ships with the names of most items, built from the [Torchlight: Infinite wiki](https://tlidb.com). The
-ones it does not know are shown as `Item #<id>`. Name them in `~/.config/tli-tracker/items.json`:
+The tracker ships with the names of most items, built from the [Torchlight: Infinite wiki](https://tlidb.com): the item
+data the [TITrack](https://github.com/astockman99/TITrack) project builds from the wiki, and the wiki itself, which
+`packages/tracker/scripts/scrape-tlidb.ts` reads for the ids that the first one leaves out. The ones it still does
+not know are shown as `Item #<id>`. Name them in `~/.config/tli-tracker/items.json`:
 
 ```json
 { "3210": "Iron Sword", "3510": "Oak Staff" }
