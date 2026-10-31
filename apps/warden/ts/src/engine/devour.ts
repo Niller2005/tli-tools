@@ -127,9 +127,10 @@ export function bites(s: State, n: number): Bite[] {
   if (cell.sealed || cell.inmate === null) return []
   const eater = cell.inmate
   const out: Bite[] = []
+  const diet = dietOf(s)
   for (const c of s.cells) {
     if (c.n === n) continue
-    if (!c.sealed && canEat(s, eater, c.inmate)) {
+    if (!c.sealed && dietCanEat(diet, eater, c.inmate)) {
       out.push({ cell: c.n, scratch: false })
     } else if (c.sealed && c.scratch && eater.beast === 'wolf' && c.hidden !== null && c.hidden.tier === eater.tier && eater.tier < RAINBOW) {
       out.push({ cell: c.n, scratch: true })
