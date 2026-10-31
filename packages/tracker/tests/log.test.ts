@@ -48,6 +48,14 @@ describe('reading the log', () => {
     expect(batch.lines).toEqual(['new'])
   })
 
+  test('a saved offset past the end of a shorter log starts again from the top', () => {
+    const path = fileWith(['new', 'log'])
+    const reader = new LogReader(path, 1_000_000)
+    const batch = reader.read()
+    expect(batch.restarted).toBe(true)
+    expect(batch.lines).toEqual(['new', 'log'])
+  })
+
   test('a log that is not there gives nothing', () => {
     const reader = new LogReader('/nowhere/at/all/UE_game.log', 0)
     const batch = reader.read()

@@ -76,7 +76,7 @@ export class LogReader {
       return { lines: [], offset: this.offset, restarted, size: st.size }
     }
     if (typeof this.from === 'number' && this.offset === 0 && !restarted) this.offset = this.from
-    else if (st.size < this.offset) {
+    if (st.size < this.offset) {
       // the log was truncated: the game was restarted
       this.offset = 0
       restarted = true
