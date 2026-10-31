@@ -19,7 +19,7 @@ bun src/tui.ts --no-color           # draw without colours
 |-------|---------------|
 | The header | the app name and log path, then net worth, FE per hour, FE per run, how many runs, how long in maps, the average run, and the tax, map-cost and pause switches |
 | Current run | the map you are in, how long you have been in it, and what you have picked up, the most valuable first |
-| Recent runs | the last runs, with how long each took and what it was worth; `enter` opens the detail of one |
+| Recent runs | the last runs, with how long each took and what it was worth; the runs that are visits to the Tartarus prison say so; `enter` opens the detail of one |
 | Bag | what you have, sorted by value (or by how many, or by name); the value of each thing |
 | Prices | what the tracker knows the price of each item to be |
 
@@ -116,8 +116,22 @@ Where the window ends up on the screen is the compositor's business.
 The game writes `UE_game.log` while it runs. The tracker reads:
 
 - **the level**: `LevelMgr@ LevelUid, LevelType, LevelId = 1071008 3 4708`. The type says whether the
-  player is in a map (3, and the harder tiers 25 and 27) or in the hideout (0). A run is the time
-  between entering a map and leaving it.
+  player is in a map, in the hideout, or in the Tartarus prison. A run is the time between entering
+  a map and leaving it. The types the logs have shown:
+
+  | Type | What it is |
+  |------|------------|
+  | 0 | the hideout, the town |
+  | 3 | a map |
+  | 16, 17, 27 | maps of the other seasons |
+  | 19 | the Fateful Contest, which the Arcana tracker follows |
+  | 25 | the harder tier of a map |
+  | 28 | the Tartarus prison |
+
+  A type that is not in this list is not a run: the tracker leaves that level alone. When a new one
+  shows up in the log, it is written down here.
+- **the pages**: `S16BoardMain Run` and `S16BoardMain Destory`. The Tartarus prison's board opens in
+  the town, and the visit to the prison begins with it.
 - **the bag**: `ItemChange@ Update Id=5140_... BagNum=26 in PageId=102 SlotId=23`. A slot's count is
   absolute, so the change is the difference against what was there before. The game writes these in
   blocks that say what caused them: `PickItem` and `PickItems` are loot, `Spv3Open` is the beacon
@@ -128,6 +142,15 @@ The game writes `UE_game.log` while it runs. The tracker reads:
 
 Everything is priced in Flame Elementium (FE). The exchange takes 12.5% of everything but FE when
 you sell, so the tracker can show the value before the tax and after it.
+
+## The Tartarus prison
+
+The prison is a run of its own. The board the warden reads opens in the town, and the challenge it
+leads into is a level of its own, so the visit begins when the board opens and ends when the player
+leaves the prison level. The list of the runs says *prison* next to those runs, and the loot of the
+prison is worth what the prices say, like the loot of any other map.
+
+A visit that never had a challenge is not a run: looking at the board for a moment does not add one.
 
 ## The prices
 
