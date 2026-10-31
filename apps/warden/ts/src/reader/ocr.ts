@@ -34,6 +34,8 @@ export function ocrEngine(): OcrEngine {
  * one for the tests. */
 export function setOcrEngine(next: OcrEngine | null): void {
   engine = next
+  // Another engine reads the same pixels another way.
+  cache.clear()
 }
 
 /** The language tag the engine reads in ("en"); null when no OCR language
@@ -58,25 +60,107 @@ export function ocr(img: Rgba, rect: Rect, scale: number): Promise<Line[]> {
 }
 
 /** The lines of each `(rect, scale)` region as `ocr` reads them in the image
- * of the same index, in order, with the regions read at the same time. */
+ * of the same index, in order, with the regions read at the same time.
+ *
+ * A region whose pixels are the same as the last time it was read is not
+ * read again: the program reads the same text from the same pixels, and
+ * starting it costs more than the whole read of the board. */
 export async function ocrAll(imgs: Rgba[], regions: [Rect, number][]): Promise<Line[][]> {
-  const inputs = imgs.map((img, i) => prepare(img, regions[i][0], regions[i][1]))
+  const keys: string[] = []
+  const hashes: number[] = []
+  const inputs: (Rgba | null)[] = []
+  const known: (Line[] | null)[] = []
+  for (let i = 0; i < regions.length; i++) {
+    const [rect, scale] = regions[i]
+    const img = imgs[i]
+    const hash = cropHash(img, rect)
+    const key = cacheKey(img, rect, scale)
+    const hit = cache.get(key)
+    keys.push(key)
+    hashes.push(hash)
+    if (hit !== undefined && hit.hash === hash) {
+      known.push(hit.lines)
+      inputs.push(null)
+      continue
+    }
+    known.push(null)
+    inputs.push(prepare(img, rect, scale))
+  }
   const read = await ocrEngine().recognizeAll(inputs)
-  return regions.map(([rect, scale], i) => {
-    const lines = read[i] ?? []
-    return lines.map((l) => {
-      const [x, y, lw, lh] = l.rect
-      return {
-        text: l.text,
-        rect: new Rect(
-          rect.x + Math.round(x / scale),
-          rect.y + Math.round(y / scale),
-          Math.round(lw / scale),
-          Math.round(lh / scale)
-        ),
+  const out: Line[][] = []
+  for (let i = 0; i < regions.length; i++) {
+    const [rect, scale] = regions[i]
+    const lines = known[i] ?? mapLines(read[i] ?? [], rect, scale)
+    if (known[i] === null) {
+      cache.set(keys[i] as string, { hash: hashes[i] as number, lines })
+      // The oldest region goes when the table is full.
+      if (cache.size > CACHE_SIZE) {
+        const oldest = cache.keys().next()
+        if (!oldest.done) cache.delete(oldest.value)
       }
-    })
+    }
+    out.push(lines)
+  }
+  return out
+}
+
+/** The lines of the OCR of an image, in the frame's pixels. */
+function mapLines(lines: TextLine[], rect: Rect, scale: number): Line[] {
+  return lines.map((l) => {
+    const [x, y, lw, lh] = l.rect
+    return {
+      text: l.text,
+      rect: new Rect(
+        rect.x + Math.round(x / scale),
+        rect.y + Math.round(y / scale),
+        Math.round(lw / scale),
+        Math.round(lh / scale)
+      ),
+    }
   })
+}
+
+/** A region read before: the hash of its pixels and the lines it gave. */
+interface Read {
+  hash: number
+  lines: Line[]
+}
+
+/** The regions read before, by where they are and how big: the same pixels
+ * in the same place read the same, so the program is not run over them
+ * again. The oldest entries go when the table is full. */
+const cache = new Map<string, Read>()
+
+/** How many regions are kept: the board's own regions and the cards read
+ * again, over a few screens. */
+const CACHE_SIZE = 96
+
+/** The key of a region: where it is in the frame and how big, and the scale
+ * it is read at. The pixels themselves are checked by their hash. */
+function cacheKey(img: Rgba, rect: Rect, scale: number): string {
+  const x0 = Math.min(Math.max(rect.x, 0), img.w)
+  const y0 = Math.min(Math.max(rect.y, 0), img.h)
+  const x1 = Math.min(Math.max(rect.x + rect.w, x0), img.w)
+  const y1 = Math.min(Math.max(rect.y + rect.h, y0), img.h)
+  return `${x0},${y0},${x1},${y1}@${scale}`
+}
+
+/** The hash of the pixels of `rect` in `img`: the same pixels give the same
+ * hash, and different ones almost never do. */
+function cropHash(img: Rgba, rect: Rect): number {
+  const x0 = Math.min(Math.max(rect.x, 0), img.w)
+  const y0 = Math.min(Math.max(rect.y, 0), img.h)
+  const x1 = Math.min(Math.max(rect.x + rect.w, x0), img.w)
+  const y1 = Math.min(Math.max(rect.y + rect.h, y0), img.h)
+  let hash = 0x811c9dc5
+  for (let y = y0; y < y1; y++) {
+    const from = (y * img.w + x0) * 4
+    const to = (y * img.w + x1) * 4
+    for (let i = from; i < to; i++) {
+      hash = Math.imul(hash ^ (img.data[i] as number), 0x01000193)
+    }
+  }
+  return hash >>> 0
 }
 
 /** The OCR input for `rect`: the crop upscaled by `scale` with its contrast
