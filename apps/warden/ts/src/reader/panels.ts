@@ -417,7 +417,9 @@ export async function doors(lines: Line[], reread: (x: number) => Promise<number
   const sorted = lines
     .filter((l) => {
       const s = squash(l.text)
-      return s.startsWith('go') || s.startsWith('to') || s.includes('cel') || door(l.text) !== null
+      // A bare number is no card: the labels of the board's cells, the numbers on the End panel and the
+      // art all read as digits, and a card says "Go to Cell N" (OCR may garble the words, not drop them all).
+      return s.startsWith('go') || s.startsWith('to') || s.includes('cel') || (door(l.text) !== null && /[a-z]/i.test(l.text))
     })
     .sort((a, b) => a.rect.centre()[0] - b.rect.centre()[0])
   const cards: Line[][] = []
