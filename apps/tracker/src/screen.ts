@@ -27,9 +27,10 @@ import {
   defaultForeground,
   duration,
   fe,
-  price,
+  fit,
   fitEnd,
   num,
+  price,
   rowChunks,
   theme,
   textColor,
@@ -39,7 +40,10 @@ import {
 } from '@tli/tui'
 import type { Run, Tracker } from '@tli/tracker'
 import {
+  type BagRow,
   type Panel,
+  type PriceRow,
+  type Rows,
   type ViewState,
   bagRows,
   findRun,
@@ -57,6 +61,15 @@ const BORDER = 2
 /** The column the scrollbar takes up. */
 const SCROLLBAR = 1
 
+/** How much of the filter the title of a panel shows. */
+const TITLE_FILTER = 20
+
+/** The title of a panel: its name, the filter and how many rows there are. */
+function panelTitle(name: string, count: number, total: number, filter: string): string {
+  if (filter.trim() === '') return `${name} (${total})`
+  return `${name} /${fit(filter, TITLE_FILTER)} (${count}/${total})`
+}
+
 /** What the screen tells the app when the player uses the mouse. */
 export interface ScreenHooks {
   /** the player clicked a panel */
@@ -65,6 +78,8 @@ export interface ScreenHooks {
   onPick?: (panel: Panel, index: number) => void
   /** the player confirmed a price */
   onPrice?: (item: number, price: string) => void
+  /** the player typed a word in the search box */
+  onSearch?: (text: string) => void
 }
 
 /** A panel with a list in it. */
@@ -81,7 +96,7 @@ const HELP: [string, string][] = [
   ['↑↓  j/k', 'move in the panel that has the focus'],
   ['tab', 'the next panel (shift+tab the one before)'],
   ['⏎', 'the detail of the run that is picked out'],
-  ['esc', 'back, or leave the price'],
+  ['esc', 'back, leave the price, or take the filter away'],
   ['t', 'the trade tax on and off'],
   ['c', 'the cost of the map counts against the profit, or not'],
   ['p', 'stop and start the clock'],
@@ -89,6 +104,7 @@ const HELP: [string, string][] = [
   ['u', 'reset a hand-set price to the learned one'],
   ['d', 'remove the item from the prices (learned and set)'],
   ['s', 'change how the list is sorted'],
+  ['/', 'search the list that has the focus (enter keeps it, esc clears it)'],
   ['x', 'write the loot report to a csv file'],
   ['r', 'read the log again from where it was'],
   ['a', 'open Arcana in a window of its own'],
@@ -129,6 +145,9 @@ export class TrackerScreen {
   private readonly priceLabel: TextRenderable
   private readonly priceInput: InputRenderable
   private readonly priceHint: TextRenderable
+  private readonly searchLabel: TextRenderable
+  private readonly searchInput: InputRenderable
+  private readonly searchHint: TextRenderable
 
   private readonly overlay: BoxRenderable
   private readonly overlayBox: BoxRenderable
@@ -288,10 +307,36 @@ export class TrackerScreen {
       wrapMode: 'none',
       visible: false,
     })
+    this.searchLabel = new TextRenderable(renderer, {
+      id: 'search-label',
+      content: '',
+      selectable: false,
+      fg: textColor(),
+      wrapMode: 'none',
+      visible: false,
+    })
+    this.searchInput = new InputRenderable(renderer, {
+      id: 'search-input',
+      width: 24,
+      visible: false,
+      textColor: textColor(),
+      cursorColor: textColor(),
+    })
+    this.searchHint = new TextRenderable(renderer, {
+      id: 'search-hint',
+      content: '',
+      selectable: false,
+      fg: textColor(),
+      wrapMode: 'none',
+      visible: false,
+    })
     this.footer.add(this.hintText)
     this.footer.add(this.priceLabel)
     this.footer.add(this.priceInput)
     this.footer.add(this.priceHint)
+    this.footer.add(this.searchLabel)
+    this.footer.add(this.searchInput)
+    this.footer.add(this.searchHint)
 
     this.overlay = new BoxRenderable(renderer, {
       id: 'overlay',
@@ -341,6 +386,10 @@ export class TrackerScreen {
       const item = this.editingItem
       if (item === null) return
       this.hooks.onPrice?.(item, value)
+    })
+
+    this.searchInput.on(InputRenderableEvents.INPUT, (value: string) => {
+      this.hooks.onSearch?.(value)
     })
   }
 
@@ -415,6 +464,24 @@ export class TrackerScreen {
     this.priceHint.visible = false
   }
 
+  /** Starts typing in the search box. */
+  beginSearch(text: string): void {
+    this.searchInput.value = text
+    this.searchLabel.content = new StyledText([tone('accent', 'search ')])
+    this.searchInput.visible = true
+    this.searchLabel.visible = true
+    this.searchHint.visible = true
+    this.searchInput.focus()
+  }
+
+  /** Stops typing in the search box. */
+  endSearch(): void {
+    this.searchInput.blur()
+    this.searchInput.visible = false
+    this.searchLabel.visible = false
+    this.searchHint.visible = false
+  }
+
   /** Draws the state. */
   draw(state: ViewState): void {
     const width = this.renderer.width
@@ -423,8 +490,10 @@ export class TrackerScreen {
     this.drawHeader(state, width)
     this.drawCurrent(state)
     this.drawRuns(state)
-    this.drawBag(state)
-    this.drawPrices(state)
+    const bag = bagRows(this.tracker, state.inventorySort, state.inventoryFilter)
+    const prices = priceRows(this.tracker, state.pricesSort, state.pricesFilter)
+    this.drawBag(state, bag)
+    this.drawPrices(state, prices)
     this.drawFooter(state, width)
     this.drawOverlay(state, width, height)
   }
@@ -622,15 +691,19 @@ export class TrackerScreen {
   }
 
   /** The panel of what the player has. */
-  private drawBag(state: ViewState): void {
-    const bag = bagRows(this.tracker, state.inventorySort)
-    if (bag.length === 0) {
-      this.drawList(this.bag, [{ cells: [{ text: 'the bag is empty', tone: 'dim' }] }])
+  private drawBag(state: ViewState, bag: Rows<BagRow>): void {
+    this.bag.box.title = panelTitle('Bag', bag.rows.length, bag.total, state.inventoryFilter)
+    if (bag.rows.length === 0) {
+      const empty =
+        state.inventoryFilter === ''
+          ? 'the bag is empty'
+          : `no item matches "${state.inventoryFilter}"`
+      this.drawList(this.bag, [{ cells: [{ text: empty, tone: 'dim' }] }])
       return
     }
-    const qtyWidth = Math.max(3, ...bag.map((row) => visibleLength(num(row.qty))))
-    const valueWidth = Math.max(13, ...bag.map((row) => visibleLength(fe(row.worth))))
-    const rows: Row[] = bag.map((row, index) => ({
+    const qtyWidth = Math.max(3, ...bag.rows.map((row) => visibleLength(num(row.qty))))
+    const valueWidth = Math.max(13, ...bag.rows.map((row) => visibleLength(fe(row.worth))))
+    const rows: Row[] = bag.rows.map((row, index) => ({
       selected: state.focus === 'inventory' && index === state.inventoryAt,
       cells: [
         { text: row.name },
@@ -643,17 +716,18 @@ export class TrackerScreen {
   }
 
   /** The panel of the prices the tracker knows. */
-  private drawPrices(state: ViewState): void {
-    const prices = priceRows(this.tracker, state.pricesSort)
-    if (prices.length === 0) {
-      this.drawList(
-        this.prices,
-        [{ cells: [{ text: 'no prices yet: look an item up on the exchange', tone: 'dim' }] }],
-      )
+  private drawPrices(state: ViewState, prices: Rows<PriceRow>): void {
+    this.prices.box.title = panelTitle('Prices (* set)', prices.rows.length, prices.total, state.pricesFilter)
+    if (prices.rows.length === 0) {
+      const empty =
+        state.pricesFilter === ''
+          ? 'no prices yet: look an item up on the exchange'
+          : `no item matches "${state.pricesFilter}"`
+      this.drawList(this.prices, [{ cells: [{ text: empty, tone: 'dim' }] }])
       return
     }
-    const valueWidth = Math.max(13, ...prices.map((row) => visibleLength(price(row.price))))
-    const rows: Row[] = prices.map((row, index) => ({
+    const valueWidth = Math.max(13, ...prices.rows.map((row) => visibleLength(price(row.price))))
+    const rows: Row[] = prices.rows.map((row, index) => ({
       selected: state.focus === 'prices' && index === state.pricesAt,
       cells: [
         { text: row.name },
@@ -707,6 +781,7 @@ export class TrackerScreen {
       ['↑↓', 'move'],
       ['tab', 'panel'],
       ['⏎', 'detail'],
+      ['/', 'search'],
       ['t', 'tax'],
       ['c', 'map cost'],
       ['e', 'price'],
@@ -722,10 +797,30 @@ export class TrackerScreen {
       tone('accent', key),
       tone('dim', ` ${label}`),
     ])
+    segments.unshift(...this.filterChips(state))
     this.hintText.content = new StyledText(this.pack(segments, width))
     this.hintText.width = width
-    this.hintText.visible = state.editing === null
+    this.hintText.visible = state.editing === null && state.searching === null
     this.priceHint.content = new StyledText([tone('dim', 'enter keeps it · empty enter resets · esc leaves it')])
+    this.searchHint.content = new StyledText([tone('dim', 'enter keeps it · esc takes it away')])
+  }
+
+  /** The filters of the panels, as the footer shows them. */
+  private filterChips(state: ViewState): TextChunk[][] {
+    const chips: TextChunk[][] = []
+    const bag = state.inventoryFilter
+    const prices = state.pricesFilter
+    const focused = state.focus === 'inventory' ? bag : state.focus === 'prices' ? prices : ''
+    if (focused !== '') {
+      chips.push([tone('accent', `/${fit(focused, 16)}`), tone('dim', ' filter, esc takes it away')])
+    }
+    if (state.focus !== 'inventory' && bag !== '') {
+      chips.push([tone('dim', `bag /${fit(bag, 16)}`)])
+    }
+    if (state.focus !== 'prices' && prices !== '') {
+      chips.push([tone('dim', `prices /${fit(prices, 16)}`)])
+    }
+    return chips
   }
 
   /** The help, or the detail of a run, over the whole screen. */

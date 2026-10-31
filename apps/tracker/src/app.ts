@@ -9,7 +9,16 @@ import type { CliRenderer } from '@opentui/core'
 import { toolById, type Tool } from '@tli/launch'
 import type { ItemNames, Tracker } from '@tli/tracker'
 import { TrackerScreen } from './screen'
-import { PANELS, bagRows, freshView, priceRows, type Panel, type ViewState } from './view'
+import {
+  PANELS,
+  bagRows,
+  freshView,
+  priceRows,
+  type BagRow,
+  type Panel,
+  type PriceRow,
+  type ViewState,
+} from './view'
 
 /** What the app tells the program around it. */
 export interface AppHooks {
@@ -63,6 +72,9 @@ export class TrackerApp {
       onPrice: (item, price) => {
         this.setPrice(item, price)
       },
+      onSearch: (text) => {
+        this.search(text)
+      },
     })
     renderer.root.add(this.screen.root)
   }
@@ -83,6 +95,11 @@ export class TrackerApp {
   key(key: KeyEvent): void {
     if (key.ctrl && key.name === 'c') {
       this.hooks.onQuit()
+      return
+    }
+
+    if (this.state.searching !== null) {
+      this.searchKey(key)
       return
     }
 
@@ -133,7 +150,7 @@ export class TrackerApp {
         break
       }
       case 'escape':
-        this.state.detail = null
+        this.escape()
         break
       default:
         this.action(this.typed(key))
@@ -220,6 +237,9 @@ export class TrackerApp {
         }
         return
       }
+      case '/':
+        this.beginSearch()
+        return
       case 'x':
         this.hooks.onReport()
         return
@@ -250,6 +270,98 @@ export class TrackerApp {
       return
     }
     this.state.message = this.hooks.onOpenWindow(tool)
+  }
+
+  /** Opens the search box of the panel that has the focus. */
+  private beginSearch(): void {
+    if (this.state.focus === 'runs') {
+      this.state.message = 'there is nothing to search in the runs'
+      return
+    }
+    this.state.searching = this.state.focus
+    this.screen.beginSearch(this.filterOf(this.state.focus))
+    this.draw()
+  }
+
+  /** Does a key while the search box is open: the box has the keys, not the screen. */
+  private searchKey(key: KeyEvent): void {
+    const panel = this.state.searching
+    if (panel === null) return
+    if (key.name === 'escape') {
+      key.preventDefault()
+      this.state.searching = null
+      this.clearFilter(panel)
+      this.screen.endSearch()
+      this.draw()
+      return
+    }
+    if (key.name === 'return' || key.name === 'kpenter' || key.name === 'linefeed') {
+      key.preventDefault()
+      this.state.searching = null
+      this.screen.endSearch()
+      this.draw()
+      return
+    }
+  }
+
+  /** Filters the panel that is being searched, as the words are typed. */
+  private search(text: string): void {
+    const panel = this.state.searching
+    if (panel === null) return
+    this.setFilter(panel, text)
+    this.draw()
+  }
+
+  /** What the escape key does: close the detail of a run, or take the filter away. */
+  private escape(): void {
+    if (this.state.detail !== null) {
+      this.state.detail = null
+      return
+    }
+    const panel = this.state.focus
+    if (this.filterOf(panel) === '') return
+    this.clearFilter(panel)
+    this.state.message = 'the filter is gone'
+  }
+
+  /** The words the rows of a panel have to match. */
+  private filterOf(panel: Panel): string {
+    if (panel === 'inventory') return this.state.inventoryFilter
+    if (panel === 'prices') return this.state.pricesFilter
+    return ''
+  }
+
+  /** Sets the words the rows of a panel have to match, and keeps the pointer inside them. */
+  private setFilter(panel: Panel, text: string): void {
+    if (panel === 'inventory') this.state.inventoryFilter = text
+    else if (panel === 'prices') this.state.pricesFilter = text
+    this.clamp(panel)
+  }
+
+  /** Takes the filter of a panel away. */
+  private clearFilter(panel: Panel): void {
+    this.setFilter(panel, '')
+  }
+
+  /** The rows of a panel, with the filter of the panel on. */
+  private rowsOf(panel: Panel): (BagRow | PriceRow)[] {
+    if (panel === 'inventory') {
+      return bagRows(this.tracker, this.state.inventorySort, this.state.inventoryFilter).rows
+    }
+    if (panel === 'prices') {
+      return priceRows(this.tracker, this.state.pricesSort, this.state.pricesFilter).rows
+    }
+    return []
+  }
+
+  /** Keeps the pointer of a panel inside the rows that are shown. */
+  private clamp(panel: Panel): void {
+    const size = this.rowsOf(panel).length
+    if (panel === 'inventory') {
+      this.state.inventoryAt = Math.max(0, Math.min(this.state.inventoryAt, size - 1))
+    } else if (panel === 'prices') {
+      this.state.pricesAt = Math.max(0, Math.min(this.state.pricesAt, size - 1))
+    }
   }
 
   /** Sets the price of an item, when the player confirms one. */
@@ -288,18 +400,17 @@ export class TrackerApp {
   /** How many rows the focused panel has. */
   private panelSize(): number {
     if (this.state.focus === 'runs') return this.tracker.runs.length
-    if (this.state.focus === 'inventory') return bagRows(this.tracker, this.state.inventorySort).length
-    return priceRows(this.tracker, this.state.pricesSort).length
+    return this.rowsOf(this.state.focus).length
   }
 
   /** The item the keys are pointing at. */
   private selectedItem(): number | null {
     if (this.state.focus === 'inventory') {
-      const rows = bagRows(this.tracker, this.state.inventorySort)
+      const rows = this.rowsOf('inventory')
       const row = rows[Math.min(this.state.inventoryAt, rows.length - 1)]
       return row?.item ?? null
     }
-    const rows = priceRows(this.tracker, this.state.pricesSort)
+    const rows = this.rowsOf('prices')
     const row = rows[Math.min(this.state.pricesAt, rows.length - 1)]
     return row?.item ?? null
   }
@@ -320,12 +431,7 @@ export class TrackerApp {
 
   /** Points at a row of a panel, as the mouse did. */
   private select(panel: Panel, index: number): void {
-    const size =
-      panel === 'runs'
-        ? this.tracker.runs.length
-        : panel === 'inventory'
-          ? bagRows(this.tracker, this.state.inventorySort).length
-          : priceRows(this.tracker, this.state.pricesSort).length
+    const size = panel === 'runs' ? this.tracker.runs.length : this.rowsOf(panel).length
     if (size === 0) return
     const at = Math.max(0, Math.min(index, size - 1))
     if (panel === 'runs') {
