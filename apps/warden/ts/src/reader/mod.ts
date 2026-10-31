@@ -87,11 +87,12 @@ export class Rgba implements Image {
     const sx = f(this.w / w)
     const sy = f(this.h / h)
     // Each output column's two source byte offsets in a row and its weight, worked out once.
-    const cols: { x0: number; x1: number; t: number }[] = []
+    const cols: { x0: number; x1: number; t: number; u: number }[] = []
     for (let x = 0; x < w; x++) {
       const fx = f(Math.min(Math.max(f(f((x + 0.5) * sx) - 0.5), 0), this.w - 1))
       const x0 = Math.trunc(fx)
-      cols.push({ x0: x0 * 4, x1: Math.min(x0 + 1, this.w - 1) * 4, t: f(fx - x0) })
+      const t = f(fx - x0)
+      cols.push({ x0: x0 * 4, x1: Math.min(x0 + 1, this.w - 1) * 4, t, u: f(1 - t) })
     }
     const rowLen = this.w * 4
     for (let y = 0; y < h; y++) {
@@ -100,14 +101,15 @@ export class Rgba implements Image {
       const y0 = Math.trunc(fy)
       const y1 = Math.min(y0 + 1, this.h - 1)
       const ty = f(fy - y0)
+      const uy = f(1 - ty)
       const top = this.data.subarray(y0 * rowLen, y0 * rowLen + rowLen)
       const bot = this.data.subarray(y1 * rowLen, y1 * rowLen + rowLen)
       for (let x = 0; x < w; x++) {
         const c = cols[x]
         for (let k = 0; k < 4; k++) {
-          const t = f(f(top[c.x0 + k] * f(1 - c.t)) + f(top[c.x1 + k] * c.t))
-          const b = f(f(bot[c.x0 + k] * f(1 - c.t)) + f(bot[c.x1 + k] * c.t))
-          data[out + x * 4 + k] = Math.min(255, Math.max(0, Math.round(f(f(t * f(1 - ty)) + f(b * ty)))))
+          const t = f(f(top[c.x0 + k] * c.u) + f(top[c.x1 + k] * c.t))
+          const b = f(f(bot[c.x0 + k] * c.u) + f(bot[c.x1 + k] * c.t))
+          data[out + x * 4 + k] = Math.min(255, Math.max(0, Math.round(f(f(t * uy) + f(b * ty)))))
         }
       }
     }

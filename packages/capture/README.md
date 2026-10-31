@@ -4,7 +4,9 @@ A picture of the game window on Linux, for the readers that follow a running
 game (Vorax's helper today; Warden's reader can use it too).
 
 Default: silent `grim` capture only. The picture is the whole output when the
-game fills it, and the part of the output the game is in otherwise. Niri's own
+game fills it, and the part of the output the game is in otherwise. `grim`
+writes the pixels as they are, in a PPM, so there is no PNG to decode: a
+picture of a 2560 x 1440 output costs 15 ms instead of 95 ms. Niri's own
 `niri msg action screenshot-window --id N` can take a window that is hidden or
 on another workspace, but Niri announces every one of those with a "Screenshot
 captured" notification and cannot turn it off. It is therefore never used by
