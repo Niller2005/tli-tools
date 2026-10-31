@@ -58,7 +58,7 @@ The keys:
 | `↑` `↓` (or `k` `j`) | Move in the panel that has the focus |
 | `tab` | The next panel (`shift+tab` the one before) |
 | `enter` | The detail of the run that is picked out |
-| `esc` | Back, or leave the price |
+| `esc` | Back, leave the price, or take the filter away |
 | `t` | The trade tax on and off |
 | `c` | The cost of the map counts against the profit, or not |
 | `p` | Stop and start the clock |
@@ -66,6 +66,7 @@ The keys:
 | `u` | Reset a hand-set price back to the learned one |
 | `d` | Remove the item from the prices (a new exchange search brings it back) |
 | `s` | Change how the list is sorted |
+| `/` | Search the list that has the focus |
 | `x` | Write the loot report to a csv file |
 | `r` | Read the log again from where it was |
 | `a` | Open Arcana in a window of its own |
@@ -73,6 +74,23 @@ The keys:
 | `w` | Open Warden in a window of its own |
 | `?` | The help |
 | `q` | Quit |
+
+## Searching the lists
+
+The *Bag* and the *Prices* can be searched. Press `/` and the search box opens at the bottom of
+the screen; the list is filtered as the words are typed, and `enter` keeps the filter and gives
+the keys back. `esc` takes the filter away again, and so does `esc` later on, when the keys are
+back.
+
+A word matches an item when the name of the item has it in it, when the word is the number of the
+item, or when the word is the start of one of the words of the name. The words are not about
+capitals, and when there are more than one of them, all of them have to match: `iron sword` finds
+the iron swords, not everything with an iron in it.
+
+The bag and the prices have their own filter, and the title of the panel says what is going on:
+`Bag (167)` when nothing is filtered, `Bag /iron (5/167)` when five of the hundred and sixty
+seven things in the bag have an iron in the name. The keys work on the rows that are left: `e`
+sets the price of the item that is picked out of the filtered list.
 
 ## A minigame in a window of its own
 

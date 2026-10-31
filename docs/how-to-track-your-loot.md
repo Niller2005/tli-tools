@@ -75,6 +75,19 @@ It only knows about the items you have looked up. For the rest, set the price yo
 *Bag* or the *Prices* panel and press `e`, then type the price in FE and press `enter`. A price you set wins over
 one that was learned, and it is kept when the tracker is closed.
 
+## Search the bag and the prices
+
+When the bag is long, it is easier to look at a part of it. Put the focus on the *Bag* or the *Prices* and press
+`/`: a search box opens at the bottom of the screen, and the list is filtered as you type. `enter` keeps the filter
+and gives the keys back, `esc` takes the filter away.
+
+A word matches an item when its name has the word in it, when the word is the number of the item, or when the word
+is the start of one of the words of the name. Capitals do not matter, and when you write more than one word, all of
+them have to match: `iron sword` finds the iron swords.
+
+The title of the panel says what is going on: `Bag (167)` when nothing is filtered, and `Bag /iron (5/167)` when
+five things match. The bag and the prices each have their own filter.
+
 ## Open a minigame in a window of its own
 
 The tracker follows the log while the game is being played, so it cannot show another full-screen
