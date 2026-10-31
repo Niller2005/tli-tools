@@ -50,6 +50,10 @@ screen-watch fallback explicit. The terminal screen is drawn with
 [OpenTUI](https://opentui.com/docs), so the terminal is restored on every way out. See
 [LINUX.md](LINUX.md) for capture and OCR requirements.
 
+The playouts of the solve run in a worker, so the window keeps painting and the capture keeps its
+pace while they do. `WARDEN_PROFILE=<file>` writes the time each stage took (the capture, the
+fingerprint, the read, the solve, the drawing) to that file, one JSON line each.
+
 ## Run logs
 
 Each run gets a folder in `%APPDATA%\warden\runs` (the newest 10 are kept) with `log.jsonl`, one JSON line per read, advice and correction, and `frame-NNNN.jpg`, the game frames behind the reads. To report a wrong read or a bad recommendation, zip that run's folder and send it.
