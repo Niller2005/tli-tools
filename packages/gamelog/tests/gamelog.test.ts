@@ -3,15 +3,20 @@ import { mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import {
+  BOARD_CLOSED_STATUS,
+  captureMinigame,
   classifyLine,
   follow,
   findLog,
   logHint,
   logTime,
+  LOG_UNAVAILABLE_STATUS,
   MinigameTracker,
+  minigameCaptureGate,
   scanBack,
   watchMinigames,
   type GameName,
+  type MinigameView,
 } from '../src/index'
 
 const dir = mkdtempSync(join(tmpdir(), 'tli-gamelog-'))
@@ -263,8 +268,74 @@ describe('watchMinigames', () => {
     const file = join(dir, 'empty.log')
     writeFileSync(file, '')
     const watcher = watchMinigames({ log: file })
-    expect(watcher.state().log).toBe('ok')
+    expect(watcher.state().log).toBe('no-detail')
     watcher.close()
+  })
+})
+
+describe('the minigame capture gate', () => {
+  const view = (overrides: Partial<MinigameView> = {}): MinigameView => ({
+    warden: 'unknown',
+    vorax: 'unknown',
+    arcana: 'unknown',
+    log: 'ok',
+    ...overrides,
+  })
+
+  const capture = () => {
+    let calls = 0
+    return {
+      calls: () => calls,
+      grab: async (): Promise<string> => {
+        calls += 1
+        return 'picture'
+      },
+    }
+  }
+
+  test('a closed board is not captured', async () => {
+    const cap = capture()
+    const result = await captureMinigame(cap, view({ warden: 'closed' }), 'warden')
+    expect(cap.calls()).toBe(0)
+    expect(result.image).toBeNull()
+    expect(result.status).toBe(BOARD_CLOSED_STATUS)
+  })
+
+  test('an unknown board in a readable log is treated as closed', async () => {
+    const cap = capture()
+    const result = await captureMinigame(cap, view({ vorax: 'unknown', log: 'ok' }), 'vorax')
+    expect(cap.calls()).toBe(0)
+    expect(result.status).toBe(BOARD_CLOSED_STATUS)
+  })
+
+  test('an open board is captured', async () => {
+    const cap = capture()
+    const result = await captureMinigame(cap, view({ vorax: 'open' }), 'vorax')
+    expect(cap.calls()).toBe(1)
+    expect(result.image).toBe('picture')
+  })
+
+  test('a missing log falls back to watching the screen', async () => {
+    const cap = capture()
+    const result = await captureMinigame(cap, view({ log: 'missing' }), 'warden')
+    expect(cap.calls()).toBe(1)
+    expect(result.status).toBe(LOG_UNAVAILABLE_STATUS)
+  })
+
+  test('a log without detail falls back to watching the screen', () => {
+    expect(minigameCaptureGate(view({ log: 'no-detail' }), 'warden')).toEqual({
+      allowed: true,
+      status: LOG_UNAVAILABLE_STATUS,
+    })
+  })
+
+  test('a manual read forces one picture while the board is closed', async () => {
+    const cap = capture()
+    const result = await captureMinigame(cap, view({ warden: 'closed' }), 'warden', true)
+    expect(cap.calls()).toBe(1)
+    expect(result.image).toBe('picture')
+    expect(result.forced).toBe(true)
+    expect(result.status).toContain('manual read forced')
   })
 })
 

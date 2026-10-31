@@ -355,6 +355,72 @@ export interface MinigameView {
   log: LogState
 }
 
+/** The header note when the log says the board is closed. */
+export const BOARD_CLOSED_STATUS = 'board closed – waiting for the board'
+
+/** The header note when the log cannot say whether the board is open. */
+export const LOG_UNAVAILABLE_STATUS = 'log unavailable – watching the screen'
+
+/** Whether a minigame may be captured, and what the header says about it. */
+export interface CaptureGate {
+  /** whether an automatic capture may happen */
+  allowed: boolean
+  /** what the header says about the gate */
+  status: string
+}
+
+/**
+ * Whether the log allows a minigame to be captured.
+ *
+ * An open board is always allowed. A closed board, and an unknown board in a readable log with
+ * detail lines, are closed. Only a missing log or one without detail lines falls back to
+ * watching the screen, because then the log cannot say whether the board is open.
+ */
+export function minigameCaptureGate(view: MinigameView | null, game: GameName): CaptureGate {
+  if (view === null) return { allowed: true, status: LOG_UNAVAILABLE_STATUS }
+  if (view[game] === 'open') return { allowed: true, status: '' }
+  if (view.log === 'missing' || view.log === 'no-detail') {
+    return { allowed: true, status: LOG_UNAVAILABLE_STATUS }
+  }
+  return { allowed: false, status: BOARD_CLOSED_STATUS }
+}
+
+/** A capture that the minigame gate can call. */
+export interface MinigameCapture<T> {
+  grab(options?: { force?: boolean }): Promise<T>
+}
+
+/** The result of a capture that went through the minigame gate. */
+export interface CaptureAttempt<T> {
+  /** the picture, or null when the gate stopped the capture */
+  image: T | null
+  /** what the header says about the gate */
+  status: string
+  /** whether a manual read went ahead while the gate was closed */
+  forced: boolean
+}
+
+/**
+ * Takes a minigame picture only when the log allows it. A manual read is the one exception: it
+ * forces one picture and says that it did so.
+ */
+export async function captureMinigame<T>(
+  capture: MinigameCapture<T>,
+  view: MinigameView | null,
+  game: GameName,
+  manual = false,
+): Promise<CaptureAttempt<T>> {
+  const gate = minigameCaptureGate(view, game)
+  const forced = manual && !gate.allowed
+  if (!gate.allowed && !manual) return { image: null, status: gate.status, forced }
+  const image = await capture.grab({ force: manual })
+  return {
+    image,
+    status: forced ? `${gate.status} (manual read forced)` : gate.status,
+    forced,
+  }
+}
+
 /** Watches the log for the minigames' states. */
 export interface Watcher {
   /** the states as they are now */
@@ -382,8 +448,8 @@ export function watchMinigames(opts: { log?: string; intervalMs?: number } = {})
   return {
     state(): MinigameView {
       const bytes = size(file)
-      // a log that is still empty says nothing, but it is not the game's fault
-      const log: LogState = bytes === null ? 'missing' : bytes === 0 || tracker.detail ? 'ok' : 'no-detail'
+      // only a log with the game's own lines can say that a board is closed
+      const log: LogState = bytes === null ? 'missing' : tracker.detail ? 'ok' : 'no-detail'
       return {
         warden: tracker.warden.state,
         vorax: tracker.vorax.state,
