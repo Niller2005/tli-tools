@@ -207,7 +207,7 @@ export function createCapture(o: { title: RegExp; command?: string; niriScreensh
           const args = p.kind === 'output' ? ['-o', p.output] : ['-g', grimGeometry(p.region)]
           try {
             const img = await grim(args)
-            state += ` (${img.width} x ${img.height}, silent)`
+            state = `window ${w.id} "${w.title ?? ''}" (${img.width} x ${img.height}, silent)`
             retryAt = 0
             lastFailure = ''
             return img
