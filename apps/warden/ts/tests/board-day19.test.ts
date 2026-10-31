@@ -1,7 +1,7 @@
 //! A real board from the game (day 19, 1 day until Riot, the warden on cell 7, the End button instead
 //! of destination cards), taken on Linux at 2560x1440 and kept at 1918x1078: the reader finds the
-//! board, the day, the warden and the locked cells, and the session takes the two held instruments
-//! from the panel.
+//! board, the day, the warden and the locked cells; no number on the screen is read as a destination
+//! card, so the session recommends no move and says there are no cards on screen.
 
 import { expect, test } from 'bun:test'
 import { Session } from '@/app/session'
@@ -25,15 +25,20 @@ test('the reader reads the board of day 19', async () => {
   expect(warnings.every((w) => w.cell !== 6)).toBe(true)
 })
 
-test('the screen is a board and the session reads the held instruments', async () => {
+test('the screen is a board with no destination cards: nothing is read as a door and no move is recommended', async () => {
   const panels = await readPanels(loadPng(FRAME))
   expect(screenLabel(panels.screen)).toBe('board')
+  // numbers on the board and the End panel are not destination cards
+  expect(panels.doors).toEqual([])
+  const [model] = await readModel(FRAME, [])
+  expect(model.dest).toEqual([])
+
   const s = new Session(ROLLOUTS, [], null, null)
   s.readInBackground(loadPng(FRAME))
   await s.wait()
-  expect(s.problems).toEqual([])
-  expect(s.reading).not.toBeNull()
-  const text = (s.reading?.warnings ?? []).map((w) => w.text).join('\n')
-  expect(s.tools).toEqual(['dogtag', 'revenge'])
-  expect(text).toContain("The Torture Instrument panel shows: Felon's Dog Tag, Avenger's Casket.")
+  expect(s.pick).toBeNull()
+  expect(s.ranking).toEqual([])
+  expect(s.rounds).toBe(0)
+  const lines = (s.reading?.warnings ?? []).map((w) => w.text).join('\n')
+  expect(lines).toContain('No destination cards or decision buttons on screen')
 })
