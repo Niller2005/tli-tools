@@ -28,7 +28,26 @@ Then play. The window stays on top of the game. It moves under the game's instru
 - The Run tab lists the Torture Instruments you hold and the run's theme. Warden follows both from the game; set them there if a read missed one.
 - "Highlight where to click" (off by default) marks the advised move on the game itself: gold corner brackets around the cell, card or button to click, with an arrow above it. The mark lets clicks through to the game and hides once you click the target, until the screen, the board or the advice changes.
 
-Settings are in `%APPDATA%\warden\settings.json`.
+Settings are in `%APPDATA%/warden/settings.json`.
+
+## Terminal version on Linux
+
+The TypeScript terminal version runs under Niri. It captures the game window, reads the Tartarus
+board when the screen changes, and shows the move it recommends in the terminal:
+
+```
+bun run warden                    # from the repo root
+bun run tui                       # from apps/warden
+bun run tui --no-log              # watch the window without using the game's log
+bun run tui --no-color            # draw without colours
+bun run tui --image frame.png     # read one screenshot, print, exit
+```
+
+The keys are `r` to read the board now and `q` to quit. The game's log says whether the Tartarus
+board is open; while it is closed the game window is not captured, and the board is read as soon as
+it opens. `--no-log` turns that gate off. The terminal screen is drawn with
+[OpenTUI](https://opentui.com/docs), so the terminal is restored on every way out. See
+[LINUX.md](LINUX.md) for capture and OCR requirements.
 
 ## Run logs
 

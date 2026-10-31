@@ -9,10 +9,12 @@
     "cli": "bun ts/src/bin/warden-cli.ts"
   },
   "dependencies": {
+    "@opentui/core": "0.8.0",
     "@tli/capture": "workspace:*",
     "@tli/gamelog": "workspace:*",
     "@tli/ocr": "workspace:*",
-    "@tli/png": "workspace:*"
+    "@tli/png": "workspace:*",
+    "@tli/tui": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",
