@@ -64,6 +64,9 @@ const SCROLLBAR = 1
 /** How much of the filter the title of a panel shows. */
 const TITLE_FILTER = 20
 
+/** The width of the column that says what kind of run it is. */
+const KIND_WIDTH = 7
+
 /** The title of a panel: its name, the filter and how many rows there are. */
 function panelTitle(name: string, count: number, total: number, filter: string): string {
   if (filter.trim() === '') return `${name} (${total})`
@@ -641,7 +644,12 @@ export class TrackerScreen {
       const loot = lootRows(this.tracker, run.loot)
       const qtyWidth = Math.max(3, ...loot.map((item) => visibleLength(num(item.qty))))
       const valueWidth = Math.max(13, ...loot.map((item) => visibleLength(fe(item.worth))))
-      rows.push({ cells: [{ text: run.name, tone: 'accent' }] })
+      rows.push({
+        cells: [
+          { text: run.name, tone: 'accent' },
+          { text: run.kind === 'prison' ? 'prison' : '', tone: 'cyan', width: KIND_WIDTH },
+        ],
+      })
       rows.push({
         cells: [
           { text: duration(state.now - run.start), tone: 'cyan', width: 9 },
@@ -680,6 +688,7 @@ export class TrackerScreen {
         selected: state.focus === 'runs' && index === state.runsAt,
         cells: [
           { text: `#${run.id}`, tone: 'dim', width: 5, align: 'right' },
+          { text: run.kind === 'prison' ? 'prison' : '', tone: 'cyan', width: KIND_WIDTH },
           { text: run.name },
           { text: duration(run.took), tone: 'dim', width: durationWidth, align: 'right' },
           { text: fe(worth), tone: valueTone, width: valueWidth, align: 'right' },
@@ -867,6 +876,7 @@ export class TrackerScreen {
     line([tone('dim', 'started    '), tone('default', clock(run.start))])
     line([tone('dim', 'ended      '), tone('default', clock(end))])
     line([tone('dim', 'duration   '), tone('accent', duration(end - run.start))])
+    line([tone('dim', 'kind       '), tone('accent', run.kind)])
     line([tone('dim', 'loot value '), tone(worth.gross > 0 ? 'gold' : 'dim', fe(worth.gross))])
     line([])
     line([tone('accent', 'Loot')])

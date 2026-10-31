@@ -24,10 +24,11 @@ function row(cells: (string | number)[]): string {
 /** The report of the runs: one line for the run, then one line for each item in it. */
 export function lootReport(tracker: Tracker, names: ItemNames): string {
   const lines: string[] = []
-  lines.push(row(['run', 'zone', 'name', 'started', 'ended', 'seconds', 'item_id', 'item', 'qty', 'price', 'value']))
+  lines.push(row(['run', 'kind', 'zone', 'name', 'started', 'ended', 'seconds', 'item_id', 'item', 'qty', 'price', 'value']))
   for (const run of tracker.runs) {
     const head = [
       run.id,
+      run.kind,
       run.zone,
       run.name,
       new Date(run.start).toISOString(),
