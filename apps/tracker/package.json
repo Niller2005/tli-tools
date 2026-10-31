@@ -5,11 +5,14 @@
   "scripts": {
     "tui": "bun src/tui.ts",
     "report": "bun src/report.ts",
+    "test": "bun test",
     "typecheck": "tsc -p ."
   },
   "dependencies": {
+    "@opentui/core": "0.8.0",
     "@tli/gamelog": "workspace:*",
-    "@tli/tracker": "workspace:*"
+    "@tli/tracker": "workspace:*",
+    "@tli/tui": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",
