@@ -1,9 +1,10 @@
 // Says how much of the loot in the game's logs the item table can name.
 //
-//   bun scripts/coverage.ts                                  the two logs of this machine
-//   bun scripts/coverage.ts <log> [<log> ...]                the logs to read
+//   bun scripts/coverage.ts                                  the logs of this machine
+//   bun scripts/coverage.ts <log> [<log> ...>                the logs to read
 //   bun scripts/coverage.ts --missing                        only the ids the table does not name
 //   bun scripts/coverage.ts --ids                            every id the logs mention, one per line
+//   bun scripts/coverage.ts --table=<file>                   the item table to read, not the shipped one
 //
 // The script reads every line of every log, works out which item ids the game mentions in it,
 // and compares them with the names in data/items.json. It says how many of the ids the table
@@ -14,14 +15,25 @@
 // the scraper (see scrape-tlidb.ts) to have the wiki name them.
 
 import { join } from 'node:path'
-import { readFile } from 'node:fs/promises'
+import { readFile, readdir } from 'node:fs/promises'
 import { parseLine } from '../src/parse'
 
-/** The logs of this machine, when none are named. */
-const DEFAULT_LOGS = [
-  '/mnt/games/SteamLibrary/steamapps/common/Torchlight Infinite/UE_game/TorchLight/Saved/Logs/UE_game.log',
-  '/mnt/games/SteamLibrary/steamapps/common/Torchlight Infinite/UE_game/TorchLight/Saved/Logs/UE_game-backup-2026.10.30-06.31.17.log',
-]
+/** Where the game keeps its logs on this machine. */
+const LOG_FOLDER =
+  '/mnt/games/SteamLibrary/steamapps/common/Torchlight Infinite/UE_game/TorchLight/Saved/Logs'
+
+/** The logs of this machine, when none are named: the log the game writes and the ones it kept. */
+async function defaultLogs(): Promise<string[]> {
+  try {
+    const names = await readdir(LOG_FOLDER)
+    return names
+      .filter((name) => name.startsWith('UE_game') && name.endsWith('.log'))
+      .sort()
+      .map((name) => join(LOG_FOLDER, name))
+  } catch {
+    return []
+  }
+}
 
 /** What the logs say about one item id. */
 interface Seen {
@@ -72,8 +84,8 @@ export async function readLog(path: string): Promise<Map<number, Seen>> {
 }
 
 /** The names the item table has. */
-async function readTable(): Promise<Record<string, { name?: string }>> {
-  const tablePath = join(import.meta.dir, '..', 'data', 'items.json')
+async function readTable(path?: string): Promise<Record<string, { name?: string }>> {
+  const tablePath = path ?? join(import.meta.dir, '..', 'data', 'items.json')
   const table = JSON.parse(await readFile(tablePath, 'utf8')) as {
     items: Record<string, { name?: string }>
   }
@@ -83,9 +95,15 @@ async function readTable(): Promise<Record<string, { name?: string }>> {
 async function main(): Promise<void> {
   const argv = process.argv.slice(2)
   const has = (name: string): boolean => argv.includes(`--${name}`)
+  const arg = (name: string): string | null =>
+    argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3) ?? null
   const logs = argv.filter((a) => !a.startsWith('--'))
-  const paths = logs.length > 0 ? logs : DEFAULT_LOGS
-  const items = await readTable()
+  const paths = logs.length > 0 ? logs : await defaultLogs()
+  if (paths.length === 0) {
+    process.stderr.write(`no logs found in ${LOG_FOLDER}; name the logs to read\n`)
+    process.exit(1)
+  }
+  const items = await readTable(arg('table') ?? undefined)
 
   const all = new Map<number, Seen>()
   for (const path of paths) {
