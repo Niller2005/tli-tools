@@ -1,9 +1,22 @@
 // A picture of the game window on Linux. Default: Niri (`niri msg action screenshot-window --id N`, the window alone,
 // even behind others, the clipboard untouched). Any other compositor: a command that writes a PNG of the game to {out}.
+//
+// Niri sends a "Screenshot captured" notification for every `screenshot-window` and can't turn it off, so the picture is
+// taken with `grim` whenever the game is on the screen: the whole output when the game fills it, and the part of the
+// output the game is in otherwise. `TLI_NO_CAPTURE=1` turns every picture off, which is how the tests keep away from the
+// player's own desktop.
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { decodePngClamped, type Image } from '@tli/png'
+import {
+  grimGeometry,
+  planCapture,
+  type NiriOutput,
+  type NiriWindow,
+  type NiriWorkspace,
+  type Plan,
+} from './geometry'
 
 export const STEAM_APP = '1974050'
 
@@ -60,28 +73,32 @@ export function createCapture(o: { title: RegExp; command?: string }): Capture {
     }
   }
 
-  interface Win { id: number; title: string | null; app_id: string | null; workspace_id: number; layout: { window_size: [number, number] } }
-  const find = async (): Promise<Win> => {
-    const r = await run(['niri', 'msg', '--json', 'windows'])
-    if (!r.ok) throw new Error(`niri msg failed: ${r.err.trim() || 'is niri running?'}`)
-    const all = JSON.parse(r.out) as Win[]
-    const w = all.find(x => x.app_id === `steam_app_${STEAM_APP}`) ?? all.find(x => o.title.test(x.title ?? ''))
+  const niriJson = async (what: string): Promise<unknown> => {
+    const r = await run(['niri', 'msg', '--json', what])
+    if (!r.ok) throw new Error(`niri msg ${what} failed: ${r.err.trim() || 'is niri running?'}`)
+    return JSON.parse(r.out)
+  }
+  const find = async (windows: NiriWindow[]): Promise<NiriWindow> => {
+    const w = windows.find(x => x.app_id === `steam_app_${STEAM_APP}`) ?? windows.find(x => o.title.test(x.title ?? ''))
     if (!w) { state = 'game window not found: start Torchlight: Infinite'; throw new Error(state) }
-    state = `window ${w.id} "${w.title}"`
+    state = `window ${w.id} "${w.title ?? ''}"`
     return w
   }
-  const json = async (what: string) => JSON.parse((await run(['niri', 'msg', '--json', what])).out)
-  // Niri sends a "Screenshot captured" notification for every screenshot-window and can't turn it off. A game that fills
-  // its output and is its workspace's active window (a neighbour scrolled in beside it would be in the picture too)
-  // is taken with grim instead (the whole output, silent).
-  const filledOutput = async (w: Win): Promise<string | null> => {
-    const ws = (await json('workspaces') as { id: number; output: string; is_active: boolean; active_window_id: number | null }[]).find(s => s.id === w.workspace_id && s.is_active && s.active_window_id === w.id)
-    if (!ws) return null
-    const l = ((await json('outputs')) as Record<string, { logical: { width: number; height: number } }>)[ws.output]?.logical
-    return l && l.width === w.layout.window_size[0] && l.height === w.layout.window_size[1] ? ws.output : null
+  // The silent ways need the game to be on the screen, which needs the workspace
+  // to be the active one on its output. Only then are the output and the
+  // overview worth asking for.
+  const plan = async (w: NiriWindow, windows: NiriWindow[]): Promise<Plan> => {
+    const workspaces = (await niriJson('workspaces')) as NiriWorkspace[]
+    const workspace = workspaces.find(s => s.id === w.workspace_id)
+    if (!workspace || !workspace.is_active) return { kind: 'window' }
+    const [outputs, overview] = await Promise.all([
+      niriJson('outputs') as Promise<Record<string, NiriOutput>>,
+      niriJson('overview-state') as Promise<{ is_open: boolean }>,
+    ])
+    return planCapture({ window: w, windows, workspaces, outputs, overviewOpen: overview.is_open })
   }
-  const grim = async (output: string) => {
-    const p = Bun.spawn(['grim', '-l', '0', '-o', output, '-'], { stdout: 'pipe', stderr: 'pipe' })
+  const grim = async (args: string[]): Promise<Image<Uint8ClampedArray>> => {
+    const p = Bun.spawn(['grim', '-l', '0', ...args, '-'], { stdout: 'pipe', stderr: 'pipe' })
     const [bytes, err] = await Promise.all([new Response(p.stdout).arrayBuffer(), new Response(p.stderr).text()])
     if ((await p.exited) !== 0) throw new Error(`grim failed: ${err.trim()}`)
     return decodePngClamped(Buffer.from(bytes))
@@ -95,10 +112,20 @@ export function createCapture(o: { title: RegExp; command?: string }): Capture {
   return {
     status: () => state,
     async grab() {
-      const w = await find()
-      const output = Bun.which('grim') ? await filledOutput(w) : null
-      if (output) {
-        try { const img = await grim(output); state += ` (${img.width} x ${img.height}, silent)`; return img } catch { /* the Niri screenshot below */ }
+      const windows = (await niriJson('windows')) as NiriWindow[]
+      const w = await find(windows)
+      if (Bun.which('grim')) {
+        const p = await plan(w, windows)
+        if (p.kind === 'output' || p.kind === 'region') {
+          // grim takes the whole output, or the part of it the game is in. Its
+          // region is in the layout's logical pixels, so grim scales it itself.
+          const args = p.kind === 'output' ? ['-o', p.output] : ['-g', grimGeometry(p.region)]
+          try {
+            const img = await grim(args)
+            state += ` (${img.width} x ${img.height}, silent)`
+            return img
+          } catch { /* the Niri screenshot below */ }
+        }
       }
       return niriShot(w.id)
     },

@@ -24,9 +24,11 @@ bun run cli solve frame.png --seed 1 --rollouts 400
 
 - Needs `tesseract` with the English data (Arch: `pacman -S tesseract tesseract-data-eng`). It replaces Windows OCR.
 - The game window is found through `niri msg` (app id `steam_app_1974050`, else a title containing "Torchlight";
-  `--title TEXT` changes that). A **fullscreen** game on a visible workspace is captured with `grim` (silent, about
-  40 ms). Niri sends a "Screenshot captured" notification for every `niri msg action screenshot-window` and can't turn
-  it off, so that is only the fallback for a game that isn't fullscreen (or if `grim` is missing).
+  `--title TEXT` changes that). A game that is **on the screen** is captured with `grim` (silent, about 40 ms): the whole
+  output when the game fills it, and the part of the output the game is in otherwise. Niri only says where a *floating*
+  window is, so a tiled game that does not fill its output, and a game on a workspace that is not the one on the screen,
+  come from `niri msg action screenshot-window`. Niri sends a "Screenshot captured" notification for every one of those
+  and can't turn it off, so keep the game on the screen (its workspace the active one on its output) to keep it silent.
 - The reader needs the picture at 16:9 or wider: play fullscreen, or floating at that shape. A tiled window of another
   shape is not read.
 - Keys: `r` read now, `q` quit. Auto read is always on (the screen is sampled 4 times a second).

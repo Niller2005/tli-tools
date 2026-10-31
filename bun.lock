@@ -99,6 +99,11 @@
       "dependencies": {
         "@tli/png": "workspace:*",
       },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@types/node": "latest",
+        "typescript": "^5.9.0",
+      },
     },
     "packages/gamelog": {
       "name": "@tli/gamelog",
