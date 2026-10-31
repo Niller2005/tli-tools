@@ -295,9 +295,7 @@ function land(ctx: Ctx, t: number, b: number, comp: Comp, crowd: number): number
 
 /** The memo key of feed: tier, beast, the exact crowd under the Muzzle (its
  * bonus starts once the chain has shrunk the crowd to max_inmates) and the
- * counts an eater at tier t can reach. */
-const KEY_CHARS: string[] = Array.from({ length: 64 }, (_, i) => String.fromCharCode(0x30 + i))
-
+ * counts an eater at tier t can reach, two to a character. */
 function feedKey(ctx: Ctx, t: number, b: number, comp: Comp, crowd: number): string {
   let head = (t | (b << 3)) >>> 0
   if (ctx.muzzle) head = (head | (1 << 5) | ((crowd + 1024) << 6)) >>> 0
@@ -306,11 +304,19 @@ function feedKey(ctx: Ctx, t: number, b: number, comp: Comp, crowd: number): str
   const slots = (0xffffff & ((ctx.down[b] & 15) * 0x11111 | ~((1 << (4 * t)) - 1))) >>> 0
   let key = String.fromCharCode(head & 0xffff, head >>> 16)
   let s = slots
+  let held = -1 // the low slot of a pair, waiting for its high one
   while (s !== 0) {
     const i = 31 - Math.clz32(s & -s) // trailing_zeros
     s = (s & (s - 1)) >>> 0
-    key += KEY_CHARS[(comp[i] + 2) & 63]
+    const v = (comp[i] + 2) & 63
+    if (held < 0) {
+      held = v
+    } else {
+      key += String.fromCharCode(held | (v << 6))
+      held = -1
+    }
   }
+  if (held >= 0) key += String.fromCharCode(held)
   return key
 }
 
