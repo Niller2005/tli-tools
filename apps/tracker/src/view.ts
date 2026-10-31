@@ -44,6 +44,10 @@ export interface ViewState {
   paused: boolean
   /** what the tracker says at the bottom of the screen */
   message: string
+  /** when the community prices were fetched, in ms; null when there are none */
+  baselineAt: number | null
+  /** how many community prices there are */
+  baselineCount: number
   /** the log the tracker is reading */
   logFile: string
   /** what is wrong with the log, if anything */
@@ -69,6 +73,8 @@ export function freshView(logFile: string, now: number): ViewState {
     editing: null,
     paused: false,
     message: '',
+    baselineAt: null,
+    baselineCount: 0,
     logFile,
     logNote: '',
     now,
@@ -89,7 +95,7 @@ export interface PriceRow {
   item: number
   name: string
   price: number
-  source: 'set' | 'learned'
+  source: 'set' | 'learned' | 'baseline'
   samples: number
 }
 
@@ -132,7 +138,13 @@ export function bagRows(
   filter = '',
 ): Rows<BagRow> {
   const rows: BagRow[] = []
+  // a gear base the log has named is the legendary it became: it is shown and priced as that
+  const totals = new Map<number, number>()
   for (const [item, qty] of tracker.inventory.totals()) {
+    const id = tracker.itemOf(item)
+    totals.set(id, (totals.get(id) ?? 0) + qty)
+  }
+  for (const [item, qty] of totals) {
     const price = tracker.prices.price(item)
     rows.push({ item, name: tracker.names.name(item), qty, price, worth: price * qty })
   }
@@ -165,6 +177,17 @@ export function priceRows(
       price: info.price,
       source: 'learned',
       samples: info.samples,
+    })
+    seen.add(item)
+  }
+  for (const [item, price] of tracker.prices.baselineEntries()) {
+    if (seen.has(item)) continue
+    rows.push({
+      item,
+      name: tracker.names.name(item),
+      price,
+      source: 'baseline',
+      samples: 0,
     })
   }
   rows.sort((a, b) => {
@@ -222,7 +245,13 @@ export function runRows(tracker: Tracker, now: number): RunRow[] {
 /** The loot of a run, the most valuable first. */
 export function lootRows(tracker: Tracker, loot: Map<number, number>): LootRow[] {
   const rows: LootRow[] = []
+  // a gear base the log has named is the legendary it became: it is shown and priced as that
+  const totals = new Map<number, number>()
   for (const [item, qty] of loot) {
+    const id = tracker.itemOf(item)
+    totals.set(id, (totals.get(id) ?? 0) + qty)
+  }
+  for (const [item, qty] of totals) {
     rows.push({ item, name: tracker.names.name(item), qty, worth: qty * tracker.prices.price(item) })
   }
   rows.sort((a, b) => b.worth - a.worth || b.qty - a.qty)

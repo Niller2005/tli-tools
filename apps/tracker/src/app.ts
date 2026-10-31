@@ -30,6 +30,8 @@ export interface AppHooks {
   onRead: () => void
   /** the player wants a tool in a window of its own; the message says what happened */
   onOpenWindow: (tool: Tool) => string
+  /** the player wants the community prices fetched again; the message says what is happening */
+  onBaseline?: () => string
 }
 
 /** The tools the tracker opens in a window of their own, and the key that opens them. */
@@ -220,9 +222,16 @@ export class TrackerApp {
           return
         }
         const name = this.names.name(item)
+        const wasBaseline = this.tracker.prices.isBaseline(item)
         this.state.message = this.tracker.prices.forget(item)
-          ? `${name} is out of the prices (a new search on the exchange brings it back)`
+          ? `${name} is out of the prices (a new search on the exchange brings it back${
+              wasBaseline ? ', and so do the community prices' : ''
+            })`
           : `${name} is not in the prices`
+        return
+      }
+      case 'b': {
+        this.state.message = this.hooks.onBaseline?.() ?? 'the community prices are not on'
         return
       }
       case 's': {
@@ -389,8 +398,14 @@ export class TrackerApp {
       this.state.message = `${name} has no price set by hand`
     } else {
       this.tracker.prices.setOverride(item, null)
-      const learned = this.tracker.prices.price(item)
-      this.state.message = `the set price of ${name} is gone${learned > 0 ? `, the learned ${learned} FE counts` : ''}`
+      const known = this.tracker.prices.price(item)
+      const source = this.tracker.prices.source(item)
+      const where =
+        source === 'learned' ? 'the learned price' : source === 'baseline' ? 'the community price' : 'nothing'
+      this.state.message =
+        known > 0
+          ? `the set price of ${name} is gone, ${where} counts (${known} FE)`
+          : `the set price of ${name} is gone, and nothing else knows what it is worth`
     }
     this.state.editing = null
     this.screen.endPrice()

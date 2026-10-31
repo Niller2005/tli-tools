@@ -39,6 +39,7 @@ import {
   visibleLength,
 } from '@tli/tui'
 import type { Run, Tracker } from '@tli/tracker'
+import { ATTRIBUTION, ATTRIBUTION_URL } from '@tli/tracker'
 import {
   type BagRow,
   type Panel,
@@ -106,6 +107,7 @@ const HELP: [string, string][] = [
   ['e', 'set the price of the item that is picked out (empty = reset)'],
   ['u', 'reset a hand-set price to the learned one'],
   ['d', 'remove the item from the prices (learned and set)'],
+  ['b', 'fetch the community prices again'],
   ['s', 'change how the list is sorted'],
   ['/', 'search the list that has the focus (enter keeps it, esc clears it)'],
   ['x', 'write the loot report to a csv file'],
@@ -742,7 +744,7 @@ export class TrackerScreen {
         { text: row.name },
         { text: price(row.price), tone: row.price > 0 ? 'gold' : 'dim', width: valueWidth, align: 'right' },
         {
-          text: row.source === 'set' ? '*' : '·',
+          text: row.source === 'set' ? '*' : row.source === 'baseline' ? '~' : '·',
           tone: row.source === 'set' ? 'accent' : 'dim',
           width: 1,
           align: 'right',
@@ -796,6 +798,7 @@ export class TrackerScreen {
       ['e', 'price'],
       ['u', 'reset price'],
       ['d', 'remove'],
+      ['b', 'community prices'],
       ['x', 'csv'],
       ['p', 'pause'],
       ['a/v/w', 'window'],
@@ -807,6 +810,7 @@ export class TrackerScreen {
       tone('dim', ` ${label}`),
     ])
     segments.unshift(...this.filterChips(state))
+    segments.push(...this.baselineChip(state))
     this.hintText.content = new StyledText(this.pack(segments, width))
     this.hintText.width = width
     this.hintText.visible = state.editing === null && state.searching === null
@@ -830,6 +834,19 @@ export class TrackerScreen {
       chips.push([tone('dim', `prices /${fit(prices, 16)}`)])
     }
     return chips
+  }
+
+  /** Where the community prices came from and how old they are, as the footer shows it. */
+  private baselineChip(state: ViewState): TextChunk[][] {
+    if (state.baselineAt === null) return []
+    const age = duration(Math.max(0, state.now - state.baselineAt))
+    return [
+      [
+        tone('dim', '~ '),
+        tone('dim', `${ATTRIBUTION} (${ATTRIBUTION_URL}) · `),
+        tone('dim', `${num(state.baselineCount)} prices · ${age} old`),
+      ],
+    ]
   }
 
   /** The help, or the detail of a run, over the whole screen. */

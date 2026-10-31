@@ -155,6 +155,47 @@ describe('the tracker screen', () => {
     test.renderer.destroy()
   })
 
+  test('the community prices are shown with their own mark, and the footer says where they are from', async () => {
+    const tracker = trackerWithItems()
+    tracker.prices.setBaseline([
+      [400, 7],
+      [100, 3],
+    ])
+    const { test, app } = await setup(160, 45, tracker)
+    app.state.focus = 'prices'
+    app.draw()
+    await test.renderOnce()
+    app.state.baselineAt = app.state.now - 3_600_000
+    app.state.baselineCount = 2
+    app.draw()
+    await test.renderOnce()
+    const frame = test.captureCharFrame()
+    const prices = column(frame, 72, 160)
+    // the row of a community price ends in ~, the other two in * and ·
+    expect(prices).toContain('~')
+    expect(frame).toContain('Prices: tlicompanion.com')
+    expect(frame).toContain('2 prices')
+    expect(frame).toContain('1h 00m old')
+    test.renderer.destroy()
+  })
+
+  test('the prices the player set and learned win over the community ones', async () => {
+    const tracker = trackerWithItems()
+    tracker.prices.setBaseline([
+      [100, 3],
+      [200, 3],
+      [300, 3],
+    ])
+    tracker.prices.learn(300, [25], NOW)
+    const { test, app } = await setup(160, 45, tracker)
+    app.state.focus = 'prices'
+    app.draw()
+    await test.renderOnce()
+    const prices = column(test.captureCharFrame(), 72, 160)
+    expect(prices).toContain('Ancient Relic')
+    test.renderer.destroy()
+  })
+
   test('the detail of a run says what kind of run it is', async () => {
     const { test, app } = await setup(160, 45, trackerWithPrison())
     app.state.detail = 3
