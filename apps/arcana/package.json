@@ -1,0 +1,23 @@
+{
+  "name": "@tli/arcana-tui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "tui": "bun src/tui.ts",
+    "test": "bun test",
+    "smoke": "python3 tests/tui-smoke.py",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@opentui/core": "0.8.0",
+    "@tli/arcana": "workspace:*",
+    "@tli/gamelog": "workspace:*",
+    "@tli/tracker": "workspace:*",
+    "@tli/tui": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "latest",
+    "typescript": "^5.9.0"
+  }
+}
