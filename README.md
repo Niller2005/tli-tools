@@ -18,9 +18,9 @@ here (imported with `git subtree`).
 
 - **Vorax Helper** also builds on Moebing's original *Torchlight-Infinite-SS11-Vorax-simulator*, credited in
   [`apps/vorax/LICENSE`](apps/vorax/LICENSE).
-- **Warden** was originally a Rust app. It is being ported to TypeScript here, and the Rust source stays in
-  `apps/warden/src` until the port fully replaces it (the Windows window is not ported). The port is checked against
-  the Rust output for the engine, solver and reader.
+- **Warden** was originally a Rust app. The TypeScript version in `apps/warden/ts` is now the main one and the only
+  one that gets changes. The Rust source stays in `apps/warden/src` (it is the only version with the Windows window)
+  but is deprecated: it is no longer kept in step, and the TypeScript tests no longer have to match its output.
 - The shared packages (`png`, `capture`, `ocr`, `gamelog`) were factored out of code written for those two projects.
 
 The tracker reads data other people made: the community prices of [TLI Companion](https://tlicompanion.com) and the

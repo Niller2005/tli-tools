@@ -22,7 +22,7 @@ Check the command first: run it by hand and open the PNG. The picture must show 
 
 ## Warden
 
-Warden's TypeScript version takes `--capture-cmd` as well (the Rust build does not):
+Warden's TypeScript version takes `--capture-cmd` as well:
 
 ```
 cd apps/warden
