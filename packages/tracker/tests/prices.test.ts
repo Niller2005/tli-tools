@@ -16,6 +16,28 @@ describe('the exchange', () => {
     expect(quote?.prices).toEqual([5, 5, 6])
   })
 
+  test('an answer that does not name the item takes it from the request (currency and materials)', () => {
+    const head = '[2026.10.31-00.39.18:367][847]TLNetGame: Display: [Game] '
+    const lines = [
+      `${head}----Socket SendMessage STT----XchgSearchPrice----SynId = 48808`,
+      `${head}`,
+      '+typ3 [43]',
+      '+filters+1+key [4]',
+      '|       | +refer [100200]',
+      `${head}----Socket SendMessage End----`,
+      `${head}----Socket RecvMessage STT----XchgSearchPrice----SynId = 48808`,
+      `${head}`,
+      '+errCode',
+      '+prices+1+unitPrices+1 [0.0002]',
+      '|      | |          +2 [0.0004]',
+      '|      | +currency [100300]',
+      `${head}----Socket RecvMessage End----`,
+    ]
+    const parser = new ExchangeParser()
+    const found = lines.map((l) => parser.feed(l)).filter((q) => q !== null)
+    expect(found).toEqual([{ item: 100200, prices: [0.0002, 0.0004] }])
+  })
+
   test('the item a search asked for is read', () => {
     const body = EXCHANGE_SEARCH.slice(2, 5).join('\n')
     expect(parseRequest(body)).toBe(8312)
