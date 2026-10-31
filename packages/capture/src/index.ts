@@ -1,10 +1,12 @@
-// A picture of the game window on Linux. Default: Niri (`niri msg action screenshot-window --id N`, the window alone,
-// even behind others, the clipboard untouched). Any other compositor: a command that writes a PNG of the game to {out}.
+// A picture of the game window on Linux. Niri (`niri msg action screenshot-window --id N`) can take
+// the window alone, but announces every picture with a "Screenshot captured" notification that cannot
+// be turned off. The default therefore uses only silent `grim` paths: the whole output when the game
+// fills it, and the part of the output the game is in otherwise. Any other compositor: a command that
+// writes a PNG of the game to {out}.
 //
-// Niri sends a "Screenshot captured" notification for every `screenshot-window` and can't turn it off, so the picture is
-// taken with `grim` whenever the game is on the screen: the whole output when the game fills it, and the part of the
-// output the game is in otherwise. `TLI_NO_CAPTURE=1` turns every picture off, which is how the tests keep away from the
-// player's own desktop.
+// Niri's window screenshot needs an explicit opt-in, through `niriScreenshot: true` or
+// `TLI_NIRI_SCREENSHOT=1`. `TLI_NO_CAPTURE=1` turns every picture off, which is how the tests keep
+// away from the player's own desktop.
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -20,15 +22,23 @@ import {
 
 export const STEAM_APP = '1974050'
 
+export interface GrabOptions {
+  /** take the picture now, even after an earlier attempt was backed off */
+  force?: boolean
+}
+
 export interface Capture {
   /** the capture's state for the header: which window, or why there is none */
   status(): string
   /** a picture of the game window; throws when there is none */
-  grab(): Promise<Image<Uint8ClampedArray>>
+  grab(options?: GrabOptions): Promise<Image<Uint8ClampedArray>>
   close(): void
 }
 
 const IEND = Buffer.from([0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82])
+
+/** How long a failed capture waits before it looks at the screen again. */
+const BACKOFF_MS = 2000
 
 /**
  * The socket of the niri that is running. A shell that outlives its niri session (a tmux server started
@@ -74,7 +84,21 @@ async function readWhole(path: string): Promise<Buffer> {
   throw new Error('the screenshot never appeared')
 }
 
-export function createCapture(o: { title: RegExp; command?: string }): Capture {
+/**
+ * Whether Niri's announced window screenshot may be used.
+ *
+ * The option is the per-capture choice; when it is absent the environment decides. An explicit
+ * `false` always wins, so a caller can keep a process-wide opt-in from reaching it.
+ */
+export function niriScreenshotEnabled(
+  option?: boolean,
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  return option ?? env.TLI_NIRI_SCREENSHOT === '1'
+}
+
+export function createCapture(o: { title: RegExp; command?: string; niriScreenshot?: boolean }): Capture {
+  const allowNiriScreenshot = niriScreenshotEnabled(o.niriScreenshot)
   // The tests run where the player is: no picture at all, and nothing is run.
   if (process.env.TLI_NO_CAPTURE) {
     return {
@@ -120,19 +144,23 @@ export function createCapture(o: { title: RegExp; command?: string }): Capture {
     return w
   }
   // The silent ways need the game to be on the screen, which needs the workspace
-  // to be the active one on its output. Only then are the output and the
-  // overview worth asking for.
+  // to be the active one on its output.
   const plan = async (w: NiriWindow, windows: NiriWindow[]): Promise<Plan> => {
     const workspaces = (await niriJson('workspaces')) as NiriWorkspace[]
-    const workspace = workspaces.find(s => s.id === w.workspace_id)
-    if (!workspace || !workspace.is_active) return { kind: 'window' }
     const [outputs, overview] = await Promise.all([
       niriJson('outputs') as Promise<Record<string, NiriOutput>>,
       // An older niri cannot say whether the overview is open: the picture is
       // then taken as if it were closed.
       niriJson('overview-state').catch(() => ({ is_open: false })) as Promise<{ is_open: boolean }>,
     ])
-    return planCapture({ window: w, windows, workspaces, outputs, overviewOpen: overview.is_open })
+    return planCapture({
+      window: w,
+      windows,
+      workspaces,
+      outputs,
+      overviewOpen: overview.is_open,
+      niriScreenshot: allowNiriScreenshot,
+    })
   }
   const grim = async (args: string[]): Promise<Image<Uint8ClampedArray>> => {
     const p = Bun.spawn(['grim', '-l', '0', ...args, '-'], { stdout: 'pipe', stderr: 'pipe' })
@@ -146,13 +174,33 @@ export function createCapture(o: { title: RegExp; command?: string }): Capture {
     if (!r.ok) throw new Error(`niri screenshot failed: ${r.err.trim()}`)
     return finish(out)
   }
+  let retryAt = 0
+  let lastFailure = ''
   return {
     status: () => state,
-    async grab() {
-      const windows = (await niriJson('windows')) as NiriWindow[]
-      const w = await find(windows)
-      if (Bun.which('grim')) {
+    async grab(options: GrabOptions = {}) {
+      if (options.force !== true && Date.now() < retryAt) {
+        state = lastFailure
+        throw new Error(lastFailure)
+      }
+      try {
+        const windows = (await niriJson('windows')) as NiriWindow[]
+        const w = await find(windows)
+        if (!Bun.which('grim')) {
+          if (!allowNiriScreenshot) {
+            throw new Error('grim is not installed; no picture taken so that niri does not notify')
+          }
+          const img = await niriShot(w.id)
+          retryAt = 0
+          lastFailure = ''
+          return img
+        }
+
         const p = await plan(w, windows)
+        if (p.kind === 'none') {
+          state = p.reason
+          throw new Error(p.reason)
+        }
         if (p.kind === 'output' || p.kind === 'region') {
           // grim takes the whole output, or the part of it the game is in. Its
           // region is in the layout's logical pixels, so grim scales it itself.
@@ -160,11 +208,27 @@ export function createCapture(o: { title: RegExp; command?: string }): Capture {
           try {
             const img = await grim(args)
             state += ` (${img.width} x ${img.height}, silent)`
+            retryAt = 0
+            lastFailure = ''
             return img
-          } catch { /* the Niri screenshot below */ }
+          } catch (err) {
+            if (!allowNiriScreenshot) {
+              const detail = err instanceof Error ? err.message : String(err)
+              throw new Error(`${detail}; no picture taken so that niri does not notify`)
+            }
+          }
         }
+        const img = await niriShot(w.id)
+        retryAt = 0
+        lastFailure = ''
+        return img
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        state = message
+        lastFailure = message
+        retryAt = Date.now() + BACKOFF_MS
+        throw err instanceof Error ? err : new Error(message)
       }
-      return niriShot(w.id)
     },
     close: () => rmSync(dir, { recursive: true, force: true }),
   }

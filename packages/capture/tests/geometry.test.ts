@@ -50,6 +50,7 @@ const plan = (o: {
   workspaces?: NiriWorkspace[]
   outputs?: Record<string, NiriOutput | undefined>
   overviewOpen?: boolean
+  niriScreenshot?: boolean
 }) =>
   planCapture({
     window: o.window ?? win(),
@@ -57,6 +58,7 @@ const plan = (o: {
     workspaces: o.workspaces ?? [workspace()],
     outputs: o.outputs ?? { 'DP-1': output() },
     overviewOpen: o.overviewOpen ?? false,
+    niriScreenshot: o.niriScreenshot ?? false,
   })
 
 describe('a game that fills its output', () => {
@@ -70,7 +72,10 @@ describe('a game that fills its output', () => {
 
   test('is not taken silently when another window floats over it', () => {
     const windows = [win(), win({ id: 2, floating: true, tile: [0, 0], size: [2560, 1440] })]
-    expect(plan({ windows })).toEqual({ kind: 'window' })
+    expect(plan({ windows })).toEqual({
+      kind: 'none',
+      reason: 'the game is not on screen (another window is over it); no picture taken so that niri does not notify',
+    })
   })
 })
 
@@ -93,19 +98,28 @@ describe('a game that does not fill its output', () => {
     })
   })
 
-  test('is taken with the picture of Niri when Niri does not say where it is', () => {
+  test('is not taken silently when Niri does not say where it is', () => {
     const game = win({ size: [1280, 720] })
-    expect(plan({ window: game })).toEqual({ kind: 'window' })
+    expect(plan({ window: game })).toEqual({
+      kind: 'none',
+      reason: 'the game is not on screen (niri cannot see the position of this tiled window); no picture taken so that niri does not notify',
+    })
   })
 
-  test('is taken with the picture of Niri when the workspace is not on the screen', () => {
+  test('is not taken silently when the workspace is not on the screen', () => {
     const game = win({ size: [1280, 720], tile: [100, 200] })
-    expect(plan({ window: game, workspaces: [workspace({ is_active: false })] })).toEqual({ kind: 'window' })
+    expect(plan({ window: game, workspaces: [workspace({ is_active: false })] })).toEqual({
+      kind: 'none',
+      reason: 'the game is not on screen (its workspace is not showing); no picture taken so that niri does not notify',
+    })
   })
 
-  test('is taken with the picture of Niri when the overview is open', () => {
+  test('is not taken silently when the overview is open', () => {
     const game = win({ size: [1280, 720], tile: [100, 200] })
-    expect(plan({ window: game, overviewOpen: true })).toEqual({ kind: 'window' })
+    expect(plan({ window: game, overviewOpen: true })).toEqual({
+      kind: 'none',
+      reason: 'the game is not on screen (the niri overview is open); no picture taken so that niri does not notify',
+    })
   })
 
   test('is cut off at the edge of the output', () => {
@@ -117,17 +131,23 @@ describe('a game that does not fill its output', () => {
     })
   })
 
-  test('is taken with the picture of Niri when it is off the output', () => {
+  test('is not taken silently when it is off the output', () => {
     const game = win({ size: [1280, 720], tile: [3000, 0] })
-    expect(plan({ window: game })).toEqual({ kind: 'window' })
+    expect(plan({ window: game })).toEqual({
+      kind: 'none',
+      reason: 'the game is not on screen (it is outside the output); no picture taken so that niri does not notify',
+    })
   })
 })
 
 describe('a floating window', () => {
-  test('over the game hides it, so the picture of Niri is used', () => {
+  test('over the game hides it, so there is no silent picture', () => {
     const game = win({ size: [1280, 720], tile: [100, 200] })
     const over = win({ id: 2, floating: true, size: [640, 480], tile: [200, 300] })
-    expect(plan({ window: game, windows: [game, over] })).toEqual({ kind: 'window' })
+    expect(plan({ window: game, windows: [game, over] })).toEqual({
+      kind: 'none',
+      reason: 'the game is not on screen (another window is over it); no picture taken so that niri does not notify',
+    })
   })
 
   test('beside the game does not hide it', () => {
@@ -163,7 +183,10 @@ describe('a floating window', () => {
   test('over a game that is not focused hides it', () => {
     const game = win({ floating: true, focused: false, size: [1280, 720], tile: [100, 200] })
     const over = win({ id: 2, floating: true, focused: true, size: [640, 480], tile: [200, 300] })
-    expect(plan({ window: game, windows: [game, over] })).toEqual({ kind: 'window' })
+    expect(plan({ window: game, windows: [game, over] })).toEqual({
+      kind: 'none',
+      reason: 'the game is not on screen (another window is over it); no picture taken so that niri does not notify',
+    })
   })
 })
 
@@ -192,6 +215,20 @@ describe('an output that is not the first one', () => {
       kind: 'region',
       output: 'DP-2',
       region: { x: -2460, y: 200, width: 1280, height: 720 },
+    })
+  })
+})
+
+describe("Niri's window screenshot", () => {
+  test('is used only when it is explicitly allowed', () => {
+    const game = win({ size: [1280, 720] })
+    expect(plan({ window: game, niriScreenshot: true })).toEqual({ kind: 'window' })
+  })
+
+  test('is chosen for an inactive workspace only with the opt-in', () => {
+    const game = win({ size: [1280, 720], tile: [100, 200] })
+    expect(plan({ window: game, workspaces: [workspace({ is_active: false })], niriScreenshot: true })).toEqual({
+      kind: 'window',
     })
   })
 })
