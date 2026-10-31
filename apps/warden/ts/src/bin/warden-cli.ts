@@ -306,19 +306,25 @@ async function strategyGames(
   }
 }
 
-/** The games of `job`, played by `threads` workers, in game order. */
+/** The games of `job`, played by `threads` workers, in game order. A game
+ * takes anywhere from seconds to minutes, so the workers take the next game
+ * as they finish one instead of each getting a fixed run of them. */
 async function playChunks(job: BenchJob, games: number, threads: number): Promise<unknown[]> {
   const workers = Math.min(threads, games)
-  const size = Math.ceil(games / workers)
   const pool: Worker[] = []
+  const results: unknown[] = new Array(games)
+  let next = 0
   try {
     for (let i = 0; i < workers; i++) pool.push(new Worker(WORKER))
-    const chunks = await Promise.all(
-      pool.map((w, i) =>
-        runChunk(w, { ...job, from: i * size, to: Math.min((i + 1) * size, games) }),
-      ),
+    await Promise.all(
+      pool.map(async (w) => {
+        for (let game = next++; game < games; game = next++) {
+          const [one] = await runChunk(w, { ...job, from: game, to: game + 1 })
+          results[game] = one
+        }
+      }),
     )
-    return chunks.flat()
+    return results
   } finally {
     for (const w of pool) w.terminate()
   }
