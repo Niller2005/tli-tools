@@ -5,7 +5,7 @@
 //!
 //!   warden-cli solve <board.json | frame.png> [--rollouts N] [--seed S] [--tools id,id]
 //!   warden-cli read <frame.png> [--tools id,id]
-//!   warden-cli capture [--frames N] [--capture-cmd <command writing a PNG of the game to {out}>] <title text> <out.png>
+//!   warden-cli capture [--frames N] [--capture-cmd <command writing a PNG of the game to {out}>] [--niri-screenshot] <title text> <out.png>
 //!   warden-cli bench [--games N] [--rollouts R] [--seed S] [--threads T]
 //!   warden-cli bench --strategy-only [--set name=value,...] [--hold id,id] [--rerolls N] [--save file] [--against file] [--games N] [--seed S] [--threads T]
 //!   warden-cli --version
@@ -26,7 +26,7 @@ import { fixed, signed } from '@/format'
 import type { BenchJob } from './warden-bench-worker'
 
 const USAGE =
-  'usage: warden-cli solve <board.json | frame.png> [--rollouts N] [--seed S] [--tools id,id] | warden-cli read <frame.png> [--tools id,id] | warden-cli capture [--frames N] [--capture-cmd COMMAND] <title text> <out.png> | warden-cli bench [--games N] [--rollouts R] [--seed S] [--threads T] | warden-cli bench --strategy-only [--set name=value,...] [--hold id,id] [--rerolls N] [--save file] [--against file] [--games N] [--seed S] [--threads T] | warden-cli --version'
+  'usage: warden-cli solve <board.json | frame.png> [--rollouts N] [--seed S] [--tools id,id] | warden-cli read <frame.png> [--tools id,id] | warden-cli capture [--frames N] [--capture-cmd COMMAND] [--niri-screenshot] <title text> <out.png> | warden-cli bench [--games N] [--rollouts R] [--seed S] [--threads T] | warden-cli bench --strategy-only [--set name=value,...] [--hold id,id] [--rerolls N] [--save file] [--against file] [--games N] [--seed S] [--threads T] | warden-cli --version'
 
 /** A closed pipe (`| head`) is not an error here, as in the Rust build. */
 process.stdout.on('error', (e: NodeJS.ErrnoException) => {
@@ -131,6 +131,7 @@ function asRgba(img: { width: number; height: number; data: Uint8ClampedArray })
 async function runCapture(args: string[]): Promise<number> {
   let frames: number | null = null
   let captureCmd: string | null = null
+  let niriScreenshot: boolean | undefined
   const rest: string[] = []
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--frames') {
@@ -138,13 +139,19 @@ async function runCapture(args: string[]): Promise<number> {
     } else if (args[i] === '--capture-cmd') {
       captureCmd = args[++i]
       if (captureCmd === undefined) throw new Error('--capture-cmd needs a command')
+    } else if (args[i] === '--niri-screenshot') {
+      niriScreenshot = true
     } else {
       rest.push(args[i])
     }
   }
   if (rest.length !== 2) throw new Error(USAGE)
   const [title, target] = rest
-  const capture = createCapture({ title: new RegExp(escapeRegExp(title), 'i'), command: captureCmd ?? undefined })
+  const capture = createCapture({
+    title: new RegExp(escapeRegExp(title), 'i'),
+    command: captureCmd ?? undefined,
+    niriScreenshot,
+  })
   let img: Rgba
   try {
     if (frames === null) {

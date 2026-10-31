@@ -84,12 +84,12 @@ describe("Warden's terminal screen", () => {
 
   test('it says when the board is closed and when the OCR is missing', async () => {
     const { test, screen, state } = await setup()
-    state.captureNote = 'board closed (waiting for the Tartarus board)  log: enable log'
+    state.captureNote = 'board closed – waiting for the board  log: enable log'
     state.ocrProblem = 'tesseract is not installed'
     screen.draw(state)
     await test.renderOnce()
     const frame = test.captureCharFrame()
-    expect(frame).toContain('board closed (waiting for the Tartarus board)')
+    expect(frame).toContain('board closed – waiting for the board')
     expect(frame).toContain('log: enable log')
     expect(frame).toContain('tesseract is not installed')
     test.renderer.destroy()
