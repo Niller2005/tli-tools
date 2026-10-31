@@ -28,6 +28,7 @@
       "dependencies": {
         "@opentui/core": "0.8.0",
         "@tli/gamelog": "workspace:*",
+        "@tli/launch": "workspace:*",
         "@tli/tui": "workspace:*",
       },
       "devDependencies": {
@@ -41,6 +42,7 @@
       "dependencies": {
         "@opentui/core": "0.8.0",
         "@tli/gamelog": "workspace:*",
+        "@tli/launch": "workspace:*",
         "@tli/tracker": "workspace:*",
         "@tli/tui": "workspace:*",
       },
@@ -115,6 +117,17 @@
         "@types/node": "latest",
       },
     },
+    "packages/launch": {
+      "name": "@tli/launch",
+      "dependencies": {
+        "@tli/gamelog": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@types/node": "latest",
+        "typescript": "^5.9.0",
+      },
+    },
     "packages/ocr": {
       "name": "@tli/ocr",
     },
@@ -169,6 +182,8 @@
     "@tli/dashboard": ["@tli/dashboard@workspace:apps/dashboard"],
 
     "@tli/gamelog": ["@tli/gamelog@workspace:packages/gamelog"],
+
+    "@tli/launch": ["@tli/launch@workspace:packages/launch"],
 
     "@tli/ocr": ["@tli/ocr@workspace:packages/ocr"],
 
