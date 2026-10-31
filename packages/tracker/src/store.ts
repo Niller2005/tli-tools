@@ -7,7 +7,7 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { dataPath } from './items'
-import type { SavedState } from './engine'
+import { migrateState, type SavedState } from './engine'
 
 /** The file the tracker saves itself in. */
 export const STATE_FILE = 'state.json'
@@ -32,8 +32,9 @@ export async function loadTracker(path = statePath()): Promise<SavedTracker | nu
     const raw = await readFile(path, 'utf8')
     const saved = JSON.parse(raw) as SavedTracker
     if (saved?.version !== 1) return null
-    if (saved.tracker?.version !== 1) return null
-    return saved
+    const tracker = migrateState(saved.tracker)
+    if (tracker === null) return null
+    return { ...saved, tracker }
   } catch {
     return null
   }

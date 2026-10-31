@@ -13,15 +13,22 @@
 // runs, `prices` keeps what the exchange said, `valuation` turns loot into FE, `engine` ties them
 // together and `store` saves the result.
 
-export { Tracker, LOOT_PROTOS, COST_PROTOS, MONEY_PROTOS, MAX_RUNS, STATE_VERSION } from './engine'
+export { Tracker, LOOT_PROTOS, COST_PROTOS, MONEY_PROTOS, MAX_RUNS, STATE_VERSION, migrateState } from './engine'
 export type { Stats, TrackerOptions, SavedRun, SavedState } from './engine'
 export { parseLine, logTime, zoneOf, type Fact } from './parse'
 export { Inventory, BAG_PAGES, type Delta } from './inventory'
-export { RunSegmenter, MAP_LEVEL_TYPES, type Run } from './runs'
+export {
+  RunSegmenter,
+  MAP_LEVEL_TYPES,
+  PRISON_LEVEL_TYPES,
+  PRISON_PAGES,
+  type Run,
+  type RunKind,
+} from './runs'
 export { PriceStore, referencePrice, type PriceInfo } from './prices'
 export { ExchangeParser, FE_ITEM, parseQuote, parseRequest, type Quote } from './exchange'
 export { valueOf, durationOf, perHour, TRADE_TAX, type Value } from './valuation'
 export { ItemNames, ITEM_TABLE_PATH, userItemsPath, configDir, dataDir, dataPath, type ItemEntry } from './items'
 export { LogReader, readTail, TAIL_BYTES, type Batch } from './log'
 export { loadTracker, saveTracker, statePath, STATE_FILE, type SavedTracker } from './store'
-export { zoneName, ZONE_NAMES } from './zones'
+export { zoneName, ZONE_NAMES, PRISON_NAME } from './zones'

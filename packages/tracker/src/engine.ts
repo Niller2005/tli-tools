@@ -15,7 +15,7 @@ import { Inventory, type Delta } from './inventory'
 import { ItemNames } from './items'
 import { parseLine, zoneOf, type Fact } from './parse'
 import { PriceStore } from './prices'
-import { RunSegmenter, type Run } from './runs'
+import { RunSegmenter, type Run, type RunKind } from './runs'
 import { durationOf, perHour, valueOf, type Value } from './valuation'
 
 /** The protocol blocks that mean the items changed because the player picked them up. */
@@ -63,6 +63,8 @@ export interface TrackerOptions {
 /** A run, as it is saved. */
 export interface SavedRun {
   id: number
+  /** what kind of run it is; the runs of the first version had no kind and were all maps */
+  kind?: RunKind
   zone: string
   name: string
   levelId: number
@@ -96,7 +98,25 @@ export interface SavedState {
 }
 
 /** The version of the saved file this code writes. */
-export const STATE_VERSION = 1
+export const STATE_VERSION = 2
+
+/**
+ * Puts a saved state into the shape this code writes.
+ *
+ * The runs of version 1 had no kind: they were all trips into a map. A state of a version this
+ * code does not know is not used at all.
+ */
+export function migrateState(state: SavedState): SavedState | null {
+  if (state.version === STATE_VERSION) return state
+  if (state.version !== 1) return null
+  const map = (run: SavedRun): SavedRun => ({ ...run, kind: 'map' })
+  return {
+    ...state,
+    version: STATE_VERSION,
+    runs: state.runs.map(map),
+    current: state.current === null ? null : map(state.current),
+  }
+}
 
 /** The tracker. */
 export class Tracker {
@@ -189,6 +209,11 @@ export class Tracker {
         this.takeDeltas(deltas)
         return
       }
+      case 'screen': {
+        const ended = this.segmenter.screen(fact.name, fact.state, fact.at)
+        if (ended !== null) this.finish(ended)
+        return
+      }
     }
   }
 
@@ -278,6 +303,7 @@ export class Tracker {
   snapshot(): SavedState {
     const save = (run: Run): SavedRun => ({
       id: run.id,
+      kind: run.kind,
       zone: run.zone,
       name: run.name,
       levelId: run.levelId,
@@ -306,14 +332,16 @@ export class Tracker {
 
   /** Puts a saved tracker back. */
   restore(state: SavedState): void {
-    this.inventory.restore(state.slots, state.instances)
-    this.prices.restore(state.prices, state.overrides)
-    this.taxed = state.taxed
-    this.mapCosts = state.mapCosts
+    const migrated = migrateState(state)
+    if (migrated === null) return
+    this.inventory.restore(migrated.slots, migrated.instances)
+    this.prices.restore(migrated.prices, migrated.overrides)
+    this.taxed = migrated.taxed
+    this.mapCosts = migrated.mapCosts
     this.runs.length = 0
-    for (const saved of state.runs) this.runs.push(fromSaved(saved))
-    this.segmenter.setNextId(state.nextRunId)
-    const current = state.current
+    for (const saved of migrated.runs) this.runs.push(fromSaved(saved))
+    this.segmenter.setNextId(migrated.nextRunId)
+    const current = migrated.current
     if (current !== null) this.segmenter.restoreCurrent(fromSaved(current))
   }
 }
@@ -322,6 +350,7 @@ export class Tracker {
 function fromSaved(saved: SavedRun): Run {
   return {
     id: saved.id,
+    kind: saved.kind ?? 'map',
     zone: saved.zone,
     name: saved.name,
     levelId: saved.levelId,
