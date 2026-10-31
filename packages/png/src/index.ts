@@ -91,50 +91,259 @@ function decode(bytes: Uint8Array, alloc: (n: number) => Uint8Array | Uint8Clamp
   if (![1, 2, 4, 8, 16].includes(h.depth)) throw new Error(`unsupported PNG depth ${h.depth}`)
   if (h.colorType === 3 && palette === null) throw new Error('palette PNG without a palette')
   const raw = inflateSync(Buffer.concat(idat))
-  // A palette image keeps its indices; the others keep their samples in 16-bit space.
-  const indexed = h.colorType === 3
-  const samples =
-    h.interlace === 1
-      ? deinterlace(raw, h, channels, indexed)
-      : scanlines(raw, h, channels, { x0: 0, y0: 0, dx: 1, dy: 1 }, indexed)
-  return toRgba(samples, h, channels, palette, trns, alloc)
+  // An interlaced image is scattered over the passes, so its samples are
+  // gathered first; the others are read row by row straight into the pixels.
+  if (h.interlace === 1) {
+    const samples = deinterlace(raw, h, channels)
+    return toRgba(samples, h, channels, palette, trns, alloc)
+  }
+  return toRgbaRows(raw, h, channels, palette, trns, alloc)
 }
 
-/** The rows of one image: the samples of each pixel, in 16-bit space. */
-type Samples = number[][]
+/** The samples of an image's pixels, row by row, in 16-bit space. */
+type Samples = Uint16Array
 
-/** The samples of an image's pixels, row by row. */
-function scanlines(raw: Buffer, h: Header, channels: number, pass: { x0: number; y0: number; dx: number; dy: number }, indexed: boolean): Samples {
-  const width = Math.ceil((h.width - pass.x0) / pass.dx)
-  const height = Math.ceil((h.height - pass.y0) / pass.dy)
-  const bps = h.depth // bits per sample
-  const stride = Math.ceil((width * channels * bps) / 8)
-  const filterUnit = Math.max(1, Math.ceil((channels * bps) / 8))
-  const out: Samples = []
-  let pos = 0
+/** The RGBA pixels of an image whose rows are read one after the other: the
+ * row is unfiltered and written into the pixels as it comes, so the
+ * samples never all sit in memory at once. */
+function toRgbaRows(
+  raw: Buffer,
+  h: Header,
+  channels: number,
+  palette: Buffer | null,
+  trns: Buffer | null,
+  alloc: (n: number) => Uint8Array | Uint8ClampedArray,
+): Image {
+  const data = alloc(h.width * h.height * 4)
+  const stride = Math.ceil((h.width * channels * h.depth) / 8)
+  const filterUnit = Math.max(1, Math.ceil((channels * h.depth) / 8))
+  // Two rows of the unfiltered bytes: one holds the row before, the other
+  // the row being read, and they trade places after every row.
   let prev = new Uint8Array(stride)
-  for (let y = 0; y < height; y++) {
+  let cur = new Uint8Array(stride)
+  let pos = 0
+  for (let y = 0; y < h.height; y++) {
     const filter = raw[pos]
     pos += 1
-    const line = Buffer.from(raw.subarray(pos, pos + stride))
+    const line = raw.subarray(pos, pos + stride)
     pos += stride
-    unfilter(filter, line, prev, filterUnit)
-    const row: number[] = []
-    for (let x = 0; x < width; x++) {
-      for (let c = 0; c < channels; c++) {
-        row.push(sample(line, x * channels + c, bps, indexed))
+    unfilter(filter, line, cur, prev, filterUnit)
+    row(cur, h, channels, palette, trns, data, y * h.width * 4)
+    const swap = prev
+    prev = cur
+    cur = swap
+  }
+  return { width: h.width, height: h.height, data }
+}
+
+/** The 16-bit sample at byte `i` of a row, big-endian. */
+function be16(line: Uint8Array, i: number): number {
+  return ((line[i] as number) << 8) | (line[i + 1] as number)
+}
+
+/** The RGBA pixels of one unfiltered row of an image, written at `at`. */
+function row(
+  line: Uint8Array,
+  h: Header,
+  channels: number,
+  palette: Buffer | null,
+  trns: Buffer | null,
+  data: Uint8Array | Uint8ClampedArray,
+  at: number,
+): void {
+  const w = h.width
+  if (h.depth === 8) {
+    switch (h.colorType) {
+      case 0: {
+        const key = trns !== null && trns.length >= 2 ? trns.readUInt16BE(0) : -1
+        for (let x = 0; x < w; x++) {
+          const v = line[x]
+          const o = at + x * 4
+          data[o] = v
+          data[o + 1] = v
+          data[o + 2] = v
+          data[o + 3] = key === v * 257 ? 0 : 255
+        }
+        return
+      }
+      case 2: {
+        const key =
+          trns !== null && trns.length >= 6
+            ? [trns.readUInt16BE(0), trns.readUInt16BE(2), trns.readUInt16BE(4)]
+            : null
+        for (let x = 0; x < w; x++) {
+          const r = line[x * 3]
+          const g = line[x * 3 + 1]
+          const b = line[x * 3 + 2]
+          const o = at + x * 4
+          data[o] = r
+          data[o + 1] = g
+          data[o + 2] = b
+          data[o + 3] = key !== null && key[0] === r * 257 && key[1] === g * 257 && key[2] === b * 257 ? 0 : 255
+        }
+        return
+      }
+      case 3: {
+        for (let x = 0; x < w; x++) {
+          const index = line[x]
+          const o = at + x * 4
+          data[o] = palette === null ? 0 : palette[index * 3]
+          data[o + 1] = palette === null ? 0 : palette[index * 3 + 1]
+          data[o + 2] = palette === null ? 0 : palette[index * 3 + 2]
+          data[o + 3] = trns === null || index >= trns.length ? 255 : trns[index]
+        }
+        return
+      }
+      case 4: {
+        for (let x = 0; x < w; x++) {
+          const v = line[x * 2]
+          const o = at + x * 4
+          data[o] = v
+          data[o + 1] = v
+          data[o + 2] = v
+          data[o + 3] = line[x * 2 + 1]
+        }
+        return
+      }
+      default: {
+        for (let x = 0; x < w; x++) {
+          const o = at + x * 4
+          data[o] = line[x * 4]
+          data[o + 1] = line[x * 4 + 1]
+          data[o + 2] = line[x * 4 + 2]
+          data[o + 3] = line[x * 4 + 3]
+        }
+        return
       }
     }
-    out.push(row)
-    prev = new Uint8Array(line)
   }
-  return out
+  if (h.depth === 16) {
+    switch (h.colorType) {
+      case 0: {
+        const key = trns !== null && trns.length >= 2 ? trns.readUInt16BE(0) : -1
+        for (let x = 0; x < w; x++) {
+          const v = be16(line, x * 2)
+          const o = at + x * 4
+          data[o] = v >> 8
+          data[o + 1] = v >> 8
+          data[o + 2] = v >> 8
+          data[o + 3] = key === v ? 0 : 255
+        }
+        return
+      }
+      case 2: {
+        const key =
+          trns !== null && trns.length >= 6
+            ? [trns.readUInt16BE(0), trns.readUInt16BE(2), trns.readUInt16BE(4)]
+            : null
+        for (let x = 0; x < w; x++) {
+          const r = be16(line, x * 6)
+          const g = be16(line, x * 6 + 2)
+          const b = be16(line, x * 6 + 4)
+          const o = at + x * 4
+          data[o] = r >> 8
+          data[o + 1] = g >> 8
+          data[o + 2] = b >> 8
+          data[o + 3] = key !== null && key[0] === r && key[1] === g && key[2] === b ? 0 : 255
+        }
+        return
+      }
+      case 3: {
+        for (let x = 0; x < w; x++) {
+          const index = be16(line, x * 2)
+          const o = at + x * 4
+          data[o] = palette === null ? 0 : palette[index * 3]
+          data[o + 1] = palette === null ? 0 : palette[index * 3 + 1]
+          data[o + 2] = palette === null ? 0 : palette[index * 3 + 2]
+          data[o + 3] = trns === null || index >= trns.length ? 255 : trns[index]
+        }
+        return
+      }
+      case 4: {
+        for (let x = 0; x < w; x++) {
+          const v = be16(line, x * 4)
+          const o = at + x * 4
+          data[o] = v >> 8
+          data[o + 1] = v >> 8
+          data[o + 2] = v >> 8
+          data[o + 3] = be16(line, x * 4 + 2) >> 8
+        }
+        return
+      }
+      default: {
+        for (let x = 0; x < w; x++) {
+          const o = at + x * 4
+          data[o] = be16(line, x * 8) >> 8
+          data[o + 1] = be16(line, x * 8 + 2) >> 8
+          data[o + 2] = be16(line, x * 8 + 4) >> 8
+          data[o + 3] = be16(line, x * 8 + 6) >> 8
+        }
+        return
+      }
+    }
+  }
+  // Fewer than eight bits per sample: the samples sit packed in the row's
+  // bytes and are scaled to the full range.
+  const bps = h.depth
+  const perByte = 8 / bps
+  const max = (1 << bps) - 1
+  for (let x = 0; x < w; x++) {
+    const o = at + x * 4
+    const sample = (c: number): number => {
+      const i = x * channels + c
+      const byte = line[Math.floor(i / perByte)]
+      const shift = 8 - bps * ((i % perByte) + 1)
+      return (byte >> shift) & max
+    }
+    if (h.colorType === 3) {
+      const index = sample(0)
+      data[o] = palette === null ? 0 : palette[index * 3]
+      data[o + 1] = palette === null ? 0 : palette[index * 3 + 1]
+      data[o + 2] = palette === null ? 0 : palette[index * 3 + 2]
+      data[o + 3] = trns === null || index >= trns.length ? 255 : trns[index]
+      continue
+    }
+    const scaled = (c: number): number => (sample(c) * 255) / max
+    if (h.colorType === 0) {
+      const v = scaled(0)
+      data[o] = v
+      data[o + 1] = v
+      data[o + 2] = v
+      data[o + 3] = trns !== null && trns.length >= 2 && trns.readUInt16BE(0) === v * 257 ? 0 : 255
+    } else if (h.colorType === 2) {
+      const r = scaled(0)
+      const g = scaled(1)
+      const b = scaled(2)
+      data[o] = r
+      data[o + 1] = g
+      data[o + 2] = b
+      data[o + 3] =
+        trns !== null &&
+        trns.length >= 6 &&
+        trns.readUInt16BE(0) === r * 257 &&
+        trns.readUInt16BE(2) === g * 257 &&
+        trns.readUInt16BE(4) === b * 257
+          ? 0
+          : 255
+    } else if (h.colorType === 4) {
+      const v = scaled(0)
+      data[o] = v
+      data[o + 1] = v
+      data[o + 2] = v
+      data[o + 3] = scaled(1)
+    } else {
+      data[o] = scaled(0)
+      data[o + 1] = scaled(1)
+      data[o + 2] = scaled(2)
+      data[o + 3] = scaled(3)
+    }
+  }
 }
 
 /** The samples of an interlaced image, in the image's own order. */
-function deinterlace(raw: Buffer, h: Header, channels: number, indexed: boolean): Samples {
-  const out: Samples = []
-  for (let y = 0; y < h.height; y++) out.push(new Array<number>(h.width * channels).fill(0))
+function deinterlace(raw: Buffer, h: Header, channels: number): Samples {
+  const indexed = h.colorType === 3
+  const out = new Uint16Array(h.width * h.height * channels)
   let pos = 0
   for (const pass of PASSES) {
     const width = Math.ceil((h.width - pass.x0) / pass.dx)
@@ -144,20 +353,23 @@ function deinterlace(raw: Buffer, h: Header, channels: number, indexed: boolean)
     const stride = Math.ceil((width * channels * bps) / 8)
     const filterUnit = Math.max(1, Math.ceil((channels * bps) / 8))
     let prev = new Uint8Array(stride)
+    let cur = new Uint8Array(stride)
     for (let y = 0; y < height; y++) {
       const filter = raw[pos]
       pos += 1
-      const line = Buffer.from(raw.subarray(pos, pos + stride))
+      const line = raw.subarray(pos, pos + stride)
       pos += stride
-      unfilter(filter, line, prev, filterUnit)
+      unfilter(filter, line, cur, prev, filterUnit)
       for (let x = 0; x < width; x++) {
         const px = pass.x0 + x * pass.dx
         const py = pass.y0 + y * pass.dy
         for (let c = 0; c < channels; c++) {
-          out[py][px * channels + c] = sample(line, x * channels + c, bps, indexed)
+          out[(py * h.width + px) * channels + c] = sample(cur, x * channels + c, bps, indexed)
         }
       }
-      prev = new Uint8Array(line)
+      const swap = prev
+      prev = cur
+      cur = swap
     }
   }
   return out
@@ -177,25 +389,47 @@ function sample(line: Buffer, i: number, bps: number, indexed: boolean): number 
   return Math.round((value * 255 * 257) / ((1 << bps) - 1))
 }
 
-/** Undoes a line's filter in place. */
-function unfilter(filter: number, line: Buffer, prev: Uint8Array, unit: number): void {
+/** Undoes a line's filter: the filtered bytes of `line` become the
+ * unfiltered bytes of `cur`, which holds the row before in `prev`. */
+function unfilter(filter: number, line: Uint8Array, cur: Uint8Array, prev: Uint8Array, unit: number): void {
   const len = line.length
-  for (let i = 0; i < len; i++) {
-    const a = i >= unit ? line[i - unit] : 0
-    const b = prev[i] ?? 0
-    const c = i >= unit ? (prev[i - unit] ?? 0) : 0
-    let v = line[i]
-    if (filter === 1) v += a
-    else if (filter === 2) v += b
-    else if (filter === 3) v += (a + b) >> 1
-    else if (filter === 4) {
-      const p = a + b - c
-      const pa = Math.abs(p - a)
-      const pb = Math.abs(p - b)
-      const pc = Math.abs(p - c)
-      v += pa <= pb && pa <= pc ? a : pb <= pc ? b : c
-    }
-    line[i] = v & 255
+  const head = Math.min(unit, len)
+  switch (filter) {
+    case 0:
+      cur.set(line)
+      return
+    case 1:
+      for (let i = 0; i < head; i++) cur[i] = line[i] as number
+      for (let i = head; i < len; i++) cur[i] = ((line[i] as number) + (cur[i - unit] as number)) & 255
+      return
+    case 2:
+      for (let i = 0; i < len; i++) cur[i] = ((line[i] as number) + (prev[i] as number)) & 255
+      return
+    case 3:
+      for (let i = 0; i < head; i++) cur[i] = ((line[i] as number) + ((prev[i] as number) >> 1)) & 255
+      for (let i = head; i < len; i++) {
+        const a = cur[i - unit] as number
+        cur[i] = ((line[i] as number) + ((a + (prev[i] as number)) >> 1)) & 255
+      }
+      return
+    default:
+      // Paeth: the predictor is the left, the above or the upper left byte,
+      // whichever is closest to the left plus the above minus the upper
+      // left. The distances are the differences of that sum to each of the
+      // three, so they are the differences of the bytes to each other.
+      for (let i = 0; i < head; i++) cur[i] = ((line[i] as number) + (prev[i] as number)) & 255
+      for (let i = head; i < len; i++) {
+        const a = cur[i - unit] as number
+        const b = prev[i] as number
+        const c = prev[i - unit] as number
+        const da = a - c
+        const db = b - c
+        const pa = db < 0 ? -db : db
+        const pb = da < 0 ? -da : da
+        const sum = da + db
+        const pc = sum < 0 ? -sum : sum
+        cur[i] = ((line[i] as number) + (pa <= pb && pa <= pc ? a : pb <= pc ? b : c)) & 255
+      }
   }
 }
 
@@ -204,27 +438,27 @@ function toRgba(samples: Samples, h: Header, channels: number, palette: Buffer |
   const data = alloc(h.width * h.height * 4)
   const transparent = trns === null ? null : trns
   for (let y = 0; y < h.height; y++) {
-    const row = samples[y]
+    const base = y * h.width * channels
     for (let x = 0; x < h.width; x++) {
       const i = (y * h.width + x) * 4
-      const at = x * channels
+      const at = base + x * channels
       if (h.colorType === 3) {
-        const index = row[at]
+        const index = samples[at]
         data[i] = palette === null ? 0 : palette[index * 3]
         data[i + 1] = palette === null ? 0 : palette[index * 3 + 1]
         data[i + 2] = palette === null ? 0 : palette[index * 3 + 2]
         data[i + 3] = transparent === null || index >= transparent.length ? 255 : transparent[index]
       } else if (h.colorType === 0 || h.colorType === 4) {
-        const grey = row[at] >> 8
+        const grey = samples[at] >> 8
         data[i] = grey
         data[i + 1] = grey
         data[i + 2] = grey
-        data[i + 3] = h.colorType === 4 ? row[at + 1] >> 8 : alphaOf(trns, [row[at]])
+        data[i + 3] = h.colorType === 4 ? samples[at + 1] >> 8 : alphaOf(trns, [samples[at]])
       } else {
-        data[i] = row[at] >> 8
-        data[i + 1] = row[at + 1] >> 8
-        data[i + 2] = row[at + 2] >> 8
-        data[i + 3] = h.colorType === 6 ? row[at + 3] >> 8 : alphaOf(trns, [row[at], row[at + 1], row[at + 2]])
+        data[i] = samples[at] >> 8
+        data[i + 1] = samples[at + 1] >> 8
+        data[i + 2] = samples[at + 2] >> 8
+        data[i + 3] = h.colorType === 6 ? samples[at + 3] >> 8 : alphaOf(trns, [samples[at], samples[at + 1], samples[at + 2]])
       }
     }
   }
