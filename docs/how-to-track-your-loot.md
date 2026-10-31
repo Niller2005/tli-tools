@@ -71,6 +71,12 @@ a level of its own, so the run begins with the board and ends when you leave the
 says *prison* next to those runs, and the loot of the prison is worth what the prices say, like the loot of
 any other map. Looking at the board without a challenge is not a run, so it does not add one.
 
+## The legendaries
+
+When a legendary drops, the log only says the base of the gear, so the tracker shows the base at first. When you
+put the gear on, the log says which legendary it is (`AttributeMgr:SetPlayerEquipment(BaseId=3010, GoldId=112151,
+4)`), and the tracker then shows the piece by the name of the legendary and values it as the legendary.
+
 ## The prices
 
 The tracker learns prices from the exchange: when you look an item up in the game, the prices of the listings come
@@ -79,6 +85,27 @@ back in the log, and the tracker keeps the tenth of them, which is close to what
 It only knows about the items you have looked up. For the rest, set the price yourself: move to the item in the
 *Bag* or the *Prices* panel and press `e`, then type the price in FE and press `enter`. A price you set wins over
 one that was learned, and it is kept when the tracker is closed.
+
+Under both of them sits the community price: what players saw an item go for on the auction house,
+collected by [TLI Companion](https://tlicompanion.com). The tracker reads its public API (see [the
+docs](https://tlicompanion.com/api)) and uses the prices for the items nobody looked up. A price you set and a
+price learned from the exchange both win over the community price.
+
+The *Prices* panel says where each price comes from: `*` for a price you set, `·` for one learned from the
+exchange and `~` for a community price. The footer says how many community prices there are, where they are from
+and how old they are. The site asks to be credited where its prices are shown, so the footer says *Prices:
+tlicompanion.com* with the link to it.
+
+The community prices are fetched at most once an hour and are kept in
+`~/.local/share/tli-tracker/baseline.json`, so the tracker works the same without a network. Press `b` to fetch
+them again. To turn them off:
+
+```
+bun run tracker --no-baseline
+```
+
+The community price is the middle of the prices players saw, and the tracker's own price is the tenth of the
+listings on the exchange, so the two can differ. Where they do, the tracker's own price wins.
 
 ## Search the bag and the prices
 
