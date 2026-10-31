@@ -18,6 +18,42 @@ export const BACK_TO_HIDEOUT = [
   '[2026.10.29-21.29.04:345][272]TLShipping: Display: [Game] LevelMgr@ LevelUid, LevelType, LevelId = 111000 0 110',
 ]
 
+/** The lines the game writes when the Tartarus prison board opens in the town. */
+export const PRISON_BOARD = [
+  '[2026.10.31-02.57.37:312][681]TLLua: Display: [Game] S16BoardMain Run',
+]
+
+/** The lines the game writes when the player enters the prison. */
+export const ENTER_PRISON = [
+  '[2026.10.31-03.10.06:155][500]TLShipping: Display: [Game] LevelMgr@ LevelUid, LevelType, LevelId = 344 28 235501',
+  '[2026.10.31-03.10.06:156][500]TLLua: Display: [Game] LevelMgr@:LevelPath, Model = Content/Art/Season/S16/Maps/ZhongZuiDiYu/ZhongZuiDiYu.umap World\'/Game/Art/Season/S16/Maps/ZhongZuiDiYu/ZhongZuiDiYu.ZhongZuiDiYu\'',
+]
+
+/** The lines the game writes when the board closes as the prison opens. */
+export const PRISON_BOARD_CLOSED = [
+  '[2026.10.31-03.10.06:232][500]TLLua: Display: [Game] S16BoardMain Destory',
+]
+
+/** A pick-up in the prison: a new item lands in an empty slot. */
+export const PICK_IN_PRISON = [
+  '[2026.10.31-03.10.13:663][869]TLLua: Display: [Game] ItemChange@ ProtoName=PickItem start',
+  '[2026.10.31-03.10.13:663][869]TLLua: Display: [Game] ItemChange@ Add Id=2218_96fd953b-d4d8-11f1-a1ef-000000000066 BagNum=1 in PageId=100 SlotId=4',
+  '[2026.10.31-03.10.13:663][869]TLLua: Display: [Game] ItemChange@ ProtoName=PickItem end',
+]
+
+/**
+ * A stack of flame sand that was already in the bag grows in the prison.
+ *
+ * The first line is the bag as the game sent it when the player logged in; the second one is
+ * the stack in the prison, and the difference between the two is what was picked up.
+ */
+export const PICK_SAND_IN_PRISON = [
+  '[2026.10.31-01.46.45:167][522]TLLua: Display: [Game] ItemChange@ Add Id=100200_59e3c7c1-d41c-11f1-9c35-000000000079 BagNum=39 in PageId=102 SlotId=2',
+  '[2026.10.31-03.14.28:923][845]TLLua: Display: [Game] ItemChange@ ProtoName=PickItems start',
+  '[2026.10.31-03.14.28:923][845]TLLua: Display: [Game] ItemChange@ Update Id=100200_88c30687-d4c0-11f1-a1ef-000000000066 BagNum=234 in PageId=102 SlotId=2',
+  '[2026.10.31-03.14.28:923][845]TLLua: Display: [Game] ItemChange@ ProtoName=PickItems end',
+]
+
 /** The whole bag, as the game sends it when the player logs in. */
 export const BAG_SNAPSHOT = [
   '[2026.10.29-21.10.01:859][815]TLLua: Display: [Game] BagMgr@:InitBagData PageId = 100 SlotId = 1 ConfigBaseId = 3810 Num = 1',
