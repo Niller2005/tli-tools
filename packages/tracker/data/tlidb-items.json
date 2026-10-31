@@ -1,15 +1,216 @@
 {
  "meta": {
-  "generatedAt": "2026-10-31T01:45:16.075Z",
+  "generatedAt": "2026-10-31T02:08:34.042Z",
   "source": "https://tlidb.com (the Torchlight: Infinite wiki; a fan-made site, not affiliated with XD)",
-  "count": 111
+  "count": 643
  },
  "items": {
+  "100": {
+   "name": "Nailclaw",
+   "slot": "One-Handed",
+   "icon": "Icon_Equip_Weapon_Claw_Norm_001_112.webp",
+   "from": "card"
+  },
+  "101": {
+   "name": "Shark Tooth",
+   "slot": "One-Handed",
+   "level": 2,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_002_112.webp",
+   "from": "card"
+  },
   "102": {
    "name": "Pickaxe Claw",
    "slot": "One-Handed",
    "level": 4,
    "icon": "Icon_Equip_Weapon_Claw_Norm_003_112.webp",
+   "from": "card"
+  },
+  "103": {
+   "name": "Black Cat Claw",
+   "slot": "One-Handed",
+   "level": 9,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_004_112.webp",
+   "from": "card"
+  },
+  "104": {
+   "name": "Eyestinger Claw",
+   "slot": "One-Handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_005_112.webp",
+   "from": "card"
+  },
+  "105": {
+   "name": "Berserker Claw",
+   "slot": "One-Handed",
+   "level": 19,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_001_112.webp",
+   "from": "card"
+  },
+  "106": {
+   "name": "Sandstorm Katar",
+   "slot": "One-Handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_002_112.webp",
+   "from": "card"
+  },
+  "107": {
+   "name": "Wailing Claw",
+   "slot": "One-Handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_003_112.webp",
+   "from": "card"
+  },
+  "108": {
+   "name": "Two-Headed Claw",
+   "slot": "One-Handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_004_112.webp",
+   "from": "card"
+  },
+  "109": {
+   "name": "Direwolf Fang",
+   "slot": "One-Handed",
+   "level": 39,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_005_112.webp",
+   "from": "card"
+  },
+  "110": {
+   "name": "Spinesplitter Katar",
+   "slot": "One-Handed",
+   "level": 44,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_001_112.webp",
+   "from": "card"
+  },
+  "111": {
+   "name": "Crimson Tiger Sting",
+   "slot": "One-Handed",
+   "level": 49,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_002_112.webp",
+   "from": "card"
+  },
+  "112": {
+   "name": "Scarlet River Claw",
+   "slot": "One-Handed",
+   "level": 54,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_003_112.webp",
+   "from": "card"
+  },
+  "113": {
+   "name": "Primeval War Claw",
+   "slot": "One-Handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_004_112.webp",
+   "from": "card"
+  },
+  "114": {
+   "name": "Jadebone Katar",
+   "slot": "One-Handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_005_112.webp",
+   "from": "card"
+  },
+  "115": {
+   "name": "Eagle Claw",
+   "slot": "One-Handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_001_112.webp",
+   "from": "card"
+  },
+  "118": {
+   "name": "Delusion Claw",
+   "slot": "One-Handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_005_112.webp",
+   "from": "card"
+  },
+  "119": {
+   "name": "Three-tailed Cat Claw",
+   "slot": "One-Handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_001_112.webp",
+   "from": "card"
+  },
+  "120": {
+   "name": "Dragon Hunter Claw",
+   "slot": "One-Handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_001_112.webp",
+   "from": "card"
+  },
+  "121": {
+   "name": "Silence Piercing Claw",
+   "slot": "One-Handed",
+   "level": 86,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_001_112.webp",
+   "from": "card"
+  },
+  "200": {
+   "name": "Witherbark Club",
+   "slot": "One-Handed",
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_001_112.webp",
+   "from": "card"
+  },
+  "201": {
+   "name": "Mossy Stone Hammer",
+   "slot": "One-Handed",
+   "level": 2,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_002_112.webp",
+   "from": "card"
+  },
+  "202": {
+   "name": "Rusted Wooden Hammer",
+   "slot": "One-Handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_003_112.webp",
+   "from": "card"
+  },
+  "203": {
+   "name": "Black Iron Maul",
+   "slot": "One-Handed",
+   "level": 9,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_004_112.webp",
+   "from": "card"
+  },
+  "204": {
+   "name": "War Hammer",
+   "slot": "One-Handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_005_112.webp",
+   "from": "card"
+  },
+  "205": {
+   "name": "Oblivion Maul",
+   "slot": "One-Handed",
+   "level": 19,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_001_112.webp",
+   "from": "card"
+  },
+  "206": {
+   "name": "Prayer Hammer",
+   "slot": "One-Handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_002_112.webp",
+   "from": "card"
+  },
+  "207": {
+   "name": "Nightmare Hammer",
+   "slot": "One-Handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_003_112.webp",
+   "from": "card"
+  },
+  "208": {
+   "name": "Dragon's Roar Hammer",
+   "slot": "One-Handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_004_112.webp",
+   "from": "card"
+  },
+  "209": {
+   "name": "Tremor Wooden Hammer",
+   "slot": "One-Handed",
+   "level": 39,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_005_112.webp",
    "from": "card"
   },
   "210": {
@@ -19,11 +220,775 @@
    "icon": "Icon_Equip_Weapon_1HMace_Norm_001_112.webp",
    "from": "card"
   },
+  "211": {
+   "name": "Rocksplitter Mallet",
+   "slot": "One-Handed",
+   "level": 49,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_002_112.webp",
+   "from": "card"
+  },
+  "212": {
+   "name": "Primeval War Hammer",
+   "slot": "One-Handed",
+   "level": 54,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_003_112.webp",
+   "from": "card"
+  },
+  "213": {
+   "name": "Nature Wooden Hammer",
+   "slot": "One-Handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_004_112.webp",
+   "from": "card"
+  },
+  "214": {
+   "name": "Redgold Hammer",
+   "slot": "One-Handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_005_112.webp",
+   "from": "card"
+  },
+  "215": {
+   "name": "Twilight Hammer",
+   "slot": "One-Handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_001_112.webp",
+   "from": "card"
+  },
+  "216": {
+   "name": "Quinn's Hammer",
+   "slot": "One-Handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_005_112.webp",
+   "from": "card"
+  },
+  "217": {
+   "name": "General's War Hammer",
+   "slot": "One-Handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_001_112.webp",
+   "from": "card"
+  },
+  "218": {
+   "name": "Melted Iron Hammer",
+   "slot": "One-Handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_001_112.webp",
+   "from": "card"
+  },
+  "219": {
+   "name": "Sierra Forge Light Hammer",
+   "slot": "One-Handed",
+   "level": 86,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_001_112.webp",
+   "from": "card"
+  },
+  "400": {
+   "name": "Rusted Bronze Sword",
+   "slot": "One-Handed",
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_001_112.webp",
+   "from": "card"
+  },
+  "401": {
+   "name": "Crude Iron Sword",
+   "slot": "One-Handed",
+   "level": 2,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_002_112.webp",
+   "from": "card"
+  },
+  "402": {
+   "name": "Recruit's Saber",
+   "slot": "One-Handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_003_112.webp",
+   "from": "card"
+  },
+  "403": {
+   "name": "Iron Sword",
+   "slot": "One-Handed",
+   "level": 9,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_004_112.webp",
+   "from": "card"
+  },
+  "404": {
+   "name": "Thorny Sword",
+   "slot": "One-Handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_005_112.webp",
+   "from": "card"
+  },
+  "405": {
+   "name": "Battlefield Longsword",
+   "slot": "One-Handed",
+   "level": 19,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_001_112.webp",
+   "from": "card"
+  },
+  "406": {
+   "name": "Redgold Sword",
+   "slot": "One-Handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_002_112.webp",
+   "from": "card"
+  },
+  "407": {
+   "name": "Cold Blade",
+   "slot": "One-Handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_003_112.webp",
+   "from": "card"
+  },
+  "408": {
+   "name": "Talon Sword",
+   "slot": "One-Handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_004_112.webp",
+   "from": "card"
+  },
+  "409": {
+   "name": "Hurricane Short Sword",
+   "slot": "One-Handed",
+   "level": 39,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_005_112.webp",
+   "from": "card"
+  },
+  "410": {
+   "name": "Blizzard Sword",
+   "slot": "One-Handed",
+   "level": 44,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_001_112.webp",
+   "from": "card"
+  },
+  "411": {
+   "name": "Coldlight Sword",
+   "slot": "One-Handed",
+   "level": 49,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_002_112.webp",
+   "from": "card"
+  },
   "412": {
    "name": "Hero's Longsword",
    "slot": "One-Handed",
    "level": 54,
    "icon": "Icon_Equip_Weapon_1HSword_Norm_003_112.webp",
+   "from": "card"
+  },
+  "413": {
+   "name": "Gilt Longsword",
+   "slot": "One-Handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_004_112.webp",
+   "from": "card"
+  },
+  "414": {
+   "name": "Bone Stinger Sword",
+   "slot": "One-Handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_005_112.webp",
+   "from": "card"
+  },
+  "415": {
+   "name": "Moonlight Long Blade",
+   "slot": "One-Handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_001_112.webp",
+   "from": "card"
+  },
+  "416": {
+   "name": "Nameless Sword",
+   "slot": "One-Handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_005_112.webp",
+   "from": "card"
+  },
+  "417": {
+   "name": "Forgotten Iron Sword",
+   "slot": "One-Handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_001_112.webp",
+   "from": "card"
+  },
+  "418": {
+   "name": "Unforgotten Long Blade",
+   "slot": "One-Handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_001_112.webp",
+   "from": "card"
+  },
+  "419": {
+   "name": "Shadowless Swordsman's Blade",
+   "slot": "One-Handed",
+   "level": 86,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_001_112.webp",
+   "from": "card"
+  },
+  "500": {
+   "name": "Rusted Iron Axe",
+   "slot": "One-Handed",
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_001_112.webp",
+   "from": "card"
+  },
+  "501": {
+   "name": "Twisted Copper Axe",
+   "slot": "One-Handed",
+   "level": 2,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_002_112.webp",
+   "from": "card"
+  },
+  "502": {
+   "name": "Iron Hatchet",
+   "slot": "One-Handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_003_112.webp",
+   "from": "card"
+  },
+  "503": {
+   "name": "Sharpened Iron Axe",
+   "slot": "One-Handed",
+   "level": 9,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_004_112.webp",
+   "from": "card"
+  },
+  "504": {
+   "name": "Alloy Board Axe",
+   "slot": "One-Handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_005_112.webp",
+   "from": "card"
+  },
+  "505": {
+   "name": "War Axe",
+   "slot": "One-Handed",
+   "level": 19,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_001_112.webp",
+   "from": "card"
+  },
+  "506": {
+   "name": "Scoundrel's Axe",
+   "slot": "One-Handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_002_112.webp",
+   "from": "card"
+  },
+  "507": {
+   "name": "Earthsplitter Axe",
+   "slot": "One-Handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_003_112.webp",
+   "from": "card"
+  },
+  "508": {
+   "name": "Savage Axe",
+   "slot": "One-Handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_004_112.webp",
+   "from": "card"
+  },
+  "509": {
+   "name": "Valagon Axe",
+   "slot": "One-Handed",
+   "level": 39,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_005_112.webp",
+   "from": "card"
+  },
+  "510": {
+   "name": "Cursed Axe",
+   "slot": "One-Handed",
+   "level": 44,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_001_112.webp",
+   "from": "card"
+  },
+  "511": {
+   "name": "Bonecrusher Greataxe",
+   "slot": "One-Handed",
+   "level": 49,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_002_112.webp",
+   "from": "card"
+  },
+  "512": {
+   "name": "Conflict War Axe",
+   "slot": "One-Handed",
+   "level": 54,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_003_112.webp",
+   "from": "card"
+  },
+  "513": {
+   "name": "Frenzy Battle Axe",
+   "slot": "One-Handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_004_112.webp",
+   "from": "card"
+  },
+  "514": {
+   "name": "Scarlet Axe",
+   "slot": "One-Handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_005_112.webp",
+   "from": "card"
+  },
+  "515": {
+   "name": "Ritual Greataxe",
+   "slot": "One-Handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_001_112.webp",
+   "from": "card"
+  },
+  "516": {
+   "name": "Vengeance Axe",
+   "slot": "One-Handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_005_112.webp",
+   "from": "card"
+  },
+  "517": {
+   "name": "Suppressor Axe",
+   "slot": "One-Handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_001_112.webp",
+   "from": "card"
+  },
+  "518": {
+   "name": "Rebel Axe",
+   "slot": "One-Handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_001_112.webp",
+   "from": "card"
+  },
+  "519": {
+   "name": "Hollow Rift Axe",
+   "slot": "One-Handed",
+   "level": 86,
+   "icon": "Icon_Equip_Weapon_1HAxe_Norm_001_112.webp",
+   "from": "card"
+  },
+  "600": {
+   "name": "Thief Short Dagger",
+   "slot": "One-Handed",
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_001_112.webp",
+   "from": "card"
+  },
+  "601": {
+   "name": "Rusted Dagger",
+   "slot": "One-Handed",
+   "level": 2,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_002_112.webp",
+   "from": "card"
+  },
+  "602": {
+   "name": "Slaughter Short Dagger",
+   "slot": "One-Handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_003_112.webp",
+   "from": "card"
+  },
+  "603": {
+   "name": "Poisoned Dagger",
+   "slot": "One-Handed",
+   "level": 9,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_004_112.webp",
+   "from": "card"
+  },
+  "604": {
+   "name": "Assassin Short Dagger",
+   "slot": "One-Handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_005_112.webp",
+   "from": "card"
+  },
+  "605": {
+   "name": "Voodoo Dagger",
+   "slot": "One-Handed",
+   "level": 19,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_001_112.webp",
+   "from": "card"
+  },
+  "606": {
+   "name": "Resentment Dirk",
+   "slot": "One-Handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_002_112.webp",
+   "from": "card"
+  },
+  "607": {
+   "name": "Violence Short Dagger",
+   "slot": "One-Handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_003_112.webp",
+   "from": "card"
+  },
+  "608": {
+   "name": "Nightshade Dagger",
+   "slot": "One-Handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_004_112.webp",
+   "from": "card"
+  },
+  "609": {
+   "name": "Kingslayer Short Dagger",
+   "slot": "One-Handed",
+   "level": 39,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_005_112.webp",
+   "from": "card"
+  },
+  "610": {
+   "name": "Cursed Dagger",
+   "slot": "One-Handed",
+   "level": 44,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_001_112.webp",
+   "from": "card"
+  },
+  "611": {
+   "name": "Godslaughter Short Dagger",
+   "slot": "One-Handed",
+   "level": 49,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_002_112.webp",
+   "from": "card"
+  },
+  "612": {
+   "name": "Sorcerer's Dagger",
+   "slot": "One-Handed",
+   "level": 54,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_003_112.webp",
+   "from": "card"
+  },
+  "613": {
+   "name": "Hatred Dirk",
+   "slot": "One-Handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_004_112.webp",
+   "from": "card"
+  },
+  "614": {
+   "name": "Esoteric Dagger",
+   "slot": "One-Handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_005_112.webp",
+   "from": "card"
+  },
+  "615": {
+   "name": "Illusory Dirk",
+   "slot": "One-Handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_001_112.webp",
+   "from": "card"
+  },
+  "616": {
+   "name": "Disillusion Dagger",
+   "slot": "One-Handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_005_112.webp",
+   "from": "card"
+  },
+  "617": {
+   "name": "Fools' Dagger",
+   "slot": "One-Handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_001_112.webp",
+   "from": "card"
+  },
+  "618": {
+   "name": "Blind Faith Dagger",
+   "slot": "One-Handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_001_112.webp",
+   "from": "card"
+  },
+  "619": {
+   "name": "Truth Speaker's Dagger",
+   "slot": "One-Handed",
+   "level": 86,
+   "icon": "Icon_Equip_Weapon_Dagger_Norm_001_112.webp",
+   "from": "card"
+  },
+  "800": {
+   "name": "Wayfarer Cane",
+   "slot": "One-Handed",
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "801": {
+   "name": "Rambone Cane",
+   "slot": "One-Handed",
+   "level": 2,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_002_112.webp",
+   "from": "card"
+  },
+  "802": {
+   "name": "Witness Cane",
+   "slot": "One-Handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_003_112.webp",
+   "from": "card"
+  },
+  "803": {
+   "name": "Snake-scale Cane",
+   "slot": "One-Handed",
+   "level": 9,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_004_112.webp",
+   "from": "card"
+  },
+  "804": {
+   "name": "Recluse Cane",
+   "slot": "One-Handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_005_112.webp",
+   "from": "card"
+  },
+  "805": {
+   "name": "Wolf Fang Cane",
+   "slot": "One-Handed",
+   "level": 19,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "806": {
+   "name": "Omen Short Staff",
+   "slot": "One-Handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_002_112.webp",
+   "from": "card"
+  },
+  "807": {
+   "name": "Thinker Cane",
+   "slot": "One-Handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_003_112.webp",
+   "from": "card"
+  },
+  "808": {
+   "name": "Leopard Jaw Cane",
+   "slot": "One-Handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_004_112.webp",
+   "from": "card"
+  },
+  "809": {
+   "name": "Traitor Cane",
+   "slot": "One-Handed",
+   "level": 39,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_005_112.webp",
+   "from": "card"
+  },
+  "810": {
+   "name": "Lion Heart Cane",
+   "slot": "One-Handed",
+   "level": 44,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "811": {
+   "name": "Villain Cane",
+   "slot": "One-Handed",
+   "level": 49,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_002_112.webp",
+   "from": "card"
+  },
+  "812": {
+   "name": "Dragonblood Cane",
+   "slot": "One-Handed",
+   "level": 54,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_003_112.webp",
+   "from": "card"
+  },
+  "813": {
+   "name": "Foreshadow Short Staff",
+   "slot": "One-Handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_004_112.webp",
+   "from": "card"
+  },
+  "814": {
+   "name": "Esoteric Cane",
+   "slot": "One-Handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_005_112.webp",
+   "from": "card"
+  },
+  "815": {
+   "name": "Fallen Pactspirital Short Staff",
+   "slot": "One-Handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "816": {
+   "name": "Obsidian Cane",
+   "slot": "One-Handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_005_112.webp",
+   "from": "card"
+  },
+  "817": {
+   "name": "Blue Amber Cane",
+   "slot": "One-Handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "818": {
+   "name": "Glimmering Fluorite Cane",
+   "slot": "One-Handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "819": {
+   "name": "Sleeping Sage's Cane",
+   "slot": "One-Handed",
+   "level": 86,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1000": {
+   "name": "Crude Iron Maul",
+   "slot": "Two-handed",
+   "icon": "Icon_Equip_Weapon_2HMace_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1002": {
+   "name": "Iron Maul",
+   "slot": "Two-handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_2HMace_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1004": {
+   "name": "Beastfang Mallet",
+   "slot": "Two-handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_2HMace_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1006": {
+   "name": "Lonewolf Maul",
+   "slot": "Two-handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_2HMace_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1007": {
+   "name": "Valagon Mallet",
+   "slot": "Two-handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_2HMace_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1008": {
+   "name": "Crushing Mallet",
+   "slot": "Two-handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_2HMace_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1013": {
+   "name": "Vanquisher Mallet",
+   "slot": "Two-handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_2HMace_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1014": {
+   "name": "Platinum Mallet",
+   "slot": "Two-handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_2HMace_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1015": {
+   "name": "Lava Maul",
+   "slot": "Two-handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_2HMace_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1016": {
+   "name": "Crumbling Maul",
+   "slot": "Two-handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_2HMace_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1017": {
+   "name": "Destroyer Mallet",
+   "slot": "Two-handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_2HMace_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1018": {
+   "name": "Forger's Maul",
+   "slot": "Two-handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_2HMace_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1019": {
+   "name": "Sierra Reverberation Maul",
+   "slot": "Two-handed",
+   "level": 86,
+   "icon": "Icon_Equip_Weapon_2HMace_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1100": {
+   "name": "Shattered Iron Axe",
+   "slot": "Two-handed",
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1101": {
+   "name": "Gigantic Stone Axe",
+   "slot": "Two-handed",
+   "level": 2,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1102": {
+   "name": "Iron Battle Axe",
+   "slot": "Two-handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1103": {
+   "name": "Hardrock Stone Axe",
+   "slot": "Two-handed",
+   "level": 9,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1104": {
+   "name": "Coldlight Greataxe",
+   "slot": "Two-handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1105": {
+   "name": "Gilt Board Axe",
+   "slot": "Two-handed",
+   "level": 19,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1106": {
+   "name": "Marsh Greataxe",
+   "slot": "Two-handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1107": {
+   "name": "Blazing Greataxe",
+   "slot": "Two-handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1108": {
+   "name": "Giant's Board Axe",
+   "slot": "Two-handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_004_112.webp",
    "from": "card"
   },
   "1109": {
@@ -33,11 +998,428 @@
    "icon": "Icon_Equip_Weapon_2HAxe_Norm_005_112.webp",
    "from": "card"
   },
+  "1110": {
+   "name": "Redgold Greataxe",
+   "slot": "Two-handed",
+   "level": 44,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1111": {
+   "name": "Unpredictable Board Axe",
+   "slot": "Two-handed",
+   "level": 49,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1112": {
+   "name": "Griffin Greataxe",
+   "slot": "Two-handed",
+   "level": 54,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1113": {
+   "name": "Blue Sea Greataxe",
+   "slot": "Two-handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1114": {
+   "name": "Ripping Greataxe",
+   "slot": "Two-handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1115": {
+   "name": "Lava Board Axe",
+   "slot": "Two-handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1116": {
+   "name": "Fallen Star Greataxe",
+   "slot": "Two-handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1117": {
+   "name": "Red Pegasus Greataxe",
+   "slot": "Two-handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1118": {
+   "name": "Black Pass Board Axe",
+   "slot": "Two-handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1119": {
+   "name": "Earthrending Axe",
+   "slot": "Two-handed",
+   "level": 86,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1200": {
+   "name": "Crude Wooden Sword",
+   "slot": "Two-handed",
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1201": {
+   "name": "Rottenwood Greatsword",
+   "slot": "Two-handed",
+   "level": 2,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1202": {
+   "name": "Rusted Claymore",
+   "slot": "Two-handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1203": {
+   "name": "Rock Claymore",
+   "slot": "Two-handed",
+   "level": 9,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1204": {
+   "name": "Iron Greatsword",
+   "slot": "Two-handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1205": {
+   "name": "Conflict Greatsword",
+   "slot": "Two-handed",
+   "level": 19,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1206": {
+   "name": "Ripping Claymore",
+   "slot": "Two-handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1207": {
+   "name": "Coldlight Claymore",
+   "slot": "Two-handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1208": {
+   "name": "Gladiator's Greatsword",
+   "slot": "Two-handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1209": {
+   "name": "Barren Greatsword",
+   "slot": "Two-handed",
+   "level": 39,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1210": {
+   "name": "Tidal Claymore",
+   "slot": "Two-handed",
+   "level": 44,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1211": {
+   "name": "Sundering Greatsword",
+   "slot": "Two-handed",
+   "level": 49,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_002_112.webp",
+   "from": "card"
+  },
   "1212": {
    "name": "Wolfsoul Claymore",
    "slot": "Two-handed",
    "level": 54,
    "icon": "Icon_Equip_Weapon_2HSword_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1213": {
+   "name": "Glory Greatsword",
+   "slot": "Two-handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1214": {
+   "name": "Griffin Greatsword",
+   "slot": "Two-handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1215": {
+   "name": "Vindicator's Greatsword",
+   "slot": "Two-handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1216": {
+   "name": "Subjugation Claymore",
+   "slot": "Two-handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1217": {
+   "name": "Red Pegasus Greatsword",
+   "slot": "Two-handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1218": {
+   "name": "Black Pass Claymore",
+   "slot": "Two-handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1219": {
+   "name": "Sky Severing Sword",
+   "slot": "Two-handed",
+   "level": 86,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1300": {
+   "name": "Witherbark Staff",
+   "slot": "Two-handed",
+   "icon": "Icon_Equip_Weapon_Staff_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1301": {
+   "name": "Cultivation Iron Staff",
+   "slot": "Two-handed",
+   "level": 2,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1302": {
+   "name": "Thorny Staff",
+   "slot": "Two-handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1303": {
+   "name": "Ascetic Iron Staff",
+   "slot": "Two-handed",
+   "level": 9,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1304": {
+   "name": "Dryad Staff",
+   "slot": "Two-handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1305": {
+   "name": "Confession Iron Staff",
+   "slot": "Two-handed",
+   "level": 19,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1306": {
+   "name": "Broken Mirror Staff",
+   "slot": "Two-handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1307": {
+   "name": "Ancestral Staff",
+   "slot": "Two-handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1308": {
+   "name": "Authority Iron Staff",
+   "slot": "Two-handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1309": {
+   "name": "Flower Staff",
+   "slot": "Two-handed",
+   "level": 39,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1310": {
+   "name": "Conviction Iron Staff",
+   "slot": "Two-handed",
+   "level": 44,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1311": {
+   "name": "Sacred Tree Staff",
+   "slot": "Two-handed",
+   "level": 49,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1312": {
+   "name": "Judge's Iron Staff",
+   "slot": "Two-handed",
+   "level": 54,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1313": {
+   "name": "Perishing Staff",
+   "slot": "Two-handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1314": {
+   "name": "Esoteric Cudgel",
+   "slot": "Two-handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1315": {
+   "name": "Origin Iron Staff",
+   "slot": "Two-handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1316": {
+   "name": "Reincarnation Iron Staff",
+   "slot": "Two-handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1317": {
+   "name": "Absolver Iron Staff",
+   "slot": "Two-handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1318": {
+   "name": "Executive Iron Staff",
+   "slot": "Two-handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1319": {
+   "name": "Last Man's Cudgel",
+   "slot": "Two-handed",
+   "level": 86,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1400": {
+   "name": "Withervine Staff",
+   "slot": "Two-handed",
+   "icon": "Icon_Equip_Weapon_Staff_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1401": {
+   "name": "Bonewood Staff",
+   "slot": "Two-handed",
+   "level": 2,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1402": {
+   "name": "Ivory Staff",
+   "slot": "Two-handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1403": {
+   "name": "Iron Staff",
+   "slot": "Two-handed",
+   "level": 9,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1404": {
+   "name": "Viper Staff",
+   "slot": "Two-handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1405": {
+   "name": "Gilt Staff",
+   "slot": "Two-handed",
+   "level": 19,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1406": {
+   "name": "Flower Sea Staff",
+   "slot": "Two-handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1407": {
+   "name": "Monkey Staff",
+   "slot": "Two-handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1408": {
+   "name": "White Crystal Staff",
+   "slot": "Two-handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1409": {
+   "name": "Black Feather Staff",
+   "slot": "Two-handed",
+   "level": 39,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1410": {
+   "name": "Twilight Staff",
+   "slot": "Two-handed",
+   "level": 44,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_001_112.webp",
    "from": "card"
   },
   "1411": {
@@ -47,11 +1429,212 @@
    "icon": "Icon_Equip_Weapon_Staff_Norm_002_112.webp",
    "from": "card"
   },
+  "1412": {
+   "name": "Sage's Staff",
+   "slot": "Two-handed",
+   "level": 54,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1413": {
+   "name": "Devout Staff",
+   "slot": "Two-handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1414": {
+   "name": "Wind God's Staff",
+   "slot": "Two-handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1415": {
+   "name": "Warden's Staff",
+   "slot": "Two-handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1416": {
+   "name": "Divinity Staff",
+   "slot": "Two-handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1417": {
+   "name": "Southern Cross Staff",
+   "slot": "Two-handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1418": {
+   "name": "Centaur Staff",
+   "slot": "Two-handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1419": {
+   "name": "First Man's Scepter",
+   "slot": "Two-handed",
+   "level": 86,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1500": {
+   "name": "Rusted Pistol",
+   "slot": "One-Handed",
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1501": {
+   "name": "Blackrock Zapper",
+   "slot": "One-Handed",
+   "level": 2,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1502": {
+   "name": "Pocket Boomstick",
+   "slot": "One-Handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1503": {
+   "name": "Iron Pistol",
+   "slot": "One-Handed",
+   "level": 9,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1504": {
+   "name": "Black Feather Zapper",
+   "slot": "One-Handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_005_112.webp",
+   "from": "card"
+  },
   "1505": {
    "name": "Rottenbone Zapper",
    "slot": "One-Handed",
    "level": 19,
    "icon": "Icon_Equip_Weapon_Pistol_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1506": {
+   "name": "Thorny Boomstick",
+   "slot": "One-Handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1507": {
+   "name": "Warden's Boomstick",
+   "slot": "One-Handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1508": {
+   "name": "Unholy Zapper",
+   "slot": "One-Handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1509": {
+   "name": "Cursed Boomstick",
+   "slot": "One-Handed",
+   "level": 39,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1510": {
+   "name": "Viper Zapper",
+   "slot": "One-Handed",
+   "level": 44,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1511": {
+   "name": "Voodoo Boomstick",
+   "slot": "One-Handed",
+   "level": 49,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1512": {
+   "name": "Bloodclaw Zapper",
+   "slot": "One-Handed",
+   "level": 54,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1513": {
+   "name": "Swarm Pistol",
+   "slot": "One-Handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1514": {
+   "name": "Shadow Boomstick",
+   "slot": "One-Handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1515": {
+   "name": "Dragonsoul Zapper",
+   "slot": "One-Handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1516": {
+   "name": "Final Battle Boomstick",
+   "slot": "One-Handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1517": {
+   "name": "Terminator Boomstick",
+   "slot": "One-Handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1518": {
+   "name": "Kingslayer Boomstick",
+   "slot": "One-Handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1519": {
+   "name": "War Ender's Boomstick",
+   "slot": "One-Handed",
+   "level": 86,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1600": {
+   "name": "Rottenwood Bow",
+   "slot": "Two-handed",
+   "icon": "Icon_Equip_Weapon_Bow_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1601": {
+   "name": "Vitex Bow",
+   "slot": "Two-handed",
+   "level": 2,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_002_112.webp",
    "from": "card"
   },
   "1602": {
@@ -61,11 +1644,574 @@
    "icon": "Icon_Equip_Weapon_Bow_Norm_003_112.webp",
    "from": "card"
   },
+  "1603": {
+   "name": "Thorny Curve Bow",
+   "slot": "Two-handed",
+   "level": 9,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1604": {
+   "name": "Bonewood Hunting Bow",
+   "slot": "Two-handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1605": {
+   "name": "Segar Hunting Bow",
+   "slot": "Two-handed",
+   "level": 19,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1606": {
+   "name": "Griffin Long Bow",
+   "slot": "Two-handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1607": {
+   "name": "White Wolf Curve Bow",
+   "slot": "Two-handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1608": {
+   "name": "Raider's Bow",
+   "slot": "Two-handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1609": {
+   "name": "White Feather Hunting Bow",
+   "slot": "Two-handed",
+   "level": 39,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1610": {
+   "name": "Piercer Bow",
+   "slot": "Two-handed",
+   "level": 44,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1611": {
+   "name": "Bloody Curve Bow",
+   "slot": "Two-handed",
+   "level": 49,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1612": {
+   "name": "Black Feather Long Bow",
+   "slot": "Two-handed",
+   "level": 54,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1613": {
+   "name": "Twilight Curve Bow",
+   "slot": "Two-handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1614": {
+   "name": "Unholy Hunting Bow",
+   "slot": "Two-handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1615": {
+   "name": "Thunder Long Bow",
+   "slot": "Two-handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1616": {
+   "name": "Starfall Long Bow",
+   "slot": "Two-handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1617": {
+   "name": "Demon Hunter Long Bow",
+   "slot": "Two-handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1618": {
+   "name": "Godseeker Long Bow",
+   "slot": "Two-handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1619": {
+   "name": "Lonely Hunter's Bow",
+   "slot": "Two-handed",
+   "level": 86,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1700": {
+   "name": "Woodvine Light Crossbow",
+   "slot": "Two-handed",
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1701": {
+   "name": "Rambone Short Crossbow",
+   "slot": "Two-handed",
+   "level": 2,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1702": {
+   "name": "Darkwoods Long Crossbow",
+   "slot": "Two-handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1703": {
+   "name": "Bronze Short Crossbow",
+   "slot": "Two-handed",
+   "level": 9,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1704": {
+   "name": "Soldier's Light Crossbow",
+   "slot": "Two-handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1705": {
+   "name": "Black Iron Crossbow",
+   "slot": "Two-handed",
+   "level": 19,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1706": {
+   "name": "Elven Hunting Crossbow",
+   "slot": "Two-handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1707": {
+   "name": "Beastfang Light Crossbow",
+   "slot": "Two-handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1708": {
+   "name": "Jungle Hunting Bow",
+   "slot": "Two-handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1709": {
+   "name": "Segar Hunting Crossbow",
+   "slot": "Two-handed",
+   "level": 39,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_005_112.webp",
+   "from": "card"
+  },
   "1710": {
    "name": "Muddy Long Crossbow",
    "slot": "Two-handed",
    "level": 44,
    "icon": "Icon_Equip_Weapon_Crossbow_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1711": {
+   "name": "Cursed War Crossbow",
+   "slot": "Two-handed",
+   "level": 49,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1712": {
+   "name": "Conflict Crossbow",
+   "slot": "Two-handed",
+   "level": 54,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1713": {
+   "name": "Blue Sea War Crossbow",
+   "slot": "Two-handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1714": {
+   "name": "Icy War Crossbow",
+   "slot": "Two-handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1715": {
+   "name": "Scarlet Crossbow",
+   "slot": "Two-handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1716": {
+   "name": "Flowing Blaze Crossbow",
+   "slot": "Two-handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1717": {
+   "name": "Red Pegasus War Crossbow",
+   "slot": "Two-handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1718": {
+   "name": "Black Pass Hunting Crossbow",
+   "slot": "Two-handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1719": {
+   "name": "War Ranger's Crossbow",
+   "slot": "Two-handed",
+   "level": 86,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1800": {
+   "name": "Witherbark Cannon",
+   "slot": "Two-handed",
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1801": {
+   "name": "Rusted Blaster",
+   "slot": "Two-handed",
+   "level": 2,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1802": {
+   "name": "Black Iron Cannon",
+   "slot": "Two-handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1803": {
+   "name": "Iron Cannon",
+   "slot": "Two-handed",
+   "level": 9,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1804": {
+   "name": "Wolf Hunter's Cannon",
+   "slot": "Two-handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1805": {
+   "name": "Starmetal Cannon",
+   "slot": "Two-handed",
+   "level": 19,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1806": {
+   "name": "Unholy Blaster",
+   "slot": "Two-handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1807": {
+   "name": "Warden's Blaster",
+   "slot": "Two-handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1808": {
+   "name": "Griffin Blaster",
+   "slot": "Two-handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1809": {
+   "name": "Blazing Cannon",
+   "slot": "Two-handed",
+   "level": 39,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1810": {
+   "name": "Unyielding Cannon",
+   "slot": "Two-handed",
+   "level": 44,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1811": {
+   "name": "Wailing Blaster",
+   "slot": "Two-handed",
+   "level": 49,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1812": {
+   "name": "Abyssal Blaster",
+   "slot": "Two-handed",
+   "level": 54,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1813": {
+   "name": "Monarch's Cannon",
+   "slot": "Two-handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1814": {
+   "name": "Solar Flame Cannon",
+   "slot": "Two-handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1815": {
+   "name": "Viking Blaster",
+   "slot": "Two-handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1816": {
+   "name": "Dark Ravine Cannon",
+   "slot": "Two-handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1817": {
+   "name": "Fire Worshiper Cannon",
+   "slot": "Two-handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1818": {
+   "name": "Fire Eater Cannon",
+   "slot": "Two-handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1819": {
+   "name": "Sun Fall Cannon",
+   "slot": "Two-handed",
+   "level": 86,
+   "icon": "Icon_Equip_Weapon_Cannon_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1900": {
+   "name": "Rusted Rifle",
+   "slot": "Two-handed",
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1901": {
+   "name": "Crude Iron Rifle",
+   "slot": "Two-handed",
+   "level": 2,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1902": {
+   "name": "Recruit's Musket",
+   "slot": "Two-handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1903": {
+   "name": "Iron Musket",
+   "slot": "Two-handed",
+   "level": 9,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1904": {
+   "name": "Wolf Fang Rifle",
+   "slot": "Two-handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1905": {
+   "name": "Blazing Rifle",
+   "slot": "Two-handed",
+   "level": 19,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1906": {
+   "name": "Unpredictable Rifle",
+   "slot": "Two-handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1907": {
+   "name": "Ripple Rifle",
+   "slot": "Two-handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1908": {
+   "name": "Eagle Rifle",
+   "slot": "Two-handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1909": {
+   "name": "Toxic Rifle",
+   "slot": "Two-handed",
+   "level": 39,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1910": {
+   "name": "Conflict Rifle",
+   "slot": "Two-handed",
+   "level": 44,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1911": {
+   "name": "Giant's Rifle",
+   "slot": "Two-handed",
+   "level": 49,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1912": {
+   "name": "War Rifle",
+   "slot": "Two-handed",
+   "level": 54,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1913": {
+   "name": "Scarlet Rifle",
+   "slot": "Two-handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_004_112.webp",
+   "from": "card"
+  },
+  "1914": {
+   "name": "Moonlight Rifle",
+   "slot": "Two-handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1915": {
+   "name": "Warlord's Musket",
+   "slot": "Two-handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1916": {
+   "name": "Imperial Rifle",
+   "slot": "Two-handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1917": {
+   "name": "Bannerlord's Musket",
+   "slot": "Two-handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1918": {
+   "name": "Personal Guard Musket",
+   "slot": "Two-handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1919": {
+   "name": "War Repercussion Musket",
+   "slot": "Two-handed",
+   "level": 86,
+   "icon": "Icon_Equip_Weapon_Shotgun_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2000": {
+   "name": "Withervine Wand",
+   "slot": "One-Handed",
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2001": {
+   "name": "Rambone Wand",
+   "slot": "One-Handed",
+   "level": 2,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_002_112.webp",
+   "from": "card"
+  },
+  "2002": {
+   "name": "Carved Wooden Wand",
+   "slot": "One-Handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_003_112.webp",
+   "from": "card"
+  },
+  "2003": {
+   "name": "Cuprite Wand",
+   "slot": "One-Handed",
+   "level": 9,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_004_112.webp",
+   "from": "card"
+  },
+  "2004": {
+   "name": "Spiritwood Wand",
+   "slot": "One-Handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_005_112.webp",
    "from": "card"
   },
   "2005": {
@@ -75,8 +2221,307 @@
    "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
    "from": "card"
   },
+  "2006": {
+   "name": "Voodoo Wand",
+   "slot": "One-Handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_002_112.webp",
+   "from": "card"
+  },
+  "2007": {
+   "name": "Flower Sea Wand",
+   "slot": "One-Handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_003_112.webp",
+   "from": "card"
+  },
+  "2008": {
+   "name": "Wiseman's Wand",
+   "slot": "One-Handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_004_112.webp",
+   "from": "card"
+  },
   "2009": {
    "name": "White Crystal Wand",
+   "slot": "One-Handed",
+   "level": 39,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_005_112.webp",
+   "from": "card"
+  },
+  "2010": {
+   "name": "Viper Wand",
+   "slot": "One-Handed",
+   "level": 44,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2011": {
+   "name": "Wraith Wand",
+   "slot": "One-Handed",
+   "level": 49,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_005_112.webp",
+   "from": "card"
+  },
+  "2012": {
+   "name": "Bard's Wand",
+   "slot": "One-Handed",
+   "level": 54,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2013": {
+   "name": "Sage Wand",
+   "slot": "One-Handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_002_112.webp",
+   "from": "card"
+  },
+  "2014": {
+   "name": "Devout Wand",
+   "slot": "One-Handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_003_112.webp",
+   "from": "card"
+  },
+  "2015": {
+   "name": "Scarlet Wand",
+   "slot": "One-Handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_004_112.webp",
+   "from": "card"
+  },
+  "2016": {
+   "name": "Azure Moon Wand",
+   "slot": "One-Handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_005_112.webp",
+   "from": "card"
+  },
+  "2017": {
+   "name": "Wretched Wand",
+   "slot": "One-Handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2018": {
+   "name": "Heartflayer Wand",
+   "slot": "One-Handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2019": {
+   "name": "Headless Cleric Wand",
+   "slot": "One-Handed",
+   "level": 86,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2100": {
+   "name": "Bud Rod",
+   "slot": "One-Handed",
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2101": {
+   "name": "Thriving Rod",
+   "slot": "One-Handed",
+   "level": 2,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_002_112.webp",
+   "from": "card"
+  },
+  "2102": {
+   "name": "Vine Rod",
+   "slot": "One-Handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_003_112.webp",
+   "from": "card"
+  },
+  "2103": {
+   "name": "Storm Rod",
+   "slot": "One-Handed",
+   "level": 9,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_004_112.webp",
+   "from": "card"
+  },
+  "2104": {
+   "name": "Waning Moon Rod",
+   "slot": "One-Handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_005_112.webp",
+   "from": "card"
+  },
+  "2105": {
+   "name": "Flying Bird Rod",
+   "slot": "One-Handed",
+   "level": 19,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2106": {
+   "name": "Swimming Fish Rod",
+   "slot": "One-Handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_002_112.webp",
+   "from": "card"
+  },
+  "2107": {
+   "name": "Shepherdess Rod",
+   "slot": "One-Handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_003_112.webp",
+   "from": "card"
+  },
+  "2108": {
+   "name": "River Rod",
+   "slot": "One-Handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_004_112.webp",
+   "from": "card"
+  },
+  "2109": {
+   "name": "Harvest Rod",
+   "slot": "One-Handed",
+   "level": 39,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_005_112.webp",
+   "from": "card"
+  },
+  "2110": {
+   "name": "Daylight Rod",
+   "slot": "One-Handed",
+   "level": 44,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2111": {
+   "name": "Full Moon Rod",
+   "slot": "One-Handed",
+   "level": 49,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_005_112.webp",
+   "from": "card"
+  },
+  "2112": {
+   "name": "Shooting Star Rod",
+   "slot": "One-Handed",
+   "level": 54,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2113": {
+   "name": "Beast King Rod",
+   "slot": "One-Handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_002_112.webp",
+   "from": "card"
+  },
+  "2114": {
+   "name": "Celestial Rod",
+   "slot": "One-Handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_003_112.webp",
+   "from": "card"
+  },
+  "2115": {
+   "name": "Cosmic Rod",
+   "slot": "One-Handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_004_112.webp",
+   "from": "card"
+  },
+  "2116": {
+   "name": "Star Ocean Rod",
+   "slot": "One-Handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_005_112.webp",
+   "from": "card"
+  },
+  "2117": {
+   "name": "Astrologer Rod",
+   "slot": "One-Handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2118": {
+   "name": "Bard Rod",
+   "slot": "One-Handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2119": {
+   "name": "Heart of All Rod",
+   "slot": "One-Handed",
+   "level": 86,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2200": {
+   "name": "Withering Scepter",
+   "slot": "One-Handed",
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2201": {
+   "name": "Marsh Scepter",
+   "slot": "One-Handed",
+   "level": 2,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_002_112.webp",
+   "from": "card"
+  },
+  "2202": {
+   "name": "Barren Scepter",
+   "slot": "One-Handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_003_112.webp",
+   "from": "card"
+  },
+  "2203": {
+   "name": "Lamentation Scepter",
+   "slot": "One-Handed",
+   "level": 9,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_004_112.webp",
+   "from": "card"
+  },
+  "2204": {
+   "name": "Disorientation Scepter",
+   "slot": "One-Handed",
+   "level": 14,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_005_112.webp",
+   "from": "card"
+  },
+  "2205": {
+   "name": "High Tower Scepter",
+   "slot": "One-Handed",
+   "level": 19,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2206": {
+   "name": "Hanging Scepter",
+   "slot": "One-Handed",
+   "level": 24,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_002_112.webp",
+   "from": "card"
+  },
+  "2207": {
+   "name": "Eternal Night Scepter",
+   "slot": "One-Handed",
+   "level": 29,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_003_112.webp",
+   "from": "card"
+  },
+  "2208": {
+   "name": "Red Rain Scepter",
+   "slot": "One-Handed",
+   "level": 34,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_004_112.webp",
+   "from": "card"
+  },
+  "2209": {
+   "name": "Stigmata Scepter",
    "slot": "One-Handed",
    "level": 39,
    "icon": "Icon_Equip_Weapon_Wand_Norm_005_112.webp",
@@ -89,10 +2534,66 @@
    "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
    "from": "card"
   },
+  "2211": {
+   "name": "Sorrow Scepter",
+   "slot": "One-Handed",
+   "level": 49,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_005_112.webp",
+   "from": "card"
+  },
+  "2212": {
+   "name": "Agony Scepter",
+   "slot": "One-Handed",
+   "level": 54,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2213": {
+   "name": "Rotten Scepter",
+   "slot": "One-Handed",
+   "level": 59,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_002_112.webp",
+   "from": "card"
+  },
+  "2214": {
+   "name": "Spiral Scepter",
+   "slot": "One-Handed",
+   "level": 64,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_003_112.webp",
+   "from": "card"
+  },
+  "2215": {
+   "name": "Judgment Scepter",
+   "slot": "One-Handed",
+   "level": 68,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_004_112.webp",
+   "from": "card"
+  },
+  "2216": {
+   "name": "Reflux Scepter",
+   "slot": "One-Handed",
+   "level": 72,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_005_112.webp",
+   "from": "card"
+  },
+  "2217": {
+   "name": "Trickster Scepter",
+   "slot": "One-Handed",
+   "level": 82,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
   "2218": {
    "name": "Thorn Sea Scepter",
    "slot": "One-Handed",
    "level": 84,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2219": {
+   "name": "Dark Gaze Scepter",
+   "slot": "One-Handed",
+   "level": 86,
    "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
    "from": "card"
   },
@@ -103,12 +2604,223 @@
    "icon": "Icon_Equip_Armor_Str_Norm_001_112.webp",
    "from": "card"
   },
+  "3001": {
+   "name": "Footman's Chestguard",
+   "family": "STR Chest Armor",
+   "slot": "Chest",
+   "icon": "Icon_Equip_Armor_Str_Norm_002_112.webp",
+   "from": "card"
+  },
+  "3002": {
+   "name": "Paladin's Heavy Armor",
+   "family": "STR Chest Armor",
+   "slot": "Chest",
+   "level": 9,
+   "icon": "Icon_Equip_Armor_Str_Norm_003_112.webp",
+   "from": "card"
+  },
+  "3003": {
+   "name": "Berserker's Chest Armor",
+   "family": "STR Chest Armor",
+   "slot": "Chest",
+   "level": 24,
+   "icon": "Icon_Equip_Armor_Str_Norm_004_112.webp",
+   "from": "card"
+  },
+  "3004": {
+   "name": "Iron Sentry's Heavy Armor",
+   "family": "STR Chest Armor",
+   "slot": "Chest",
+   "level": 39,
+   "icon": "Icon_Equip_Armor_Str_Norm_001_01_112.webp",
+   "from": "card"
+  },
+  "3005": {
+   "name": "Packleader Chest Armor",
+   "family": "STR Chest Armor",
+   "slot": "Chest",
+   "level": 52,
+   "icon": "Icon_Equip_Armor_Str_Norm_002_01_112.webp",
+   "from": "card"
+  },
+  "3006": {
+   "name": "Mountain Lord's Chest Armor",
+   "family": "STR Chest Armor",
+   "slot": "Chest",
+   "level": 57,
+   "icon": "Icon_Equip_Armor_Str_Norm_003_01_112.webp",
+   "from": "card"
+  },
+  "3007": {
+   "name": "Divine Arbiter's Defense",
+   "family": "STR Chest Armor",
+   "slot": "Chest",
+   "level": 62,
+   "icon": "Icon_Equip_Armor_Str_Norm_004_01_112.webp",
+   "from": "card"
+  },
+  "3008": {
+   "name": "Dragon Guardian's Lamellar Armor",
+   "family": "STR Chest Armor",
+   "slot": "Chest",
+   "level": 66,
+   "icon": "Icon_Equip_Armor_Str_Norm_001_02_112.webp",
+   "from": "card"
+  },
+  "3009": {
+   "name": "Fallen Knight's Armor",
+   "family": "STR Chest Armor",
+   "slot": "Chest",
+   "level": 70,
+   "icon": "Icon_Equip_Armor_Str_Norm_002_02_112.webp",
+   "from": "card"
+  },
   "3010": {
    "name": "Old King's Armor",
    "family": "STR Chest Armor",
    "slot": "Chest",
    "level": 76,
    "icon": "Icon_Equip_Armor_Str_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "3011": {
+   "name": "Ranger's Rag",
+   "family": "STR Chest Armor",
+   "slot": "Chest",
+   "level": 82,
+   "icon": "Icon_Equip_Armor_Str_Norm_004_02_112.webp",
+   "from": "card"
+  },
+  "3012": {
+   "name": "Divine Arbiter's Defense",
+   "family": "STR Chest Armor",
+   "slot": "Chest",
+   "level": 61,
+   "icon": "Icon_Equip_Armor_Str_Norm_013_128.webp",
+   "from": "card"
+  },
+  "3100": {
+   "name": "Rogue Outerwear",
+   "family": "DEX Chest Armor",
+   "slot": "Chest",
+   "icon": "Icon_Equip_Armor_Agi_Norm_001_112.webp",
+   "from": "card"
+  },
+  "3101": {
+   "name": "Scout's Tight Vest",
+   "family": "DEX Chest Armor",
+   "slot": "Chest",
+   "icon": "Icon_Equip_Armor_Agi_Norm_002_112.webp",
+   "from": "card"
+  },
+  "3102": {
+   "name": "Skirmisher Outerwear",
+   "family": "DEX Chest Armor",
+   "slot": "Chest",
+   "level": 9,
+   "icon": "Icon_Equip_Armor_Agi_Norm_003_112.webp",
+   "from": "card"
+  },
+  "3103": {
+   "name": "Hunter's Chestguard",
+   "family": "DEX Chest Armor",
+   "slot": "Chest",
+   "level": 24,
+   "icon": "Icon_Equip_Armor_Agi_Norm_004_112.webp",
+   "from": "card"
+  },
+  "3104": {
+   "name": "Prospector Outerwear",
+   "family": "DEX Chest Armor",
+   "slot": "Chest",
+   "level": 39,
+   "icon": "Icon_Equip_Armor_Agi_Norm_001_01_112.webp",
+   "from": "card"
+  },
+  "3105": {
+   "name": "Wild Dominator Outerwear",
+   "family": "DEX Chest Armor",
+   "slot": "Chest",
+   "level": 52,
+   "icon": "Icon_Equip_Armor_Agi_Norm_002_01_112.webp",
+   "from": "card"
+  },
+  "3106": {
+   "name": "Grand Explorer Outerwear",
+   "family": "DEX Chest Armor",
+   "slot": "Chest",
+   "level": 57,
+   "icon": "Icon_Equip_Armor_Agi_Norm_003_01_112.webp",
+   "from": "card"
+  },
+  "3107": {
+   "name": "Watcher's Chest Armor",
+   "family": "DEX Chest Armor",
+   "slot": "Chest",
+   "level": 62,
+   "icon": "Icon_Equip_Armor_Agi_Norm_004_01_112.webp",
+   "from": "card"
+  },
+  "3108": {
+   "name": "Eternal Night Stalker's Chestguard",
+   "family": "DEX Chest Armor",
+   "slot": "Chest",
+   "level": 66,
+   "icon": "Icon_Equip_Armor_Agi_Norm_001_02_112.webp",
+   "from": "card"
+  },
+  "3109": {
+   "name": "Sanctuary of Calamity",
+   "family": "DEX Chest Armor",
+   "slot": "Chest",
+   "level": 70,
+   "icon": "Icon_Equip_Armor_Agi_Norm_002_02_112.webp",
+   "from": "card"
+  },
+  "3110": {
+   "name": "Demon Slayer's Skin",
+   "family": "DEX Chest Armor",
+   "slot": "Chest",
+   "level": 76,
+   "icon": "Icon_Equip_Armor_Agi_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "3111": {
+   "name": "Secret Shadow's Protection",
+   "family": "DEX Chest Armor",
+   "slot": "Chest",
+   "level": 82,
+   "icon": "Icon_Equip_Armor_Agi_Norm_004_02_112.webp",
+   "from": "card"
+  },
+  "3200": {
+   "name": "Herbalist's Robe",
+   "family": "INT Chest Armor",
+   "slot": "Chest",
+   "icon": "Icon_Equip_Armor_Int_Norm_001_112.webp",
+   "from": "card"
+  },
+  "3201": {
+   "name": "Scribe's Coat",
+   "family": "INT Chest Armor",
+   "slot": "Chest",
+   "icon": "Icon_Equip_Armor_Int_Norm_002_112.webp",
+   "from": "card"
+  },
+  "3202": {
+   "name": "Acolyte's Robe",
+   "family": "INT Chest Armor",
+   "slot": "Chest",
+   "level": 9,
+   "icon": "Icon_Equip_Armor_Int_Norm_003_112.webp",
+   "from": "card"
+  },
+  "3203": {
+   "name": "Witchdoctor's Robe",
+   "family": "INT Chest Armor",
+   "slot": "Chest",
+   "level": 24,
+   "icon": "Icon_Equip_Armor_Int_Norm_004_112.webp",
    "from": "card"
   },
   "3204": {
@@ -125,6 +2837,30 @@
    "slot": "Chest",
    "level": 52,
    "icon": "Icon_Equip_Armor_Int_Norm_002_01_112.webp",
+   "from": "card"
+  },
+  "3206": {
+   "name": "Envoy's Robe",
+   "family": "INT Chest Armor",
+   "slot": "Chest",
+   "level": 57,
+   "icon": "Icon_Equip_Armor_Int_Norm_003_01_112.webp",
+   "from": "card"
+  },
+  "3207": {
+   "name": "Respected Tutor's Robe",
+   "family": "INT Chest Armor",
+   "slot": "Chest",
+   "level": 62,
+   "icon": "Icon_Equip_Armor_Int_Norm_004_01_112.webp",
+   "from": "card"
+  },
+  "3208": {
+   "name": "Elder Sage's Regalia",
+   "family": "INT Chest Armor",
+   "slot": "Chest",
+   "level": 66,
+   "icon": "Icon_Equip_Armor_Int_Norm_001_02_112.webp",
    "from": "card"
   },
   "3209": {
@@ -149,6 +2885,130 @@
    "slot": "Chest",
    "level": 82,
    "icon": "Icon_Equip_Armor_Int_Norm_004_02_112.webp",
+   "from": "card"
+  },
+  "3212": {
+   "name": "Respected Tutor's Robe",
+   "family": "INT Chest Armor",
+   "slot": "Chest",
+   "level": 61,
+   "icon": "Icon_Equip_Armor_Int_Norm_013_128.webp",
+   "from": "card"
+  },
+  "3214": {
+   "name": "Imperishable Black Robe",
+   "family": "INT Chest Armor",
+   "slot": "Chest",
+   "level": 66,
+   "icon": "Icon_Equip_Armor_Int_Norm_015_128.webp",
+   "from": "card"
+  },
+  "3300": {
+   "name": "Brute Handguards",
+   "family": "STR Gloves",
+   "slot": "Hands",
+   "icon": "Icon_Equip_Gloves_Str_Norm_001_112.webp",
+   "from": "card"
+  },
+  "3301": {
+   "name": "Footman's Gauntlets",
+   "family": "STR Gloves",
+   "slot": "Hands",
+   "icon": "Icon_Equip_Gloves_Str_Norm_002_112.webp",
+   "from": "card"
+  },
+  "3302": {
+   "name": "Paladin's Hands",
+   "family": "STR Gloves",
+   "slot": "Hands",
+   "level": 9,
+   "icon": "Icon_Equip_Gloves_Str_Norm_003_112.webp",
+   "from": "card"
+  },
+  "3303": {
+   "name": "Berserker's Hands",
+   "family": "STR Gloves",
+   "slot": "Hands",
+   "level": 24,
+   "icon": "Icon_Equip_Gloves_Str_Norm_004_112.webp",
+   "from": "card"
+  },
+  "3304": {
+   "name": "Iron Sentry's Hold",
+   "family": "STR Gloves",
+   "slot": "Hands",
+   "level": 39,
+   "icon": "Icon_Equip_Gloves_Str_Norm_001_01_112.webp",
+   "from": "card"
+  },
+  "3305": {
+   "name": "Packleader Handguards",
+   "family": "STR Gloves",
+   "slot": "Hands",
+   "level": 52,
+   "icon": "Icon_Equip_Gloves_Str_Norm_002_01_112.webp",
+   "from": "card"
+  },
+  "3306": {
+   "name": "Mountain Lord Handguards",
+   "family": "STR Gloves",
+   "slot": "Hands",
+   "level": 57,
+   "icon": "Icon_Equip_Gloves_Str_Norm_003_01_112.webp",
+   "from": "card"
+  },
+  "3307": {
+   "name": "Divine Arbiter's Hands",
+   "family": "STR Gloves",
+   "slot": "Hands",
+   "level": 62,
+   "icon": "Icon_Equip_Gloves_Str_Norm_004_01_112.webp",
+   "from": "card"
+  },
+  "3308": {
+   "name": "Dragon Guardian Handguards",
+   "family": "STR Gloves",
+   "slot": "Hands",
+   "level": 66,
+   "icon": "Icon_Equip_Gloves_Str_Norm_001_02_112.webp",
+   "from": "card"
+  },
+  "3309": {
+   "name": "Fallen Knight Handguards",
+   "family": "STR Gloves",
+   "slot": "Hands",
+   "level": 70,
+   "icon": "Icon_Equip_Gloves_Str_Norm_002_02_112.webp",
+   "from": "card"
+  },
+  "3310": {
+   "name": "Old King's Rerebraces",
+   "family": "STR Gloves",
+   "slot": "Hands",
+   "level": 76,
+   "icon": "Icon_Equip_Gloves_Str_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "3311": {
+   "name": "Ranger's Rusted Gauntlets",
+   "family": "STR Gloves",
+   "slot": "Hands",
+   "level": 82,
+   "icon": "Icon_Equip_Gloves_Str_Norm_004_02_112.webp",
+   "from": "card"
+  },
+  "3400": {
+   "name": "Rogue's Gloves",
+   "family": "DEX Gloves",
+   "slot": "Hands",
+   "icon": "Icon_Equip_Gloves_Agi_Norm_001_112.webp",
+   "from": "card"
+  },
+  "3401": {
+   "name": "Scout's Gloves",
+   "family": "DEX Gloves",
+   "slot": "Hands",
+   "icon": "Icon_Equip_Gloves_Agi_Norm_002_112.webp",
    "from": "card"
   },
   "3402": {
@@ -183,6 +3043,38 @@
    "icon": "Icon_Equip_Gloves_Agi_Norm_002_01_112.webp",
    "from": "card"
   },
+  "3406": {
+   "name": "Grand Explorer's Gloves",
+   "family": "DEX Gloves",
+   "slot": "Hands",
+   "level": 57,
+   "icon": "Icon_Equip_Gloves_Agi_Norm_003_01_112.webp",
+   "from": "card"
+  },
+  "3407": {
+   "name": "Watcher's Hold",
+   "family": "DEX Gloves",
+   "slot": "Hands",
+   "level": 62,
+   "icon": "Icon_Equip_Gloves_Agi_Norm_004_01_112.webp",
+   "from": "card"
+  },
+  "3408": {
+   "name": "Eternal Night Stalker's Hands",
+   "family": "DEX Gloves",
+   "slot": "Hands",
+   "level": 66,
+   "icon": "Icon_Equip_Gloves_Agi_Norm_001_02_112.webp",
+   "from": "card"
+  },
+  "3409": {
+   "name": "Hands of Calamity",
+   "family": "DEX Gloves",
+   "slot": "Hands",
+   "level": 70,
+   "icon": "Icon_Equip_Gloves_Agi_Norm_002_02_112.webp",
+   "from": "card"
+  },
   "3410": {
    "name": "Demon Slayer's Hands",
    "family": "DEX Gloves",
@@ -191,11 +3083,74 @@
    "icon": "Icon_Equip_Gloves_Agi_Norm_003_02_112.webp",
    "from": "card"
   },
+  "3411": {
+   "name": "Secret Shadow's Wrists",
+   "family": "DEX Gloves",
+   "slot": "Hands",
+   "level": 82,
+   "icon": "Icon_Equip_Gloves_Agi_Norm_004_02_112.webp",
+   "from": "card"
+  },
+  "3500": {
+   "name": "Herbalist's Gloves",
+   "family": "INT Gloves",
+   "slot": "Hands",
+   "icon": "Icon_Equip_Gloves_Int_Norm_001_112.webp",
+   "from": "card"
+  },
   "3501": {
    "name": "Scribe Handguards",
    "family": "INT Gloves",
    "slot": "Hands",
    "icon": "Icon_Equip_Gloves_Int_Norm_002_112.webp",
+   "from": "card"
+  },
+  "3502": {
+   "name": "Acolyte Handguards",
+   "family": "INT Gloves",
+   "slot": "Hands",
+   "level": 9,
+   "icon": "Icon_Equip_Gloves_Int_Norm_003_112.webp",
+   "from": "card"
+  },
+  "3503": {
+   "name": "Witchdoctor's Gloves",
+   "family": "INT Gloves",
+   "slot": "Hands",
+   "level": 24,
+   "icon": "Icon_Equip_Gloves_Int_Norm_004_112.webp",
+   "from": "card"
+  },
+  "3504": {
+   "name": "Disciple Handguards",
+   "family": "INT Gloves",
+   "slot": "Hands",
+   "level": 39,
+   "icon": "Icon_Equip_Gloves_Int_Norm_001_01_112.webp",
+   "from": "card"
+  },
+  "3505": {
+   "name": "Shaman's Hands",
+   "family": "INT Gloves",
+   "slot": "Hands",
+   "level": 52,
+   "icon": "Icon_Equip_Gloves_Int_Norm_002_01_112.webp",
+   "from": "card"
+  },
+  "3506": {
+   "name": "Envoy's Hands",
+   "family": "INT Gloves",
+   "slot": "Hands",
+   "level": 57,
+   "icon": "Icon_Equip_Gloves_Int_Norm_003_01_112.webp",
+   "from": "card"
+  },
+  "3507": {
+   "name": "Respected Tutor's Gloves",
+   "family": "INT Gloves",
+   "slot": "Hands",
+   "level": 62,
+   "icon": "Icon_Equip_Gloves_Int_Norm_004_01_112.webp",
    "from": "card"
   },
   "3508": {
@@ -230,6 +3185,20 @@
    "icon": "Icon_Equip_Gloves_Int_Norm_004_02_112.webp",
    "from": "card"
   },
+  "3600": {
+   "name": "Brute's Helm",
+   "family": "STR Helmet",
+   "slot": "Helmet",
+   "icon": "Icon_Equip_Helmet_Str_Norm_001_112.webp",
+   "from": "card"
+  },
+  "3601": {
+   "name": "Footman Helmet",
+   "family": "STR Helmet",
+   "slot": "Helmet",
+   "icon": "Icon_Equip_Helmet_Str_Norm_002_112.webp",
+   "from": "card"
+  },
   "3602": {
    "name": "Paladin's Heavy Helm",
    "family": "STR Helmet",
@@ -238,12 +3207,184 @@
    "icon": "Icon_Equip_Helmet_Str_Norm_003_112.webp",
    "from": "card"
   },
+  "3603": {
+   "name": "Berserker's Spired Helm",
+   "family": "STR Helmet",
+   "slot": "Helmet",
+   "level": 24,
+   "icon": "Icon_Equip_Helmet_Str_Norm_004_112.webp",
+   "from": "card"
+  },
+  "3604": {
+   "name": "Iron Sentry's Helmet",
+   "family": "STR Helmet",
+   "slot": "Helmet",
+   "level": 39,
+   "icon": "Icon_Equip_Helmet_Str_Norm_001_01_112.webp",
+   "from": "card"
+  },
+  "3605": {
+   "name": "Packleader Helmet",
+   "family": "STR Helmet",
+   "slot": "Helmet",
+   "level": 52,
+   "icon": "Icon_Equip_Helmet_Str_Norm_002_01_112.webp",
+   "from": "card"
+  },
+  "3606": {
+   "name": "Mountain Lord Helmet",
+   "family": "STR Helmet",
+   "slot": "Helmet",
+   "level": 57,
+   "icon": "Icon_Equip_Helmet_Str_Norm_003_01_112.webp",
+   "from": "card"
+  },
+  "3607": {
+   "name": "Divine Arbiter's Diadem",
+   "family": "STR Helmet",
+   "slot": "Helmet",
+   "level": 62,
+   "icon": "Icon_Equip_Helmet_Str_Norm_004_01_112.webp",
+   "from": "card"
+  },
+  "3608": {
+   "name": "Dragon Guardian's Faceguard",
+   "family": "STR Helmet",
+   "slot": "Helmet",
+   "level": 66,
+   "icon": "Icon_Equip_Helmet_Str_Norm_001_02_112.webp",
+   "from": "card"
+  },
+  "3609": {
+   "name": "Fallen Knight Helmet",
+   "family": "STR Helmet",
+   "slot": "Helmet",
+   "level": 70,
+   "icon": "Icon_Equip_Helmet_Str_Norm_002_02_112.webp",
+   "from": "card"
+  },
+  "3610": {
+   "name": "Old King's Crown",
+   "family": "STR Helmet",
+   "slot": "Helmet",
+   "level": 76,
+   "icon": "Icon_Equip_Helmet_Str_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "3611": {
+   "name": "Ranger's Broken Mask",
+   "family": "STR Helmet",
+   "slot": "Helmet",
+   "level": 82,
+   "icon": "Icon_Equip_Helmet_Str_Norm_004_02_112.webp",
+   "from": "card"
+  },
+  "3700": {
+   "name": "Rogue's Hood",
+   "family": "DEX Helmet",
+   "slot": "Helmet",
+   "icon": "Icon_Equip_Helmet_Agi_Norm_001_112.webp",
+   "from": "card"
+  },
+  "3701": {
+   "name": "Scout's Hood",
+   "family": "DEX Helmet",
+   "slot": "Helmet",
+   "icon": "Icon_Equip_Helmet_Agi_Norm_002_112.webp",
+   "from": "card"
+  },
+  "3702": {
+   "name": "Skirmisher's Mask",
+   "family": "DEX Helmet",
+   "slot": "Helmet",
+   "level": 9,
+   "icon": "Icon_Equip_Helmet_Agi_Norm_003_112.webp",
+   "from": "card"
+  },
+  "3703": {
+   "name": "Hunter's Hood",
+   "family": "DEX Helmet",
+   "slot": "Helmet",
+   "level": 24,
+   "icon": "Icon_Equip_Helmet_Agi_Norm_004_112.webp",
+   "from": "card"
+  },
+  "3704": {
+   "name": "Prospector's Hat",
+   "family": "DEX Helmet",
+   "slot": "Helmet",
+   "level": 39,
+   "icon": "Icon_Equip_Helmet_Agi_Norm_001_01_112.webp",
+   "from": "card"
+  },
   "3705": {
    "name": "Wild Dominator Headdress",
    "family": "DEX Helmet",
    "slot": "Helmet",
    "level": 52,
    "icon": "Icon_Equip_Helmet_Agi_Norm_002_01_112.webp",
+   "from": "card"
+  },
+  "3706": {
+   "name": "Grand Explorer's Fez",
+   "family": "DEX Helmet",
+   "slot": "Helmet",
+   "level": 57,
+   "icon": "Icon_Equip_Helmet_Agi_Norm_003_01_112.webp",
+   "from": "card"
+  },
+  "3707": {
+   "name": "Watcher's Gaze",
+   "family": "DEX Helmet",
+   "slot": "Helmet",
+   "level": 62,
+   "icon": "Icon_Equip_Helmet_Agi_Norm_004_01_112.webp",
+   "from": "card"
+  },
+  "3708": {
+   "name": "Eternal Night Stalker's Hood",
+   "family": "DEX Helmet",
+   "slot": "Helmet",
+   "level": 66,
+   "icon": "Icon_Equip_Helmet_Agi_Norm_001_02_112.webp",
+   "from": "card"
+  },
+  "3709": {
+   "name": "Mask of Calamity",
+   "family": "DEX Helmet",
+   "slot": "Helmet",
+   "level": 70,
+   "icon": "Icon_Equip_Helmet_Agi_Norm_002_02_112.webp",
+   "from": "card"
+  },
+  "3710": {
+   "name": "Demon Slayer's Eyes",
+   "family": "DEX Helmet",
+   "slot": "Helmet",
+   "level": 76,
+   "icon": "Icon_Equip_Helmet_Agi_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "3711": {
+   "name": "Secret Shadow's Mask",
+   "family": "DEX Helmet",
+   "slot": "Helmet",
+   "level": 82,
+   "icon": "Icon_Equip_Helmet_Agi_Norm_004_02_112.webp",
+   "from": "card"
+  },
+  "3800": {
+   "name": "Herbalist's Headscarf",
+   "family": "INT Helmet",
+   "slot": "Helmet",
+   "icon": "Icon_Equip_Helmet_Int_Norm_001_112.webp",
+   "from": "card"
+  },
+  "3801": {
+   "name": "Scribe's Headscarf",
+   "family": "INT Helmet",
+   "slot": "Helmet",
+   "icon": "Icon_Equip_Helmet_Int_Norm_002_112.webp",
    "from": "card"
   },
   "3802": {
@@ -262,12 +3403,36 @@
    "icon": "Icon_Equip_Helmet_Int_Norm_004_112.webp",
    "from": "card"
   },
+  "3804": {
+   "name": "Disciple's Headscarf",
+   "family": "INT Helmet",
+   "slot": "Helmet",
+   "level": 39,
+   "icon": "Icon_Equip_Helmet_Int_Norm_001_01_112.webp",
+   "from": "card"
+  },
+  "3805": {
+   "name": "Shaman's Headdress",
+   "family": "INT Helmet",
+   "slot": "Helmet",
+   "level": 52,
+   "icon": "Icon_Equip_Helmet_Int_Norm_002_01_112.webp",
+   "from": "card"
+  },
   "3806": {
    "name": "Envoy's Mask",
    "family": "INT Helmet",
    "slot": "Helmet",
    "level": 57,
    "icon": "Icon_Equip_Helmet_Int_Norm_003_01_112.webp",
+   "from": "card"
+  },
+  "3807": {
+   "name": "Respected Tutor's Face",
+   "family": "INT Helmet",
+   "slot": "Helmet",
+   "level": 62,
+   "icon": "Icon_Equip_Helmet_Int_Norm_004_01_112.webp",
    "from": "card"
   },
   "3808": {
@@ -294,6 +3459,28 @@
    "icon": "Icon_Equip_Helmet_Int_Norm_003_02_112.webp",
    "from": "card"
   },
+  "3811": {
+   "name": "Long Night Sorcerer's Mask",
+   "family": "INT Helmet",
+   "slot": "Helmet",
+   "level": 82,
+   "icon": "Icon_Equip_Helmet_Int_Norm_004_02_112.webp",
+   "from": "card"
+  },
+  "3900": {
+   "name": "Brute's Greaves",
+   "family": "STR Boots",
+   "slot": "Feet",
+   "icon": "Icon_Equip_Shoes_Str_Norm_001_112.webp",
+   "from": "card"
+  },
+  "3901": {
+   "name": "Footman's Boots",
+   "family": "STR Boots",
+   "slot": "Feet",
+   "icon": "Icon_Equip_Shoes_Str_Norm_002_112.webp",
+   "from": "card"
+  },
   "3902": {
    "name": "Paladin's Iron Greaves",
    "family": "STR Boots",
@@ -302,12 +3489,106 @@
    "icon": "Icon_Equip_Shoes_Str_Norm_003_112.webp",
    "from": "card"
   },
+  "3903": {
+   "name": "Berserker's Footguards",
+   "family": "STR Boots",
+   "slot": "Feet",
+   "level": 24,
+   "icon": "Icon_Equip_Shoes_Str_Norm_004_112.webp",
+   "from": "card"
+  },
+  "3904": {
+   "name": "Iron Sentry's Feet",
+   "family": "STR Boots",
+   "slot": "Feet",
+   "level": 39,
+   "icon": "Icon_Equip_Shoes_Str_Norm_001_01_112.webp",
+   "from": "card"
+  },
+  "3905": {
+   "name": "Packleader Greaves",
+   "family": "STR Boots",
+   "slot": "Feet",
+   "level": 52,
+   "icon": "Icon_Equip_Shoes_Str_Norm_002_01_112.webp",
+   "from": "card"
+  },
+  "3906": {
+   "name": "Mountain Lord's Feet",
+   "family": "STR Boots",
+   "slot": "Feet",
+   "level": 57,
+   "icon": "Icon_Equip_Shoes_Str_Norm_003_01_112.webp",
+   "from": "card"
+  },
+  "3907": {
+   "name": "Divine Arbiter's Feet",
+   "family": "STR Boots",
+   "slot": "Feet",
+   "level": 62,
+   "icon": "Icon_Equip_Shoes_Str_Norm_004_01_112.webp",
+   "from": "card"
+  },
+  "3908": {
+   "name": "Dragon Guardian's Footguards",
+   "family": "STR Boots",
+   "slot": "Feet",
+   "level": 66,
+   "icon": "Icon_Equip_Shoes_Str_Norm_001_02_112.webp",
+   "from": "card"
+  },
+  "3909": {
+   "name": "Fallen Knight's Footguards",
+   "family": "STR Boots",
+   "slot": "Feet",
+   "level": 70,
+   "icon": "Icon_Equip_Shoes_Str_Norm_002_02_112.webp",
+   "from": "card"
+  },
   "3910": {
    "name": "Old King's Sabatons",
    "family": "STR Boots",
    "slot": "Feet",
    "level": 76,
    "icon": "Icon_Equip_Shoes_Str_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "3911": {
+   "name": "Ranger's Dirty Boots",
+   "family": "STR Boots",
+   "slot": "Feet",
+   "level": 82,
+   "icon": "Icon_Equip_Shoes_Str_Norm_004_02_112.webp",
+   "from": "card"
+  },
+  "4000": {
+   "name": "Rogue's Long Boots",
+   "family": "DEX Boots",
+   "slot": "Feet",
+   "icon": "Icon_Equip_Shoes_Agi_Norm_001_112.webp",
+   "from": "card"
+  },
+  "4001": {
+   "name": "Scout's Short Boots",
+   "family": "DEX Boots",
+   "slot": "Feet",
+   "icon": "Icon_Equip_Shoes_Agi_Norm_002_112.webp",
+   "from": "card"
+  },
+  "4002": {
+   "name": "Skirmisher's Leather Boots",
+   "family": "DEX Boots",
+   "slot": "Feet",
+   "level": 9,
+   "icon": "Icon_Equip_Shoes_Agi_Norm_003_112.webp",
+   "from": "card"
+  },
+  "4003": {
+   "name": "Hunter's Leather Boots",
+   "family": "DEX Boots",
+   "slot": "Feet",
+   "level": 24,
+   "icon": "Icon_Equip_Shoes_Agi_Norm_004_112.webp",
    "from": "card"
   },
   "4004": {
@@ -326,6 +3607,30 @@
    "icon": "Icon_Equip_Shoes_Agi_Norm_002_01_112.webp",
    "from": "card"
   },
+  "4006": {
+   "name": "Grand Explorer's Heavy Boots",
+   "family": "DEX Boots",
+   "slot": "Feet",
+   "level": 57,
+   "icon": "Icon_Equip_Shoes_Agi_Norm_003_01_112.webp",
+   "from": "card"
+  },
+  "4007": {
+   "name": "Watcher's Trail",
+   "family": "DEX Boots",
+   "slot": "Feet",
+   "level": 62,
+   "icon": "Icon_Equip_Shoes_Agi_Norm_004_01_112.webp",
+   "from": "card"
+  },
+  "4008": {
+   "name": "Eternal Night Stalker's Long Boots",
+   "family": "DEX Boots",
+   "slot": "Feet",
+   "level": 66,
+   "icon": "Icon_Equip_Shoes_Agi_Norm_001_02_112.webp",
+   "from": "card"
+  },
   "4009": {
    "name": "Boots of Calamity",
    "family": "DEX Boots",
@@ -334,11 +3639,42 @@
    "icon": "Icon_Equip_Shoes_Agi_Norm_002_02_112.webp",
    "from": "card"
   },
+  "4010": {
+   "name": "Demon Slayer's Feet",
+   "family": "DEX Boots",
+   "slot": "Feet",
+   "level": 76,
+   "icon": "Icon_Equip_Shoes_Agi_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "4011": {
+   "name": "Secret Shadow's Shoes",
+   "family": "DEX Boots",
+   "slot": "Feet",
+   "level": 82,
+   "icon": "Icon_Equip_Shoes_Agi_Norm_004_02_112.webp",
+   "from": "card"
+  },
+  "4100": {
+   "name": "Herbalist's Footguards",
+   "family": "INT Boots",
+   "slot": "Feet",
+   "icon": "Icon_Equip_Shoes_Int_Norm_001_112.webp",
+   "from": "card"
+  },
   "4101": {
    "name": "Scribe's Boots",
    "family": "INT Boots",
    "slot": "Feet",
    "icon": "Icon_Equip_Shoes_Int_Norm_002_112.webp",
+   "from": "card"
+  },
+  "4102": {
+   "name": "Acolyte's Footwraps",
+   "family": "INT Boots",
+   "slot": "Feet",
+   "level": 9,
+   "icon": "Icon_Equip_Shoes_Int_Norm_003_112.webp",
    "from": "card"
   },
   "4103": {
@@ -357,12 +3693,28 @@
    "icon": "Icon_Equip_Shoes_Int_Norm_001_01_112.webp",
    "from": "card"
   },
+  "4105": {
+   "name": "Shaman's Slippers",
+   "family": "INT Boots",
+   "slot": "Feet",
+   "level": 52,
+   "icon": "Icon_Equip_Shoes_Int_Norm_002_01_112.webp",
+   "from": "card"
+  },
   "4106": {
    "name": "Envoy's Soft Shoes",
    "family": "INT Boots",
    "slot": "Feet",
    "level": 57,
    "icon": "Icon_Equip_Shoes_Int_Norm_003_01_112.webp",
+   "from": "card"
+  },
+  "4107": {
+   "name": "Respected Tutor's Footwraps",
+   "family": "INT Boots",
+   "slot": "Feet",
+   "level": 62,
+   "icon": "Icon_Equip_Shoes_Int_Norm_004_01_112.webp",
    "from": "card"
   },
   "4108": {
@@ -389,12 +3741,294 @@
    "icon": "Icon_Equip_Shoes_Int_Norm_003_02_112.webp",
    "from": "card"
   },
+  "4111": {
+   "name": "Long Night Sorcerer's Boots",
+   "family": "INT Boots",
+   "slot": "Feet",
+   "level": 82,
+   "icon": "Icon_Equip_Shoes_Int_Norm_004_02_112.webp",
+   "from": "card"
+  },
+  "4200": {
+   "name": "Aspiration Tower Shield",
+   "family": "STR Shield",
+   "slot": "Off-Hand",
+   "icon": "Icon_Equip_Shield_Str_Norm_001_128.webp",
+   "from": "card"
+  },
+  "4201": {
+   "name": "Starmetal Kite Shield",
+   "family": "STR Shield",
+   "slot": "Off-Hand",
+   "icon": "Icon_Equip_Shield_Str_Norm_002_128.webp",
+   "from": "card"
+  },
+  "4202": {
+   "name": "Griffin Tower Shield",
+   "family": "STR Shield",
+   "slot": "Off-Hand",
+   "level": 9,
+   "icon": "Icon_Equip_Shield_Str_Norm_003_128.webp",
+   "from": "card"
+  },
+  "4203": {
+   "name": "Crimson Kite Shield",
+   "family": "STR Shield",
+   "slot": "Off-Hand",
+   "level": 24,
+   "icon": "Icon_Equip_Shield_Str_Norm_004_128.webp",
+   "from": "card"
+  },
+  "4204": {
+   "name": "Callous Kite Shield",
+   "family": "STR Shield",
+   "slot": "Off-Hand",
+   "level": 39,
+   "icon": "Icon_Equip_Shield_Str_Norm_001_128.webp",
+   "from": "card"
+  },
+  "4205": {
+   "name": "Falling Star Tower Shield",
+   "family": "STR Shield",
+   "slot": "Off-Hand",
+   "level": 52,
+   "icon": "Icon_Equip_Shield_Str_Norm_002_128.webp",
+   "from": "card"
+  },
+  "4206": {
+   "name": "Warlord's Kite Shield",
+   "family": "STR Shield",
+   "slot": "Off-Hand",
+   "level": 57,
+   "icon": "Icon_Equip_Shield_Str_Norm_003_128.webp",
+   "from": "card"
+  },
+  "4207": {
+   "name": "Vindicator's Tower Shield",
+   "family": "STR Shield",
+   "slot": "Off-Hand",
+   "level": 62,
+   "icon": "Icon_Equip_Shield_Str_Norm_004_128.webp",
+   "from": "card"
+  },
+  "4208": {
+   "name": "Monarch's Kite Shield",
+   "family": "STR Shield",
+   "slot": "Off-Hand",
+   "level": 66,
+   "icon": "Icon_Equip_Shield_Str_Norm_001_128.webp",
+   "from": "card"
+  },
+  "4209": {
+   "name": "Glory Kite Shield",
+   "family": "STR Shield",
+   "slot": "Off-Hand",
+   "level": 70,
+   "icon": "Icon_Equip_Shield_Str_Norm_002_128.webp",
+   "from": "card"
+  },
+  "4210": {
+   "name": "Red Pegasus Kite Shield",
+   "family": "STR Shield",
+   "slot": "Off-Hand",
+   "level": 76,
+   "icon": "Icon_Equip_Shield_Str_Norm_003_128.webp",
+   "from": "card"
+  },
+  "4211": {
+   "name": "Future Warrior's Kite Shield",
+   "family": "STR Shield",
+   "slot": "Off-Hand",
+   "level": 82,
+   "icon": "Icon_Equip_Shield_Str_Norm_004_128.webp",
+   "from": "card"
+  },
+  "4300": {
+   "name": "Aspiration Light Shield",
+   "family": "DEX Shield",
+   "slot": "Off-Hand",
+   "icon": "Icon_Equip_Shield_Agi_Norm_001_112.webp",
+   "from": "card"
+  },
+  "4301": {
+   "name": "Griffin Buckler",
+   "family": "DEX Shield",
+   "slot": "Off-Hand",
+   "icon": "Icon_Equip_Shield_Agi_Norm_002_112.webp",
+   "from": "card"
+  },
+  "4302": {
+   "name": "Wind Spirit Light Shield",
+   "family": "DEX Shield",
+   "slot": "Off-Hand",
+   "level": 9,
+   "icon": "Icon_Equip_Shield_Agi_Norm_003_112.webp",
+   "from": "card"
+  },
+  "4303": {
+   "name": "Dragonfang Buckler",
+   "family": "DEX Shield",
+   "slot": "Off-Hand",
+   "level": 24,
+   "icon": "Icon_Equip_Shield_Agi_Norm_004_112.webp",
+   "from": "card"
+  },
   "4304": {
    "name": "Hunter's Buckler",
    "family": "DEX Shield",
    "slot": "Off-Hand",
    "level": 39,
    "icon": "Icon_Equip_Shield_Agi_Norm_001_112.webp",
+   "from": "card"
+  },
+  "4305": {
+   "name": "Thunder Light Shield",
+   "family": "DEX Shield",
+   "slot": "Off-Hand",
+   "level": 52,
+   "icon": "Icon_Equip_Shield_Agi_Norm_002_112.webp",
+   "from": "card"
+  },
+  "4306": {
+   "name": "Cursed Light Shield",
+   "family": "DEX Shield",
+   "slot": "Off-Hand",
+   "level": 57,
+   "icon": "Icon_Equip_Shield_Agi_Norm_003_112.webp",
+   "from": "card"
+  },
+  "4307": {
+   "name": "Viper Buckler",
+   "family": "DEX Shield",
+   "slot": "Off-Hand",
+   "level": 62,
+   "icon": "Icon_Equip_Shield_Agi_Norm_004_112.webp",
+   "from": "card"
+  },
+  "4308": {
+   "name": "Shadow Light Shield",
+   "family": "DEX Shield",
+   "slot": "Off-Hand",
+   "level": 66,
+   "icon": "Icon_Equip_Shield_Agi_Norm_001_112.webp",
+   "from": "card"
+  },
+  "4309": {
+   "name": "Wind God's Buckler",
+   "family": "DEX Shield",
+   "slot": "Off-Hand",
+   "level": 70,
+   "icon": "Icon_Equip_Shield_Agi_Norm_002_112.webp",
+   "from": "card"
+  },
+  "4310": {
+   "name": "Conqueror Buckler",
+   "family": "DEX Shield",
+   "slot": "Off-Hand",
+   "level": 76,
+   "icon": "Icon_Equip_Shield_Agi_Norm_003_112.webp",
+   "from": "card"
+  },
+  "4311": {
+   "name": "Lost Ranger's Light Shield",
+   "family": "DEX Shield",
+   "slot": "Off-Hand",
+   "level": 82,
+   "icon": "Icon_Equip_Shield_Agi_Norm_004_112.webp",
+   "from": "card"
+  },
+  "4400": {
+   "name": "Aspiration Magic Shield",
+   "family": "INT Shield",
+   "slot": "Off-Hand",
+   "icon": "Icon_Equip_Shield_Int_Norm_001_112.webp",
+   "from": "card"
+  },
+  "4401": {
+   "name": "Voodoo Caster Shield",
+   "family": "INT Shield",
+   "slot": "Off-Hand",
+   "icon": "Icon_Equip_Shield_Int_Norm_002_112.webp",
+   "from": "card"
+  },
+  "4402": {
+   "name": "Bard's Square Shield",
+   "family": "INT Shield",
+   "slot": "Off-Hand",
+   "level": 9,
+   "icon": "Icon_Equip_Shield_Int_Norm_003_112.webp",
+   "from": "card"
+  },
+  "4403": {
+   "name": "Freedom Square Shield",
+   "family": "INT Shield",
+   "slot": "Off-Hand",
+   "level": 24,
+   "icon": "Icon_Equip_Shield_Int_Norm_004_112.webp",
+   "from": "card"
+  },
+  "4404": {
+   "name": "Nature Caster Shield",
+   "family": "INT Shield",
+   "slot": "Off-Hand",
+   "level": 39,
+   "icon": "Icon_Equip_Shield_Int_Norm_001_112.webp",
+   "from": "card"
+  },
+  "4405": {
+   "name": "Abyssal Square Shield",
+   "family": "INT Shield",
+   "slot": "Off-Hand",
+   "level": 52,
+   "icon": "Icon_Equip_Shield_Int_Norm_002_112.webp",
+   "from": "card"
+  },
+  "4406": {
+   "name": "Blizzard Square Shield",
+   "family": "INT Shield",
+   "slot": "Off-Hand",
+   "level": 57,
+   "icon": "Icon_Equip_Shield_Int_Norm_003_112.webp",
+   "from": "card"
+  },
+  "4407": {
+   "name": "Sage's Caster Shield",
+   "family": "INT Shield",
+   "slot": "Off-Hand",
+   "level": 62,
+   "icon": "Icon_Equip_Shield_Int_Norm_004_112.webp",
+   "from": "card"
+  },
+  "4408": {
+   "name": "Spirit Lord's Caster Shield",
+   "family": "INT Shield",
+   "slot": "Off-Hand",
+   "level": 66,
+   "icon": "Icon_Equip_Shield_Int_Norm_001_112.webp",
+   "from": "card"
+  },
+  "4409": {
+   "name": "Twilight Square Shield",
+   "family": "INT Shield",
+   "slot": "Off-Hand",
+   "level": 70,
+   "icon": "Icon_Equip_Shield_Int_Norm_002_112.webp",
+   "from": "card"
+  },
+  "4410": {
+   "name": "Fraudster Magic Shield",
+   "family": "INT Shield",
+   "slot": "Off-Hand",
+   "level": 76,
+   "icon": "Icon_Equip_Shield_Int_Norm_003_112.webp",
+   "from": "card"
+  },
+  "4411": {
+   "name": "Ninth Apostle's Magic Shield",
+   "family": "INT Shield",
+   "slot": "Off-Hand",
+   "level": 82,
+   "icon": "Icon_Equip_Shield_Int_Norm_004_112.webp",
    "from": "card"
   },
   "4518": {
@@ -438,10 +4072,24 @@
    "icon": "Icon_Equip_Amulet_Norm_004_03_112.webp",
    "from": "card"
   },
+  "4525": {
+   "name": "Destroyer's Amulet",
+   "slot": "Neck",
+   "level": 86,
+   "icon": "Icon_Equip_Amulet_Norm_005_03_112.webp",
+   "from": "card"
+  },
   "4526": {
    "name": "Cinnabar Pendant",
    "slot": "Neck",
    "icon": "Icon_Equip_Amulet_Norm_005_02_112.webp",
+   "from": "card"
+  },
+  "4527": {
+   "name": "Sunlight Pendant",
+   "slot": "Neck",
+   "level": 32,
+   "icon": "Icon_Equip_Amulet_Norm_001_03_112.webp",
    "from": "card"
   },
   "4528": {
@@ -463,6 +4111,19 @@
    "slot": "Neck",
    "level": 78,
    "icon": "Icon_Equip_Amulet_Norm_004_03_112.webp",
+   "from": "card"
+  },
+  "4531": {
+   "name": "Onslaughter's Pendant",
+   "slot": "Neck",
+   "level": 86,
+   "icon": "Icon_Equip_Amulet_Norm_005_03_112.webp",
+   "from": "card"
+  },
+  "4532": {
+   "name": "Obsidian Necklace",
+   "slot": "Neck",
+   "icon": "Icon_Equip_Amulet_Norm_005_02_112.webp",
    "from": "card"
   },
   "4533": {
@@ -493,6 +4154,13 @@
    "icon": "Icon_Equip_Amulet_Norm_004_03_112.webp",
    "from": "card"
   },
+  "4537": {
+   "name": "Sacrificer's Necklace",
+   "slot": "Neck",
+   "level": 86,
+   "icon": "Icon_Equip_Amulet_Norm_005_03_112.webp",
+   "from": "card"
+  },
   "4601": {
    "name": "Frozen Ring",
    "slot": "Finger",
@@ -500,11 +4168,24 @@
    "icon": "Icon_Equip_Ring_Norm_002_128.webp",
    "from": "card"
   },
+  "4620": {
+   "name": "Burning Flame Ring",
+   "slot": "Finger",
+   "icon": "Icon_Equip_Ring_Norm_002_01_112.webp",
+   "from": "card"
+  },
   "4621": {
    "name": "Heated Flame Ring",
    "slot": "Finger",
    "level": 24,
    "icon": "Icon_Equip_Ring_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "4622": {
+   "name": "Raging Boil Flame Ring",
+   "slot": "Finger",
+   "level": 52,
+   "icon": "Icon_Equip_Ring_Norm_004_03_112.webp",
    "from": "card"
   },
   "4623": {
@@ -521,11 +4202,31 @@
    "icon": "Icon_Equip_Ring_Norm_001_02_112.webp",
    "from": "card"
   },
+  "4625": {
+   "name": "Perishing Inferno Flame Ring",
+   "slot": "Finger",
+   "level": 82,
+   "icon": "Icon_Equip_Ring_Norm_002_02_112.webp",
+   "from": "card"
+  },
+  "4626": {
+   "name": "Biting Wind Ice Ring",
+   "slot": "Finger",
+   "icon": "Icon_Equip_Ring_Norm_002_01_112.webp",
+   "from": "card"
+  },
   "4627": {
    "name": "Blight Ice Ring",
    "slot": "Finger",
    "level": 24,
    "icon": "Icon_Equip_Ring_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "4628": {
+   "name": "Snow Ice Ring",
+   "slot": "Finger",
+   "level": 52,
+   "icon": "Icon_Equip_Ring_Norm_004_03_112.webp",
    "from": "card"
   },
   "4629": {
@@ -542,11 +4243,38 @@
    "icon": "Icon_Equip_Ring_Norm_001_02_112.webp",
    "from": "card"
   },
+  "4631": {
+   "name": "Eternal Sleep Ice Ring",
+   "slot": "Finger",
+   "level": 82,
+   "icon": "Icon_Equip_Ring_Norm_002_02_112.webp",
+   "from": "card"
+  },
+  "4632": {
+   "name": "Calamity Lightning Ring",
+   "slot": "Finger",
+   "icon": "Icon_Equip_Ring_Norm_002_01_112.webp",
+   "from": "card"
+  },
   "4633": {
    "name": "Dazzling Lightning Ring",
    "slot": "Finger",
    "level": 24,
    "icon": "Icon_Equip_Ring_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "4634": {
+   "name": "Chilling Lightning Ring",
+   "slot": "Finger",
+   "level": 52,
+   "icon": "Icon_Equip_Ring_Norm_004_03_112.webp",
+   "from": "card"
+  },
+  "4635": {
+   "name": "High Heavens Lightning Ring",
+   "slot": "Finger",
+   "level": 66,
+   "icon": "Icon_Equip_Ring_Norm_005_03_112.webp",
    "from": "card"
   },
   "4636": {
@@ -556,6 +4284,40 @@
    "icon": "Icon_Equip_Ring_Norm_001_02_112.webp",
    "from": "card"
   },
+  "4637": {
+   "name": "Thunder Tempered Lightning Ring",
+   "slot": "Finger",
+   "level": 82,
+   "icon": "Icon_Equip_Ring_Norm_002_02_112.webp",
+   "from": "card"
+  },
+  "4638": {
+   "name": "Abyss Darkness Ring",
+   "slot": "Finger",
+   "icon": "Icon_Equip_Ring_Norm_002_01_112.webp",
+   "from": "card"
+  },
+  "4639": {
+   "name": "Agony Darkness Ring",
+   "slot": "Finger",
+   "level": 24,
+   "icon": "Icon_Equip_Ring_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "4640": {
+   "name": "Rotten Darkness Ring",
+   "slot": "Finger",
+   "level": 52,
+   "icon": "Icon_Equip_Ring_Norm_004_03_112.webp",
+   "from": "card"
+  },
+  "4641": {
+   "name": "Evernight Darkness Ring",
+   "slot": "Finger",
+   "level": 66,
+   "icon": "Icon_Equip_Ring_Norm_005_03_112.webp",
+   "from": "card"
+  },
   "4642": {
    "name": "Imprisoned Darkness Ring",
    "slot": "Finger",
@@ -563,11 +4325,66 @@
    "icon": "Icon_Equip_Ring_Norm_001_02_112.webp",
    "from": "card"
   },
+  "4643": {
+   "name": "Eternal Gloom Darkness Ring",
+   "slot": "Finger",
+   "level": 82,
+   "icon": "Icon_Equip_Ring_Norm_002_02_112.webp",
+   "from": "card"
+  },
+  "4644": {
+   "name": "Budding Spirit Ring",
+   "slot": "Finger",
+   "icon": "Icon_Equip_Ring_Norm_002_01_112.webp",
+   "from": "card"
+  },
+  "4645": {
+   "name": "Thriving Spirit Ring",
+   "slot": "Finger",
+   "level": 24,
+   "icon": "Icon_Equip_Ring_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "4646": {
+   "name": "Command Spirit Ring",
+   "slot": "Finger",
+   "level": 52,
+   "icon": "Icon_Equip_Ring_Norm_004_03_112.webp",
+   "from": "card"
+  },
+  "4647": {
+   "name": "Harvest Spirit Ring",
+   "slot": "Finger",
+   "level": 66,
+   "icon": "Icon_Equip_Ring_Norm_005_03_112.webp",
+   "from": "card"
+  },
+  "4648": {
+   "name": "Championed Spirit Ring",
+   "slot": "Finger",
+   "level": 76,
+   "icon": "Icon_Equip_Ring_Norm_001_02_112.webp",
+   "from": "card"
+  },
+  "4649": {
+   "name": "Essence Spirit Ring",
+   "slot": "Finger",
+   "level": 82,
+   "icon": "Icon_Equip_Ring_Norm_002_02_112.webp",
+   "from": "card"
+  },
   "4654": {
    "name": "Depicted Ward Ring",
    "slot": "Finger",
    "level": 76,
    "icon": "Icon_Equip_Ring_Norm_001_02_112.webp",
+   "from": "card"
+  },
+  "4655": {
+   "name": "Myriad Radiance Ward Ring",
+   "slot": "Finger",
+   "level": 82,
+   "icon": "Icon_Equip_Ring_Norm_002_02_112.webp",
    "from": "card"
   },
   "4720": {

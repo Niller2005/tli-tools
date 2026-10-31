@@ -1,8 +1,8 @@
 {
  "meta": {
-  "generatedAt": "2026-10-31T01:45:38.216Z",
+  "generatedAt": "2026-10-31T02:10:22.251Z",
   "source": "https://raw.githubusercontent.com/astockman99/TITrack/master/tlidb_items_seed_en.json (a build of the tlidb.com wiki data and the community translations), plus https://tlidb.com (the wiki read by scripts/scrape-tlidb.ts)",
-  "count": 2300,
+  "count": 2832,
   "sources": [
    {
     "id": "titrack",
@@ -14,13 +14,187 @@
     "id": "tlidb",
     "url": "https://tlidb.com",
     "note": "the Torchlight: Infinite wiki read by scripts/scrape-tlidb.ts; a fan-made site, not affiliated with XD",
-    "count": 111
+    "count": 643
    }
   ]
  },
  "items": {
+  "100": {
+   "name": "Nailclaw",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "101": {
+   "name": "Shark Tooth",
+   "sources": [
+    "tlidb"
+   ]
+  },
   "102": {
    "name": "Pickaxe Claw",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "103": {
+   "name": "Black Cat Claw",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "104": {
+   "name": "Eyestinger Claw",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "105": {
+   "name": "Berserker Claw",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "106": {
+   "name": "Sandstorm Katar",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "107": {
+   "name": "Wailing Claw",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "108": {
+   "name": "Two-Headed Claw",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "109": {
+   "name": "Direwolf Fang",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "110": {
+   "name": "Spinesplitter Katar",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "111": {
+   "name": "Crimson Tiger Sting",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "112": {
+   "name": "Scarlet River Claw",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "113": {
+   "name": "Primeval War Claw",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "114": {
+   "name": "Jadebone Katar",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "115": {
+   "name": "Eagle Claw",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "118": {
+   "name": "Delusion Claw",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "119": {
+   "name": "Three-tailed Cat Claw",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "120": {
+   "name": "Dragon Hunter Claw",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "121": {
+   "name": "Silence Piercing Claw",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "200": {
+   "name": "Witherbark Club",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "201": {
+   "name": "Mossy Stone Hammer",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "202": {
+   "name": "Rusted Wooden Hammer",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "203": {
+   "name": "Black Iron Maul",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "204": {
+   "name": "War Hammer",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "205": {
+   "name": "Oblivion Maul",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "206": {
+   "name": "Prayer Hammer",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "207": {
+   "name": "Nightmare Hammer",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "208": {
+   "name": "Dragon's Roar Hammer",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "209": {
+   "name": "Tremor Wooden Hammer",
    "sources": [
     "tlidb"
    ]
@@ -31,8 +205,542 @@
     "tlidb"
    ]
   },
+  "211": {
+   "name": "Rocksplitter Mallet",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "212": {
+   "name": "Primeval War Hammer",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "213": {
+   "name": "Nature Wooden Hammer",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "214": {
+   "name": "Redgold Hammer",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "215": {
+   "name": "Twilight Hammer",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "216": {
+   "name": "Quinn's Hammer",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "217": {
+   "name": "General's War Hammer",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "218": {
+   "name": "Melted Iron Hammer",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "219": {
+   "name": "Sierra Forge Light Hammer",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "400": {
+   "name": "Rusted Bronze Sword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "401": {
+   "name": "Crude Iron Sword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "402": {
+   "name": "Recruit's Saber",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "403": {
+   "name": "Iron Sword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "404": {
+   "name": "Thorny Sword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "405": {
+   "name": "Battlefield Longsword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "406": {
+   "name": "Redgold Sword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "407": {
+   "name": "Cold Blade",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "408": {
+   "name": "Talon Sword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "409": {
+   "name": "Hurricane Short Sword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "410": {
+   "name": "Blizzard Sword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "411": {
+   "name": "Coldlight Sword",
+   "sources": [
+    "tlidb"
+   ]
+  },
   "412": {
    "name": "Hero's Longsword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "413": {
+   "name": "Gilt Longsword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "414": {
+   "name": "Bone Stinger Sword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "415": {
+   "name": "Moonlight Long Blade",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "416": {
+   "name": "Nameless Sword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "417": {
+   "name": "Forgotten Iron Sword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "418": {
+   "name": "Unforgotten Long Blade",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "419": {
+   "name": "Shadowless Swordsman's Blade",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "500": {
+   "name": "Rusted Iron Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "501": {
+   "name": "Twisted Copper Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "502": {
+   "name": "Iron Hatchet",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "503": {
+   "name": "Sharpened Iron Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "504": {
+   "name": "Alloy Board Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "505": {
+   "name": "War Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "506": {
+   "name": "Scoundrel's Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "507": {
+   "name": "Earthsplitter Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "508": {
+   "name": "Savage Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "509": {
+   "name": "Valagon Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "510": {
+   "name": "Cursed Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "511": {
+   "name": "Bonecrusher Greataxe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "512": {
+   "name": "Conflict War Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "513": {
+   "name": "Frenzy Battle Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "514": {
+   "name": "Scarlet Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "515": {
+   "name": "Ritual Greataxe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "516": {
+   "name": "Vengeance Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "517": {
+   "name": "Suppressor Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "518": {
+   "name": "Rebel Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "519": {
+   "name": "Hollow Rift Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "600": {
+   "name": "Thief Short Dagger",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "601": {
+   "name": "Rusted Dagger",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "602": {
+   "name": "Slaughter Short Dagger",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "603": {
+   "name": "Poisoned Dagger",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "604": {
+   "name": "Assassin Short Dagger",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "605": {
+   "name": "Voodoo Dagger",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "606": {
+   "name": "Resentment Dirk",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "607": {
+   "name": "Violence Short Dagger",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "608": {
+   "name": "Nightshade Dagger",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "609": {
+   "name": "Kingslayer Short Dagger",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "610": {
+   "name": "Cursed Dagger",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "611": {
+   "name": "Godslaughter Short Dagger",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "612": {
+   "name": "Sorcerer's Dagger",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "613": {
+   "name": "Hatred Dirk",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "614": {
+   "name": "Esoteric Dagger",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "615": {
+   "name": "Illusory Dirk",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "616": {
+   "name": "Disillusion Dagger",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "617": {
+   "name": "Fools' Dagger",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "618": {
+   "name": "Blind Faith Dagger",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "619": {
+   "name": "Truth Speaker's Dagger",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "800": {
+   "name": "Wayfarer Cane",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "801": {
+   "name": "Rambone Cane",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "802": {
+   "name": "Witness Cane",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "803": {
+   "name": "Snake-scale Cane",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "804": {
+   "name": "Recluse Cane",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "805": {
+   "name": "Wolf Fang Cane",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "806": {
+   "name": "Omen Short Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "807": {
+   "name": "Thinker Cane",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "808": {
+   "name": "Leopard Jaw Cane",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "809": {
+   "name": "Traitor Cane",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "810": {
+   "name": "Lion Heart Cane",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "811": {
+   "name": "Villain Cane",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "812": {
+   "name": "Dragonblood Cane",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "813": {
+   "name": "Foreshadow Short Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "814": {
+   "name": "Esoteric Cane",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "815": {
+   "name": "Fallen Pactspirital Short Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "816": {
+   "name": "Obsidian Cane",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "817": {
+   "name": "Blue Amber Cane",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "818": {
+   "name": "Glimmering Fluorite Cane",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "819": {
+   "name": "Sleeping Sage's Cane",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1000": {
+   "name": "Crude Iron Maul",
    "sources": [
     "tlidb"
    ]
@@ -45,6 +753,12 @@
    "nameCn": "星星蛾火",
    "type": "传奇装备"
   },
+  "1002": {
+   "name": "Iron Maul",
+   "sources": [
+    "tlidb"
+   ]
+  },
   "1003": {
    "sources": [
     "titrack"
@@ -53,6 +767,12 @@
    "nameCn": "群星辉陨",
    "type": "传奇装备"
   },
+  "1004": {
+   "name": "Beastfang Mallet",
+   "sources": [
+    "tlidb"
+   ]
+  },
   "1005": {
    "sources": [
     "titrack"
@@ -60,6 +780,24 @@
    "name": "A Corner of Divinity",
    "nameCn": "神性一角",
    "type": "传奇装备"
+  },
+  "1006": {
+   "name": "Lonewolf Maul",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1007": {
+   "name": "Valagon Mallet",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1008": {
+   "name": "Crushing Mallet",
+   "sources": [
+    "tlidb"
+   ]
   },
   "1009": {
    "sources": [
@@ -93,8 +831,236 @@
    "nameCn": "蛾火燎原之刻",
    "type": "传奇装备"
   },
+  "1013": {
+   "name": "Vanquisher Mallet",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1014": {
+   "name": "Platinum Mallet",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1015": {
+   "name": "Lava Maul",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1016": {
+   "name": "Crumbling Maul",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1017": {
+   "name": "Destroyer Mallet",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1018": {
+   "name": "Forger's Maul",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1019": {
+   "name": "Sierra Reverberation Maul",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1100": {
+   "name": "Shattered Iron Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1101": {
+   "name": "Gigantic Stone Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1102": {
+   "name": "Iron Battle Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1103": {
+   "name": "Hardrock Stone Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1104": {
+   "name": "Coldlight Greataxe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1105": {
+   "name": "Gilt Board Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1106": {
+   "name": "Marsh Greataxe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1107": {
+   "name": "Blazing Greataxe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1108": {
+   "name": "Giant's Board Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
   "1109": {
    "name": "Doomsday Board Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1110": {
+   "name": "Redgold Greataxe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1111": {
+   "name": "Unpredictable Board Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1112": {
+   "name": "Griffin Greataxe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1113": {
+   "name": "Blue Sea Greataxe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1114": {
+   "name": "Ripping Greataxe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1115": {
+   "name": "Lava Board Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1116": {
+   "name": "Fallen Star Greataxe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1117": {
+   "name": "Red Pegasus Greataxe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1118": {
+   "name": "Black Pass Board Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1119": {
+   "name": "Earthrending Axe",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1200": {
+   "name": "Crude Wooden Sword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1201": {
+   "name": "Rottenwood Greatsword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1202": {
+   "name": "Rusted Claymore",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1203": {
+   "name": "Rock Claymore",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1204": {
+   "name": "Iron Greatsword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1205": {
+   "name": "Conflict Greatsword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1206": {
+   "name": "Ripping Claymore",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1207": {
+   "name": "Coldlight Claymore",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1208": {
+   "name": "Gladiator's Greatsword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1209": {
+   "name": "Barren Greatsword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1210": {
+   "name": "Tidal Claymore",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1211": {
+   "name": "Sundering Greatsword",
    "sources": [
     "tlidb"
    ]
@@ -105,8 +1071,314 @@
     "tlidb"
    ]
   },
+  "1213": {
+   "name": "Glory Greatsword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1214": {
+   "name": "Griffin Greatsword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1215": {
+   "name": "Vindicator's Greatsword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1216": {
+   "name": "Subjugation Claymore",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1217": {
+   "name": "Red Pegasus Greatsword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1218": {
+   "name": "Black Pass Claymore",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1219": {
+   "name": "Sky Severing Sword",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1300": {
+   "name": "Witherbark Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1301": {
+   "name": "Cultivation Iron Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1302": {
+   "name": "Thorny Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1303": {
+   "name": "Ascetic Iron Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1304": {
+   "name": "Dryad Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1305": {
+   "name": "Confession Iron Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1306": {
+   "name": "Broken Mirror Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1307": {
+   "name": "Ancestral Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1308": {
+   "name": "Authority Iron Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1309": {
+   "name": "Flower Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1310": {
+   "name": "Conviction Iron Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1311": {
+   "name": "Sacred Tree Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1312": {
+   "name": "Judge's Iron Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1313": {
+   "name": "Perishing Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1314": {
+   "name": "Esoteric Cudgel",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1315": {
+   "name": "Origin Iron Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1316": {
+   "name": "Reincarnation Iron Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1317": {
+   "name": "Absolver Iron Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1318": {
+   "name": "Executive Iron Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1319": {
+   "name": "Last Man's Cudgel",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1400": {
+   "name": "Withervine Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1401": {
+   "name": "Bonewood Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1402": {
+   "name": "Ivory Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1403": {
+   "name": "Iron Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1404": {
+   "name": "Viper Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1405": {
+   "name": "Gilt Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1406": {
+   "name": "Flower Sea Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1407": {
+   "name": "Monkey Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1408": {
+   "name": "White Crystal Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1409": {
+   "name": "Black Feather Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1410": {
+   "name": "Twilight Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
   "1411": {
    "name": "Voodoo Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1412": {
+   "name": "Sage's Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1413": {
+   "name": "Devout Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1414": {
+   "name": "Wind God's Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1415": {
+   "name": "Warden's Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1416": {
+   "name": "Divinity Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1417": {
+   "name": "Southern Cross Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1418": {
+   "name": "Centaur Staff",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1419": {
+   "name": "First Man's Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1500": {
+   "name": "Rusted Pistol",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1501": {
+   "name": "Blackrock Zapper",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1502": {
+   "name": "Pocket Boomstick",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1503": {
+   "name": "Iron Pistol",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1504": {
+   "name": "Black Feather Zapper",
    "sources": [
     "tlidb"
    ]
@@ -117,8 +1389,266 @@
     "tlidb"
    ]
   },
+  "1506": {
+   "name": "Thorny Boomstick",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1507": {
+   "name": "Warden's Boomstick",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1508": {
+   "name": "Unholy Zapper",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1509": {
+   "name": "Cursed Boomstick",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1510": {
+   "name": "Viper Zapper",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1511": {
+   "name": "Voodoo Boomstick",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1512": {
+   "name": "Bloodclaw Zapper",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1513": {
+   "name": "Swarm Pistol",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1514": {
+   "name": "Shadow Boomstick",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1515": {
+   "name": "Dragonsoul Zapper",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1516": {
+   "name": "Final Battle Boomstick",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1517": {
+   "name": "Terminator Boomstick",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1518": {
+   "name": "Kingslayer Boomstick",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1519": {
+   "name": "War Ender's Boomstick",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1600": {
+   "name": "Rottenwood Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1601": {
+   "name": "Vitex Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
   "1602": {
    "name": "Beastbone Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1603": {
+   "name": "Thorny Curve Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1604": {
+   "name": "Bonewood Hunting Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1605": {
+   "name": "Segar Hunting Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1606": {
+   "name": "Griffin Long Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1607": {
+   "name": "White Wolf Curve Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1608": {
+   "name": "Raider's Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1609": {
+   "name": "White Feather Hunting Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1610": {
+   "name": "Piercer Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1611": {
+   "name": "Bloody Curve Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1612": {
+   "name": "Black Feather Long Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1613": {
+   "name": "Twilight Curve Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1614": {
+   "name": "Unholy Hunting Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1615": {
+   "name": "Thunder Long Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1616": {
+   "name": "Starfall Long Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1617": {
+   "name": "Demon Hunter Long Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1618": {
+   "name": "Godseeker Long Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1619": {
+   "name": "Lonely Hunter's Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1700": {
+   "name": "Woodvine Light Crossbow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1701": {
+   "name": "Rambone Short Crossbow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1702": {
+   "name": "Darkwoods Long Crossbow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1703": {
+   "name": "Bronze Short Crossbow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1704": {
+   "name": "Soldier's Light Crossbow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1705": {
+   "name": "Black Iron Crossbow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1706": {
+   "name": "Elven Hunting Crossbow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1707": {
+   "name": "Beastfang Light Crossbow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1708": {
+   "name": "Jungle Hunting Bow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1709": {
+   "name": "Segar Hunting Crossbow",
    "sources": [
     "tlidb"
    ]
@@ -129,8 +1659,350 @@
     "tlidb"
    ]
   },
+  "1711": {
+   "name": "Cursed War Crossbow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1712": {
+   "name": "Conflict Crossbow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1713": {
+   "name": "Blue Sea War Crossbow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1714": {
+   "name": "Icy War Crossbow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1715": {
+   "name": "Scarlet Crossbow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1716": {
+   "name": "Flowing Blaze Crossbow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1717": {
+   "name": "Red Pegasus War Crossbow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1718": {
+   "name": "Black Pass Hunting Crossbow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1719": {
+   "name": "War Ranger's Crossbow",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1800": {
+   "name": "Witherbark Cannon",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1801": {
+   "name": "Rusted Blaster",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1802": {
+   "name": "Black Iron Cannon",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1803": {
+   "name": "Iron Cannon",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1804": {
+   "name": "Wolf Hunter's Cannon",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1805": {
+   "name": "Starmetal Cannon",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1806": {
+   "name": "Unholy Blaster",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1807": {
+   "name": "Warden's Blaster",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1808": {
+   "name": "Griffin Blaster",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1809": {
+   "name": "Blazing Cannon",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1810": {
+   "name": "Unyielding Cannon",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1811": {
+   "name": "Wailing Blaster",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1812": {
+   "name": "Abyssal Blaster",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1813": {
+   "name": "Monarch's Cannon",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1814": {
+   "name": "Solar Flame Cannon",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1815": {
+   "name": "Viking Blaster",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1816": {
+   "name": "Dark Ravine Cannon",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1817": {
+   "name": "Fire Worshiper Cannon",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1818": {
+   "name": "Fire Eater Cannon",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1819": {
+   "name": "Sun Fall Cannon",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1900": {
+   "name": "Rusted Rifle",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1901": {
+   "name": "Crude Iron Rifle",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1902": {
+   "name": "Recruit's Musket",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1903": {
+   "name": "Iron Musket",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1904": {
+   "name": "Wolf Fang Rifle",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1905": {
+   "name": "Blazing Rifle",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1906": {
+   "name": "Unpredictable Rifle",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1907": {
+   "name": "Ripple Rifle",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1908": {
+   "name": "Eagle Rifle",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1909": {
+   "name": "Toxic Rifle",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1910": {
+   "name": "Conflict Rifle",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1911": {
+   "name": "Giant's Rifle",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1912": {
+   "name": "War Rifle",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1913": {
+   "name": "Scarlet Rifle",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1914": {
+   "name": "Moonlight Rifle",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1915": {
+   "name": "Warlord's Musket",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1916": {
+   "name": "Imperial Rifle",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1917": {
+   "name": "Bannerlord's Musket",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1918": {
+   "name": "Personal Guard Musket",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "1919": {
+   "name": "War Repercussion Musket",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2000": {
+   "name": "Withervine Wand",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2001": {
+   "name": "Rambone Wand",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2002": {
+   "name": "Carved Wooden Wand",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2003": {
+   "name": "Cuprite Wand",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2004": {
+   "name": "Spiritwood Wand",
+   "sources": [
+    "tlidb"
+   ]
+  },
   "2005": {
    "name": "Wind Spirit Wand",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2006": {
+   "name": "Voodoo Wand",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2007": {
+   "name": "Flower Sea Wand",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2008": {
+   "name": "Wiseman's Wand",
    "sources": [
     "tlidb"
    ]
@@ -141,8 +2013,290 @@
     "tlidb"
    ]
   },
+  "2010": {
+   "name": "Viper Wand",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2011": {
+   "name": "Wraith Wand",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2012": {
+   "name": "Bard's Wand",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2013": {
+   "name": "Sage Wand",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2014": {
+   "name": "Devout Wand",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2015": {
+   "name": "Scarlet Wand",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2016": {
+   "name": "Azure Moon Wand",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2017": {
+   "name": "Wretched Wand",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2018": {
+   "name": "Heartflayer Wand",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2019": {
+   "name": "Headless Cleric Wand",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2100": {
+   "name": "Bud Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2101": {
+   "name": "Thriving Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2102": {
+   "name": "Vine Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2103": {
+   "name": "Storm Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2104": {
+   "name": "Waning Moon Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2105": {
+   "name": "Flying Bird Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2106": {
+   "name": "Swimming Fish Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2107": {
+   "name": "Shepherdess Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2108": {
+   "name": "River Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2109": {
+   "name": "Harvest Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2110": {
+   "name": "Daylight Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2111": {
+   "name": "Full Moon Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2112": {
+   "name": "Shooting Star Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2113": {
+   "name": "Beast King Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2114": {
+   "name": "Celestial Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2115": {
+   "name": "Cosmic Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2116": {
+   "name": "Star Ocean Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2117": {
+   "name": "Astrologer Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2118": {
+   "name": "Bard Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2119": {
+   "name": "Heart of All Rod",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2200": {
+   "name": "Withering Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2201": {
+   "name": "Marsh Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2202": {
+   "name": "Barren Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2203": {
+   "name": "Lamentation Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2204": {
+   "name": "Disorientation Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2205": {
+   "name": "High Tower Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2206": {
+   "name": "Hanging Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2207": {
+   "name": "Eternal Night Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2208": {
+   "name": "Red Rain Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2209": {
+   "name": "Stigmata Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
   "2210": {
    "name": "Deception Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2211": {
+   "name": "Sorrow Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2212": {
+   "name": "Agony Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2213": {
+   "name": "Rotten Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2214": {
+   "name": "Spiral Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2215": {
+   "name": "Judgment Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2216": {
+   "name": "Reflux Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "2217": {
+   "name": "Trickster Scepter",
    "sources": [
     "tlidb"
    ]
@@ -153,8 +2307,86 @@
     "tlidb"
    ]
   },
+  "2219": {
+   "name": "Dark Gaze Scepter",
+   "sources": [
+    "tlidb"
+   ]
+  },
   "3000": {
    "name": "Brute's Chestguard (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Chest Armor",
+   "typeEn": "STR Chest Armor"
+  },
+  "3001": {
+   "name": "Footman's Chestguard (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Chest Armor",
+   "typeEn": "STR Chest Armor"
+  },
+  "3002": {
+   "name": "Paladin's Heavy Armor (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Chest Armor",
+   "typeEn": "STR Chest Armor"
+  },
+  "3003": {
+   "name": "Berserker's Chest Armor (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Chest Armor",
+   "typeEn": "STR Chest Armor"
+  },
+  "3004": {
+   "name": "Iron Sentry's Heavy Armor (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Chest Armor",
+   "typeEn": "STR Chest Armor"
+  },
+  "3005": {
+   "name": "Packleader Chest Armor (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Chest Armor",
+   "typeEn": "STR Chest Armor"
+  },
+  "3006": {
+   "name": "Mountain Lord's Chest Armor (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Chest Armor",
+   "typeEn": "STR Chest Armor"
+  },
+  "3007": {
+   "name": "Divine Arbiter's Defense (Str) (lv 62)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Chest Armor",
+   "typeEn": "STR Chest Armor"
+  },
+  "3008": {
+   "name": "Dragon Guardian's Lamellar Armor (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Chest Armor",
+   "typeEn": "STR Chest Armor"
+  },
+  "3009": {
+   "name": "Fallen Knight's Armor (Str)",
    "sources": [
     "tlidb"
    ],
@@ -168,6 +2400,150 @@
    ],
    "type": "STR Chest Armor",
    "typeEn": "STR Chest Armor"
+  },
+  "3011": {
+   "name": "Ranger's Rag (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Chest Armor",
+   "typeEn": "STR Chest Armor"
+  },
+  "3012": {
+   "name": "Divine Arbiter's Defense (Str) (lv 61)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Chest Armor",
+   "typeEn": "STR Chest Armor"
+  },
+  "3100": {
+   "name": "Rogue Outerwear (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Chest Armor",
+   "typeEn": "DEX Chest Armor"
+  },
+  "3101": {
+   "name": "Scout's Tight Vest (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Chest Armor",
+   "typeEn": "DEX Chest Armor"
+  },
+  "3102": {
+   "name": "Skirmisher Outerwear (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Chest Armor",
+   "typeEn": "DEX Chest Armor"
+  },
+  "3103": {
+   "name": "Hunter's Chestguard (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Chest Armor",
+   "typeEn": "DEX Chest Armor"
+  },
+  "3104": {
+   "name": "Prospector Outerwear (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Chest Armor",
+   "typeEn": "DEX Chest Armor"
+  },
+  "3105": {
+   "name": "Wild Dominator Outerwear (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Chest Armor",
+   "typeEn": "DEX Chest Armor"
+  },
+  "3106": {
+   "name": "Grand Explorer Outerwear (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Chest Armor",
+   "typeEn": "DEX Chest Armor"
+  },
+  "3107": {
+   "name": "Watcher's Chest Armor (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Chest Armor",
+   "typeEn": "DEX Chest Armor"
+  },
+  "3108": {
+   "name": "Eternal Night Stalker's Chestguard (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Chest Armor",
+   "typeEn": "DEX Chest Armor"
+  },
+  "3109": {
+   "name": "Sanctuary of Calamity (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Chest Armor",
+   "typeEn": "DEX Chest Armor"
+  },
+  "3110": {
+   "name": "Demon Slayer's Skin (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Chest Armor",
+   "typeEn": "DEX Chest Armor"
+  },
+  "3111": {
+   "name": "Secret Shadow's Protection (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Chest Armor",
+   "typeEn": "DEX Chest Armor"
+  },
+  "3200": {
+   "name": "Herbalist's Robe (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Chest Armor",
+   "typeEn": "INT Chest Armor"
+  },
+  "3201": {
+   "name": "Scribe's Coat (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Chest Armor",
+   "typeEn": "INT Chest Armor"
+  },
+  "3202": {
+   "name": "Acolyte's Robe (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Chest Armor",
+   "typeEn": "INT Chest Armor"
+  },
+  "3203": {
+   "name": "Witchdoctor's Robe (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Chest Armor",
+   "typeEn": "INT Chest Armor"
   },
   "3204": {
    "name": "Disciple's Coat (Int)",
@@ -185,8 +2561,32 @@
    "type": "INT Chest Armor",
    "typeEn": "INT Chest Armor"
   },
+  "3206": {
+   "name": "Envoy's Robe (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Chest Armor",
+   "typeEn": "INT Chest Armor"
+  },
+  "3207": {
+   "name": "Respected Tutor's Robe (Int) (lv 62)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Chest Armor",
+   "typeEn": "INT Chest Armor"
+  },
+  "3208": {
+   "name": "Elder Sage's Regalia (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Chest Armor",
+   "typeEn": "INT Chest Armor"
+  },
   "3209": {
-   "name": "Imperishable Black Robe (Int)",
+   "name": "Imperishable Black Robe (Int) (lv 70)",
    "sources": [
     "tlidb"
    ],
@@ -208,6 +2608,134 @@
    ],
    "type": "INT Chest Armor",
    "typeEn": "INT Chest Armor"
+  },
+  "3212": {
+   "name": "Respected Tutor's Robe (Int) (lv 61)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Chest Armor",
+   "typeEn": "INT Chest Armor"
+  },
+  "3214": {
+   "name": "Imperishable Black Robe (Int) (lv 66)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Chest Armor",
+   "typeEn": "INT Chest Armor"
+  },
+  "3300": {
+   "name": "Brute Handguards (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Gloves",
+   "typeEn": "STR Gloves"
+  },
+  "3301": {
+   "name": "Footman's Gauntlets (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Gloves",
+   "typeEn": "STR Gloves"
+  },
+  "3302": {
+   "name": "Paladin's Hands (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Gloves",
+   "typeEn": "STR Gloves"
+  },
+  "3303": {
+   "name": "Berserker's Hands (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Gloves",
+   "typeEn": "STR Gloves"
+  },
+  "3304": {
+   "name": "Iron Sentry's Hold (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Gloves",
+   "typeEn": "STR Gloves"
+  },
+  "3305": {
+   "name": "Packleader Handguards (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Gloves",
+   "typeEn": "STR Gloves"
+  },
+  "3306": {
+   "name": "Mountain Lord Handguards (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Gloves",
+   "typeEn": "STR Gloves"
+  },
+  "3307": {
+   "name": "Divine Arbiter's Hands (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Gloves",
+   "typeEn": "STR Gloves"
+  },
+  "3308": {
+   "name": "Dragon Guardian Handguards (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Gloves",
+   "typeEn": "STR Gloves"
+  },
+  "3309": {
+   "name": "Fallen Knight Handguards (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Gloves",
+   "typeEn": "STR Gloves"
+  },
+  "3310": {
+   "name": "Old King's Rerebraces (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Gloves",
+   "typeEn": "STR Gloves"
+  },
+  "3311": {
+   "name": "Ranger's Rusted Gauntlets (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Gloves",
+   "typeEn": "STR Gloves"
+  },
+  "3400": {
+   "name": "Rogue's Gloves (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Gloves",
+   "typeEn": "DEX Gloves"
+  },
+  "3401": {
+   "name": "Scout's Gloves (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Gloves",
+   "typeEn": "DEX Gloves"
   },
   "3402": {
    "name": "Skirmisher's Gloves (Dex)",
@@ -241,6 +2769,38 @@
    "type": "DEX Gloves",
    "typeEn": "DEX Gloves"
   },
+  "3406": {
+   "name": "Grand Explorer's Gloves (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Gloves",
+   "typeEn": "DEX Gloves"
+  },
+  "3407": {
+   "name": "Watcher's Hold (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Gloves",
+   "typeEn": "DEX Gloves"
+  },
+  "3408": {
+   "name": "Eternal Night Stalker's Hands (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Gloves",
+   "typeEn": "DEX Gloves"
+  },
+  "3409": {
+   "name": "Hands of Calamity (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Gloves",
+   "typeEn": "DEX Gloves"
+  },
   "3410": {
    "name": "Demon Slayer's Hands (Dex)",
    "sources": [
@@ -249,8 +2809,72 @@
    "type": "DEX Gloves",
    "typeEn": "DEX Gloves"
   },
+  "3411": {
+   "name": "Secret Shadow's Wrists (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Gloves",
+   "typeEn": "DEX Gloves"
+  },
+  "3500": {
+   "name": "Herbalist's Gloves (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Gloves",
+   "typeEn": "INT Gloves"
+  },
   "3501": {
    "name": "Scribe Handguards (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Gloves",
+   "typeEn": "INT Gloves"
+  },
+  "3502": {
+   "name": "Acolyte Handguards (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Gloves",
+   "typeEn": "INT Gloves"
+  },
+  "3503": {
+   "name": "Witchdoctor's Gloves (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Gloves",
+   "typeEn": "INT Gloves"
+  },
+  "3504": {
+   "name": "Disciple Handguards (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Gloves",
+   "typeEn": "INT Gloves"
+  },
+  "3505": {
+   "name": "Shaman's Hands (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Gloves",
+   "typeEn": "INT Gloves"
+  },
+  "3506": {
+   "name": "Envoy's Hands (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Gloves",
+   "typeEn": "INT Gloves"
+  },
+  "3507": {
+   "name": "Respected Tutor's Gloves (Int)",
    "sources": [
     "tlidb"
    ],
@@ -289,6 +2913,22 @@
    "type": "INT Gloves",
    "typeEn": "INT Gloves"
   },
+  "3600": {
+   "name": "Brute's Helm (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Helmet",
+   "typeEn": "STR Helmet"
+  },
+  "3601": {
+   "name": "Footman Helmet (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Helmet",
+   "typeEn": "STR Helmet"
+  },
   "3602": {
    "name": "Paladin's Heavy Helm (Str)",
    "sources": [
@@ -297,6 +2937,118 @@
    "type": "STR Helmet",
    "typeEn": "STR Helmet"
   },
+  "3603": {
+   "name": "Berserker's Spired Helm (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Helmet",
+   "typeEn": "STR Helmet"
+  },
+  "3604": {
+   "name": "Iron Sentry's Helmet (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Helmet",
+   "typeEn": "STR Helmet"
+  },
+  "3605": {
+   "name": "Packleader Helmet (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Helmet",
+   "typeEn": "STR Helmet"
+  },
+  "3606": {
+   "name": "Mountain Lord Helmet (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Helmet",
+   "typeEn": "STR Helmet"
+  },
+  "3607": {
+   "name": "Divine Arbiter's Diadem (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Helmet",
+   "typeEn": "STR Helmet"
+  },
+  "3608": {
+   "name": "Dragon Guardian's Faceguard (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Helmet",
+   "typeEn": "STR Helmet"
+  },
+  "3609": {
+   "name": "Fallen Knight Helmet (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Helmet",
+   "typeEn": "STR Helmet"
+  },
+  "3610": {
+   "name": "Old King's Crown (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Helmet",
+   "typeEn": "STR Helmet"
+  },
+  "3611": {
+   "name": "Ranger's Broken Mask (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Helmet",
+   "typeEn": "STR Helmet"
+  },
+  "3700": {
+   "name": "Rogue's Hood (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Helmet",
+   "typeEn": "DEX Helmet"
+  },
+  "3701": {
+   "name": "Scout's Hood (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Helmet",
+   "typeEn": "DEX Helmet"
+  },
+  "3702": {
+   "name": "Skirmisher's Mask (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Helmet",
+   "typeEn": "DEX Helmet"
+  },
+  "3703": {
+   "name": "Hunter's Hood (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Helmet",
+   "typeEn": "DEX Helmet"
+  },
+  "3704": {
+   "name": "Prospector's Hat (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Helmet",
+   "typeEn": "DEX Helmet"
+  },
   "3705": {
    "name": "Wild Dominator Headdress (Dex)",
    "sources": [
@@ -304,6 +3056,70 @@
    ],
    "type": "DEX Helmet",
    "typeEn": "DEX Helmet"
+  },
+  "3706": {
+   "name": "Grand Explorer's Fez (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Helmet",
+   "typeEn": "DEX Helmet"
+  },
+  "3707": {
+   "name": "Watcher's Gaze (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Helmet",
+   "typeEn": "DEX Helmet"
+  },
+  "3708": {
+   "name": "Eternal Night Stalker's Hood (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Helmet",
+   "typeEn": "DEX Helmet"
+  },
+  "3709": {
+   "name": "Mask of Calamity (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Helmet",
+   "typeEn": "DEX Helmet"
+  },
+  "3710": {
+   "name": "Demon Slayer's Eyes (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Helmet",
+   "typeEn": "DEX Helmet"
+  },
+  "3711": {
+   "name": "Secret Shadow's Mask (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Helmet",
+   "typeEn": "DEX Helmet"
+  },
+  "3800": {
+   "name": "Herbalist's Headscarf (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Helmet",
+   "typeEn": "INT Helmet"
+  },
+  "3801": {
+   "name": "Scribe's Headscarf (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Helmet",
+   "typeEn": "INT Helmet"
   },
   "3802": {
    "name": "Acolyte's Crown (Int)",
@@ -321,8 +3137,32 @@
    "type": "INT Helmet",
    "typeEn": "INT Helmet"
   },
+  "3804": {
+   "name": "Disciple's Headscarf (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Helmet",
+   "typeEn": "INT Helmet"
+  },
+  "3805": {
+   "name": "Shaman's Headdress (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Helmet",
+   "typeEn": "INT Helmet"
+  },
   "3806": {
    "name": "Envoy's Mask (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Helmet",
+   "typeEn": "INT Helmet"
+  },
+  "3807": {
+   "name": "Respected Tutor's Face (Int)",
    "sources": [
     "tlidb"
    ],
@@ -353,8 +3193,88 @@
    "type": "INT Helmet",
    "typeEn": "INT Helmet"
   },
+  "3811": {
+   "name": "Long Night Sorcerer's Mask (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Helmet",
+   "typeEn": "INT Helmet"
+  },
+  "3900": {
+   "name": "Brute's Greaves (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Boots",
+   "typeEn": "STR Boots"
+  },
+  "3901": {
+   "name": "Footman's Boots (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Boots",
+   "typeEn": "STR Boots"
+  },
   "3902": {
    "name": "Paladin's Iron Greaves (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Boots",
+   "typeEn": "STR Boots"
+  },
+  "3903": {
+   "name": "Berserker's Footguards (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Boots",
+   "typeEn": "STR Boots"
+  },
+  "3904": {
+   "name": "Iron Sentry's Feet (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Boots",
+   "typeEn": "STR Boots"
+  },
+  "3905": {
+   "name": "Packleader Greaves (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Boots",
+   "typeEn": "STR Boots"
+  },
+  "3906": {
+   "name": "Mountain Lord's Feet (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Boots",
+   "typeEn": "STR Boots"
+  },
+  "3907": {
+   "name": "Divine Arbiter's Feet (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Boots",
+   "typeEn": "STR Boots"
+  },
+  "3908": {
+   "name": "Dragon Guardian's Footguards (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Boots",
+   "typeEn": "STR Boots"
+  },
+  "3909": {
+   "name": "Fallen Knight's Footguards (Str)",
    "sources": [
     "tlidb"
    ],
@@ -368,6 +3288,46 @@
    ],
    "type": "STR Boots",
    "typeEn": "STR Boots"
+  },
+  "3911": {
+   "name": "Ranger's Dirty Boots (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Boots",
+   "typeEn": "STR Boots"
+  },
+  "4000": {
+   "name": "Rogue's Long Boots (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Boots",
+   "typeEn": "DEX Boots"
+  },
+  "4001": {
+   "name": "Scout's Short Boots (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Boots",
+   "typeEn": "DEX Boots"
+  },
+  "4002": {
+   "name": "Skirmisher's Leather Boots (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Boots",
+   "typeEn": "DEX Boots"
+  },
+  "4003": {
+   "name": "Hunter's Leather Boots (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Boots",
+   "typeEn": "DEX Boots"
   },
   "4004": {
    "name": "Prospector's Short Boots (Dex)",
@@ -385,6 +3345,30 @@
    "type": "DEX Boots",
    "typeEn": "DEX Boots"
   },
+  "4006": {
+   "name": "Grand Explorer's Heavy Boots (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Boots",
+   "typeEn": "DEX Boots"
+  },
+  "4007": {
+   "name": "Watcher's Trail (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Boots",
+   "typeEn": "DEX Boots"
+  },
+  "4008": {
+   "name": "Eternal Night Stalker's Long Boots (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Boots",
+   "typeEn": "DEX Boots"
+  },
   "4009": {
    "name": "Boots of Calamity (Dex)",
    "sources": [
@@ -393,8 +3377,40 @@
    "type": "DEX Boots",
    "typeEn": "DEX Boots"
   },
+  "4010": {
+   "name": "Demon Slayer's Feet (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Boots",
+   "typeEn": "DEX Boots"
+  },
+  "4011": {
+   "name": "Secret Shadow's Shoes (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Boots",
+   "typeEn": "DEX Boots"
+  },
+  "4100": {
+   "name": "Herbalist's Footguards (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Boots",
+   "typeEn": "INT Boots"
+  },
   "4101": {
    "name": "Scribe's Boots (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Boots",
+   "typeEn": "INT Boots"
+  },
+  "4102": {
+   "name": "Acolyte's Footwraps (Int)",
    "sources": [
     "tlidb"
    ],
@@ -417,8 +3433,24 @@
    "type": "INT Boots",
    "typeEn": "INT Boots"
   },
+  "4105": {
+   "name": "Shaman's Slippers (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Boots",
+   "typeEn": "INT Boots"
+  },
   "4106": {
    "name": "Envoy's Soft Shoes (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Boots",
+   "typeEn": "INT Boots"
+  },
+  "4107": {
+   "name": "Respected Tutor's Footwraps (Int)",
    "sources": [
     "tlidb"
    ],
@@ -449,6 +3481,142 @@
    "type": "INT Boots",
    "typeEn": "INT Boots"
   },
+  "4111": {
+   "name": "Long Night Sorcerer's Boots (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Boots",
+   "typeEn": "INT Boots"
+  },
+  "4200": {
+   "name": "Aspiration Tower Shield (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Shield",
+   "typeEn": "STR Shield"
+  },
+  "4201": {
+   "name": "Starmetal Kite Shield (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Shield",
+   "typeEn": "STR Shield"
+  },
+  "4202": {
+   "name": "Griffin Tower Shield (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Shield",
+   "typeEn": "STR Shield"
+  },
+  "4203": {
+   "name": "Crimson Kite Shield (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Shield",
+   "typeEn": "STR Shield"
+  },
+  "4204": {
+   "name": "Callous Kite Shield (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Shield",
+   "typeEn": "STR Shield"
+  },
+  "4205": {
+   "name": "Falling Star Tower Shield (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Shield",
+   "typeEn": "STR Shield"
+  },
+  "4206": {
+   "name": "Warlord's Kite Shield (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Shield",
+   "typeEn": "STR Shield"
+  },
+  "4207": {
+   "name": "Vindicator's Tower Shield (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Shield",
+   "typeEn": "STR Shield"
+  },
+  "4208": {
+   "name": "Monarch's Kite Shield (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Shield",
+   "typeEn": "STR Shield"
+  },
+  "4209": {
+   "name": "Glory Kite Shield (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Shield",
+   "typeEn": "STR Shield"
+  },
+  "4210": {
+   "name": "Red Pegasus Kite Shield (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Shield",
+   "typeEn": "STR Shield"
+  },
+  "4211": {
+   "name": "Future Warrior's Kite Shield (Str)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "STR Shield",
+   "typeEn": "STR Shield"
+  },
+  "4300": {
+   "name": "Aspiration Light Shield (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Shield",
+   "typeEn": "DEX Shield"
+  },
+  "4301": {
+   "name": "Griffin Buckler (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Shield",
+   "typeEn": "DEX Shield"
+  },
+  "4302": {
+   "name": "Wind Spirit Light Shield (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Shield",
+   "typeEn": "DEX Shield"
+  },
+  "4303": {
+   "name": "Dragonfang Buckler (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Shield",
+   "typeEn": "DEX Shield"
+  },
   "4304": {
    "name": "Hunter's Buckler (Dex)",
    "sources": [
@@ -456,6 +3624,158 @@
    ],
    "type": "DEX Shield",
    "typeEn": "DEX Shield"
+  },
+  "4305": {
+   "name": "Thunder Light Shield (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Shield",
+   "typeEn": "DEX Shield"
+  },
+  "4306": {
+   "name": "Cursed Light Shield (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Shield",
+   "typeEn": "DEX Shield"
+  },
+  "4307": {
+   "name": "Viper Buckler (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Shield",
+   "typeEn": "DEX Shield"
+  },
+  "4308": {
+   "name": "Shadow Light Shield (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Shield",
+   "typeEn": "DEX Shield"
+  },
+  "4309": {
+   "name": "Wind God's Buckler (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Shield",
+   "typeEn": "DEX Shield"
+  },
+  "4310": {
+   "name": "Conqueror Buckler (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Shield",
+   "typeEn": "DEX Shield"
+  },
+  "4311": {
+   "name": "Lost Ranger's Light Shield (Dex)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "DEX Shield",
+   "typeEn": "DEX Shield"
+  },
+  "4400": {
+   "name": "Aspiration Magic Shield (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Shield",
+   "typeEn": "INT Shield"
+  },
+  "4401": {
+   "name": "Voodoo Caster Shield (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Shield",
+   "typeEn": "INT Shield"
+  },
+  "4402": {
+   "name": "Bard's Square Shield (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Shield",
+   "typeEn": "INT Shield"
+  },
+  "4403": {
+   "name": "Freedom Square Shield (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Shield",
+   "typeEn": "INT Shield"
+  },
+  "4404": {
+   "name": "Nature Caster Shield (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Shield",
+   "typeEn": "INT Shield"
+  },
+  "4405": {
+   "name": "Abyssal Square Shield (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Shield",
+   "typeEn": "INT Shield"
+  },
+  "4406": {
+   "name": "Blizzard Square Shield (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Shield",
+   "typeEn": "INT Shield"
+  },
+  "4407": {
+   "name": "Sage's Caster Shield (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Shield",
+   "typeEn": "INT Shield"
+  },
+  "4408": {
+   "name": "Spirit Lord's Caster Shield (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Shield",
+   "typeEn": "INT Shield"
+  },
+  "4409": {
+   "name": "Twilight Square Shield (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Shield",
+   "typeEn": "INT Shield"
+  },
+  "4410": {
+   "name": "Fraudster Magic Shield (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Shield",
+   "typeEn": "INT Shield"
+  },
+  "4411": {
+   "name": "Ninth Apostle's Magic Shield (Int)",
+   "sources": [
+    "tlidb"
+   ],
+   "type": "INT Shield",
+   "typeEn": "INT Shield"
   },
   "4518": {
    "name": "Sunlight Amulet",
@@ -493,8 +3813,20 @@
     "tlidb"
    ]
   },
+  "4525": {
+   "name": "Destroyer's Amulet",
+   "sources": [
+    "tlidb"
+   ]
+  },
   "4526": {
    "name": "Cinnabar Pendant",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4527": {
+   "name": "Sunlight Pendant",
    "sources": [
     "tlidb"
    ]
@@ -513,6 +3845,18 @@
   },
   "4530": {
    "name": "Assassin's Pendant",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4531": {
+   "name": "Onslaughter's Pendant",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4532": {
+   "name": "Obsidian Necklace",
    "sources": [
     "tlidb"
    ]
@@ -541,14 +3885,32 @@
     "tlidb"
    ]
   },
+  "4537": {
+   "name": "Sacrificer's Necklace",
+   "sources": [
+    "tlidb"
+   ]
+  },
   "4601": {
    "name": "Frozen Ring",
    "sources": [
     "tlidb"
    ]
   },
+  "4620": {
+   "name": "Burning Flame Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
   "4621": {
    "name": "Heated Flame Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4622": {
+   "name": "Raging Boil Flame Ring",
    "sources": [
     "tlidb"
    ]
@@ -565,8 +3927,26 @@
     "tlidb"
    ]
   },
+  "4625": {
+   "name": "Perishing Inferno Flame Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4626": {
+   "name": "Biting Wind Ice Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
   "4627": {
    "name": "Blight Ice Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4628": {
+   "name": "Snow Ice Ring",
    "sources": [
     "tlidb"
    ]
@@ -583,8 +3963,32 @@
     "tlidb"
    ]
   },
+  "4631": {
+   "name": "Eternal Sleep Ice Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4632": {
+   "name": "Calamity Lightning Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
   "4633": {
    "name": "Dazzling Lightning Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4634": {
+   "name": "Chilling Lightning Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4635": {
+   "name": "High Heavens Lightning Ring",
    "sources": [
     "tlidb"
    ]
@@ -595,14 +3999,92 @@
     "tlidb"
    ]
   },
+  "4637": {
+   "name": "Thunder Tempered Lightning Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4638": {
+   "name": "Abyss Darkness Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4639": {
+   "name": "Agony Darkness Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4640": {
+   "name": "Rotten Darkness Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4641": {
+   "name": "Evernight Darkness Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
   "4642": {
    "name": "Imprisoned Darkness Ring",
    "sources": [
     "tlidb"
    ]
   },
+  "4643": {
+   "name": "Eternal Gloom Darkness Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4644": {
+   "name": "Budding Spirit Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4645": {
+   "name": "Thriving Spirit Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4646": {
+   "name": "Command Spirit Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4647": {
+   "name": "Harvest Spirit Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4648": {
+   "name": "Championed Spirit Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4649": {
+   "name": "Essence Spirit Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
   "4654": {
    "name": "Depicted Ward Ring",
+   "sources": [
+    "tlidb"
+   ]
+  },
+  "4655": {
+   "name": "Myriad Radiance Ward Ring",
    "sources": [
     "tlidb"
    ]
@@ -10533,7 +14015,7 @@
    "sources": [
     "titrack"
    ],
-   "name": "Immolating World",
+   "name": "Immolating World (#113287)",
    "nameCn": "焚烧不完的世界",
    "type": "传奇装备"
   },
@@ -10917,30 +14399,30 @@
    "sources": [
     "titrack"
    ],
-   "name": "Goddess of Hunting's Divinity",
+   "name": "Goddess of Hunting's Divinity (#260001)",
    "nameCn": "狩猎之神的神格",
    "type": "狩猎之神"
   },
   "260003": {
-   "name": "Goddess of Hunting's Divinity",
+   "name": "Goddess of Hunting's Divinity (#260003)",
    "sources": [
     "tlidb"
    ]
   },
   "260004": {
-   "name": "Goddess of Hunting's Divinity",
+   "name": "Goddess of Hunting's Divinity (#260004)",
    "sources": [
     "tlidb"
    ]
   },
   "260005": {
-   "name": "Goddess of Hunting's Divinity",
+   "name": "Goddess of Hunting's Divinity (#260005)",
    "sources": [
     "tlidb"
    ]
   },
   "260006": {
-   "name": "Goddess of Hunting's Divinity",
+   "name": "Goddess of Hunting's Divinity (#260006)",
    "sources": [
     "tlidb"
    ]
@@ -10949,36 +14431,36 @@
    "sources": [
     "titrack"
    ],
-   "name": "Goddess of Deception's Divinity",
+   "name": "Goddess of Deception's Divinity (#260101)",
    "nameCn": "欺诈之神的神格",
    "type": "欺诈之神"
   },
   "260102": {
-   "name": "Goddess of Deception's Divinity",
+   "name": "Goddess of Deception's Divinity (#260102)",
    "sources": [
     "tlidb"
    ]
   },
   "260103": {
-   "name": "Goddess of Deception's Divinity",
+   "name": "Goddess of Deception's Divinity (#260103)",
    "sources": [
     "tlidb"
    ]
   },
   "260104": {
-   "name": "Goddess of Deception's Divinity",
+   "name": "Goddess of Deception's Divinity (#260104)",
    "sources": [
     "tlidb"
    ]
   },
   "260105": {
-   "name": "Goddess of Deception's Divinity",
+   "name": "Goddess of Deception's Divinity (#260105)",
    "sources": [
     "tlidb"
    ]
   },
   "260106": {
-   "name": "Goddess of Deception's Divinity",
+   "name": "Goddess of Deception's Divinity (#260106)",
    "sources": [
     "tlidb"
    ]
@@ -10987,24 +14469,24 @@
    "sources": [
     "titrack"
    ],
-   "name": "Goddess of Knowledge's Divinity",
+   "name": "Goddess of Knowledge's Divinity (#260201)",
    "nameCn": "知识之神的神格",
    "type": "知识之神"
   },
   "260202": {
-   "name": "Goddess of Knowledge's Divinity",
+   "name": "Goddess of Knowledge's Divinity (#260202)",
    "sources": [
     "tlidb"
    ]
   },
   "260204": {
-   "name": "Goddess of Knowledge's Divinity",
+   "name": "Goddess of Knowledge's Divinity (#260204)",
    "sources": [
     "tlidb"
    ]
   },
   "260206": {
-   "name": "Goddess of Knowledge's Divinity",
+   "name": "Goddess of Knowledge's Divinity (#260206)",
    "sources": [
     "tlidb"
    ]
@@ -11013,12 +14495,12 @@
    "sources": [
     "titrack"
    ],
-   "name": "God of War's Divinity",
+   "name": "God of War's Divinity (#260301)",
    "nameCn": "征战之神的神格",
    "type": "征战之神"
   },
   "260305": {
-   "name": "God of War's Divinity",
+   "name": "God of War's Divinity (#260305)",
    "sources": [
     "tlidb"
    ]
@@ -11027,18 +14509,18 @@
    "sources": [
     "titrack"
    ],
-   "name": "God of Machines' Divinity",
+   "name": "God of Machines' Divinity (#260401)",
    "nameCn": "机械之神的神格",
    "type": "机械之神"
   },
   "260402": {
-   "name": "God of Machines' Divinity",
+   "name": "God of Machines' Divinity (#260402)",
    "sources": [
     "tlidb"
    ]
   },
   "260406": {
-   "name": "God of Machines' Divinity",
+   "name": "God of Machines' Divinity (#260406)",
    "sources": [
     "tlidb"
    ]
@@ -11047,12 +14529,12 @@
    "sources": [
     "titrack"
    ],
-   "name": "God of Might's Divinity",
+   "name": "God of Might's Divinity (#260501)",
    "nameCn": "巨力之神的神格",
    "type": "巨力之神"
   },
   "260502": {
-   "name": "God of Might's Divinity",
+   "name": "God of Might's Divinity (#260502)",
    "sources": [
     "tlidb"
    ]
@@ -15021,12 +18503,12 @@
    "sources": [
     "titrack"
    ],
-   "name": "Organ: Unholy Prayer",
+   "name": "Organ: Unholy Prayer (#382148)",
    "nameCn": "器官：污秽祝祷",
    "type": "核心器官-戒指"
   },
   "382149": {
-   "name": "Organ: Unholy Prayer",
+   "name": "Organ: Unholy Prayer (#382149)",
    "sources": [
     "tlidb"
    ]
@@ -15035,7 +18517,7 @@
    "sources": [
     "titrack"
    ],
-   "name": "Organ: Unholy Prayer",
+   "name": "Organ: Unholy Prayer (#382150)",
    "nameCn": "器官：污秽祝祷",
    "type": "核心器官"
   },
@@ -16131,7 +19613,7 @@
    "sources": [
     "titrack"
    ],
-   "name": "Immolating World",
+   "name": "Immolating World (#392024)",
    "nameCn": "焚烧不完的世界",
    "type": "追忆复苏素材-月相"
   },
@@ -16531,7 +20013,7 @@
    "sources": [
     "titrack"
    ],
-   "name": "Recommendation Letter - Lone Wolf",
+   "name": "Recommendation Letter - Lone Wolf (#396010)",
    "nameCn": "引荐信：独狼",
    "type": "追随者"
   },
@@ -16547,7 +20029,7 @@
    "sources": [
     "titrack"
    ],
-   "name": "Recommendation Letter - Witch Rat",
+   "name": "Recommendation Letter - Witch Rat (#396012)",
    "nameCn": "引荐信：巫鼠",
    "type": "追随者"
   },
@@ -16555,24 +20037,24 @@
    "sources": [
     "titrack"
    ],
-   "name": "Recommendation Letter - Lion Queen",
+   "name": "Recommendation Letter - Lion Queen (#396013)",
    "nameCn": "引荐信：狮后",
    "type": "追随者"
   },
   "396100": {
-   "name": "Recommendation Letter - Lone Wolf",
+   "name": "Recommendation Letter - Lone Wolf (#396100)",
    "sources": [
     "tlidb"
    ]
   },
   "396102": {
-   "name": "Recommendation Letter - Witch Rat",
+   "name": "Recommendation Letter - Witch Rat (#396102)",
    "sources": [
     "tlidb"
    ]
   },
   "396103": {
-   "name": "Recommendation Letter - Lion Queen",
+   "name": "Recommendation Letter - Lion Queen (#396103)",
    "sources": [
     "tlidb"
    ]

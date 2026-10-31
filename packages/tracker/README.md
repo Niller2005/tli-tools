@@ -68,6 +68,21 @@ The wiki names the gear the player picks up after the base type of the gear, so 
 different stat families would be the same. The name in the table has the family in brackets:
 `Magic Shoes (Int)`.
 
+The gear bases the player has not picked up yet are named as well. `scripts/gear-bases.ts` walks
+the wiki's pages of the gear (the page of each slot lists the base types that fit it), reads the
+pages of those base types, and writes the ids it finds, so the scraper can name them too:
+
+```
+bun scripts/gear-bases.ts                   # the ids of the gear bases, one per line
+bun scripts/gear-bases.ts --pages           # the pages of the gear bases, one per line
+bun scripts/gear-bases.ts > gear-ids.txt    # the ids, ready for the scraper
+```
+
+Two items can carry the same name: the wiki has a page for each version of some gear bases, and
+the tiers of a divinity slate all carry the same name. The name of such an item gets the level it
+needs in brackets (`Divine Arbiter's Defense (Str) (lv 62)`), or its id when the levels are the
+same (`Goddess of Hunting's Divinity (#260001)`), so that every item in the table has its own name.
+
 `scripts/coverage.ts` says how much of the loot in the game's logs the table can name, and which
 ids it does not know:
 

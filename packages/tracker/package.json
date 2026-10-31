@@ -11,6 +11,7 @@
     "typecheck": "tsc -p .",
     "items": "bun scripts/generate-items.ts",
     "items:scrape": "bun scripts/scrape-tlidb.ts",
+    "items:gear": "bun scripts/gear-bases.ts",
     "items:coverage": "bun scripts/coverage.ts"
   },
   "devDependencies": {
