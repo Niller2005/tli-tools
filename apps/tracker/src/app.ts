@@ -6,6 +6,7 @@
 
 import type { KeyEvent } from '@opentui/core'
 import type { CliRenderer } from '@opentui/core'
+import { toolById, type Tool } from '@tli/launch'
 import type { ItemNames, Tracker } from '@tli/tracker'
 import { TrackerScreen } from './screen'
 import { PANELS, bagRows, freshView, priceRows, type Panel, type ViewState } from './view'
@@ -18,7 +19,12 @@ export interface AppHooks {
   onReport: () => void
   /** the player wants the log read again */
   onRead: () => void
+  /** the player wants a tool in a window of its own; the message says what happened */
+  onOpenWindow: (tool: Tool) => string
 }
+
+/** The tools the tracker opens in a window of their own, and the key that opens them. */
+const WINDOW_TOOLS: Record<string, string> = { a: 'arcana', v: 'vorax', w: 'warden' }
 
 /** The tracker, as a program the player can use. */
 export class TrackerApp {
@@ -221,12 +227,29 @@ export class TrackerApp {
         this.hooks.onRead()
         this.state.message = 'the log was read again'
         return
+      case 'a':
+      case 'v':
+      case 'w':
+        this.openWindow(char)
+        return
       case '?':
         this.state.help = true
         return
       default:
         return
     }
+  }
+
+  /** Opens a minigame's tool in a window of its own, and says what happened. */
+  private openWindow(char: string): void {
+    const id = WINDOW_TOOLS[char]
+    if (id === undefined) return
+    const tool = toolById(id)
+    if (tool === undefined) {
+      this.state.message = `there is no tool called ${id}`
+      return
+    }
+    this.state.message = this.hooks.onOpenWindow(tool)
   }
 
   /** Sets the price of an item, when the player confirms one. */

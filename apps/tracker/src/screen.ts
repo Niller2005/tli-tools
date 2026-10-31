@@ -91,6 +91,9 @@ const HELP: [string, string][] = [
   ['s', 'change how the list is sorted'],
   ['x', 'write the loot report to a csv file'],
   ['r', 'read the log again from where it was'],
+  ['a', 'open Arcana in a window of its own'],
+  ['v', 'open Vorax in a window of its own'],
+  ['w', 'open Warden in a window of its own'],
   ['?', 'this help'],
   ['q', 'quit'],
 ]
@@ -711,6 +714,7 @@ export class TrackerScreen {
       ['d', 'remove'],
       ['x', 'csv'],
       ['p', 'pause'],
+      ['a/v/w', 'window'],
       ['?', 'help'],
       ['q', 'quit'],
     ]
