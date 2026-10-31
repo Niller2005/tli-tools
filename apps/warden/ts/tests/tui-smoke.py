@@ -60,6 +60,9 @@ def run(keys, wait=2.0, no_color=False, no_log=True):
         os.chdir(APP)
         env = dict(os.environ, TERM="xterm-256color", COLUMNS="120", LINES="40")
         env.pop("NO_COLOR", None)
+        # The test runs where the player is: the capture is off, so niri and grim
+        # are never run.
+        env["TLI_NO_CAPTURE"] = "1"
         cmd = ["bun", "ts/src/bin/warden-tui.ts"]
         if no_log:
             cmd.append("--no-log")

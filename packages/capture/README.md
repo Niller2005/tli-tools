@@ -15,6 +15,10 @@ still come from Niri.
 Any other compositor: `command` is a shell command that writes a PNG of the
 game to `{out}`, which the capture replaces with the file it wants.
 
+`TLI_NO_CAPTURE=1` turns every picture off: the capture says `capture disabled`
+and neither Niri nor `grim` is run. The tests run with it, so they never touch
+the player's own desktop.
+
 ## What it gives
 
 ```ts

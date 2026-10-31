@@ -188,6 +188,8 @@ def run(keys, log=None, wait=None, state=None, no_color=False):
         os.chdir(APP)
         env = dict(os.environ, TERM="xterm-256color", COLUMNS=str(COLS), LINES=str(ROWS), XDG_DATA_HOME=home)
         env.pop("NO_COLOR", None)
+        # The test runs where the player is: no picture of the game, no niri, no grim.
+        env["TLI_NO_CAPTURE"] = "1"
         cmd = ["bun", "src/tui.ts"]
         if log is not None:
             cmd.append(f"--log={log}")

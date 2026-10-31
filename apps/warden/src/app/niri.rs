@@ -98,11 +98,18 @@ fn shot(w: &Value) -> Result<Rgba, String> {
 
 /// The game window as the reader takes it, or the reason it can't be captured.
 pub fn capture(title: &str) -> Result<Rgba, String> {
+    // The tests run where the player is: no picture at all, and nothing is run.
+    if std::env::var_os("TLI_NO_CAPTURE").is_some() {
+        return Err("capture disabled".to_string());
+    }
     shot(&find(title)?)
 }
 
 /// `frames` pictures in a row: the last and the time each took.
 pub fn time_frames(title: &str, frames: usize) -> Result<(Rgba, Vec<Duration>), String> {
+    if std::env::var_os("TLI_NO_CAPTURE").is_some() {
+        return Err("capture disabled".to_string());
+    }
     let w = find(title)?;
     let mut times = Vec::new();
     let mut last = None;

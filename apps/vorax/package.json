@@ -5,7 +5,7 @@
   "scripts": {
     "tui": "bun scripts/tui.ts",
     "build:web": "bun scripts/build-web.mjs",
-    "test": "bun test",
+    "test": "TLI_NO_CAPTURE=1 bun test",
     "typecheck": "tsc -p ."
   },
   "dependencies": {
