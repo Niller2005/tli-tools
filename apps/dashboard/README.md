@@ -15,6 +15,7 @@ bun src/main.ts --no-color
 | `space` | Select or unselect the tool under the cursor |
 | `a` | Select all |
 | `enter` | Run the selected tools (the one under the cursor if none is selected) |
+| `w` | Open the tool under the cursor in a window of its own |
 | `q` | Quit |
 
 ## How tools start
@@ -31,6 +32,21 @@ helpers from `@tli/tui`.
   open after its tool exits so you can read any error.
 - A tool whose required programs (`bun`, `tesseract`, ...) are not installed shows what is missing and does
   not start.
+
+## A tool in a window of its own
+
+`w` opens the tool under the cursor in a window of its own, and the dashboard keeps the terminal.
+The window is opened in the terminal the player uses: `ghostty`, `kitty`, `foot`, `alacritty`,
+`wezterm` or `xterm`, whichever is installed; `TLI_TERMINAL` says which one to use. The tool gets
+the log the dashboard watches (`--log=`) and the colours the dashboard has (`--no-color`).
+
+In tmux the tool opens as a pane of the session the dashboard is in, so the dashboard keeps the
+focus. `TLI_TMUX_MODE` says how: `split-h` (the default) puts the pane beside the dashboard,
+`split-v` below it and `window` gives it a window of its own.
+
+The window is opened in a session of its own, so it keeps running when the dashboard is left.
+Opening the same tool twice does nothing: the second key says that it is already open. Where the
+window ends up on the screen is the compositor's business.
 
 ## The status badges
 
@@ -50,9 +66,10 @@ second while the dashboard is up; a running tool has the terminal, so the log is
 
 ## Adding a tool
 
-Add an entry to `TOOLS` in [`src/tools.ts`](src/tools.ts): an id, a name, a description, the command and its
-working directory, and the programs it needs on `PATH`. It then shows up in the list. A tool that reads a
-minigame also names it in `game` (`vorax`, `warden` or `arcana`), so it gets a status badge.
+Add an entry to `TOOLS` in [`packages/launch/src/tools.ts`](../../packages/launch/src/tools.ts): an id, a name, a
+description, the command and its working directory, and the programs it needs on `PATH`. It then shows up in the
+list. A tool that reads a minigame also names it in `game` (`vorax`, `warden` or `arcana`), so it gets a status
+badge.
 
 ## Tests
 

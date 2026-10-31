@@ -7,9 +7,9 @@
 
 import { BoxRenderable, StyledText, TextRenderable, type CliRenderer, type TextChunk } from '@opentui/core'
 import { logHint, type MinigameState } from '@tli/gamelog'
+import { missing, TOOLS, type Tool } from '@tli/launch'
 import { textColor, tone, type Tone } from '@tli/tui'
 import type { DashboardState } from './app'
-import { missing, TOOLS, type Tool } from './tools'
 
 /** How a minigame's state is shown. */
 const BADGE: Record<MinigameState, [string, Tone]> = {
@@ -99,7 +99,7 @@ export class DashboardScreen {
 
     const footer = new TextRenderable(renderer, {
       id: 'footer',
-      content: new StyledText([tone('dim', '↑/↓ move   space select   a all   enter run   q quit')]),
+      content: new StyledText([tone('dim', '↑/↓ move   space select   a all   enter run   w window   q quit')]),
       selectable: false,
       fg: textColor(),
       wrapMode: 'none',

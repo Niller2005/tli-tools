@@ -1,6 +1,6 @@
 // Starts the chosen tools. Two full-screen programs cannot share one terminal, so several tools run in tmux panes
 // (a new window when already inside tmux, else a new session); a single tool simply takes over this terminal.
-import type { Tool } from './tools'
+import type { Tool } from '@tli/launch'
 
 const sh = (t: Tool) => `cd ${q(t.cwd)} && ${t.command.map(q).join(' ')}; echo; read -n1 -s -p "${t.name} exited, press a key"`
 const q = (s: string) => `'${s.replaceAll("'", `'\\''`)}'`

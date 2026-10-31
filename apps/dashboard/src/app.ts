@@ -6,8 +6,8 @@
 
 import type { CliRenderer, KeyEvent } from '@opentui/core'
 import type { MinigameView } from '@tli/gamelog'
+import { missing, TOOLS, type Tool } from '@tli/launch'
 import { DashboardScreen } from './screen'
-import { missing, TOOLS, type Tool } from './tools'
 
 /** What the dashboard is showing. */
 export interface DashboardState {
@@ -37,6 +37,8 @@ export interface DashboardHooks {
   onQuit: () => void
   /** the player wants to run the tools */
   onRun: (tools: Tool[]) => void
+  /** the player wants the tool in a window of its own; the message says what happened */
+  onOpenWindow: (tool: Tool) => string
 }
 
 /** The dashboard, as a program the player can use. */
@@ -77,6 +79,10 @@ export class DashboardApp {
       this.toggle()
     } else if (char === 'a') {
       this.selectAll()
+    } else if (char === 'w') {
+      this.openWindow()
+      key.preventDefault()
+      return
     } else if (key.name === 'return') {
       this.run()
       key.preventDefault()
@@ -129,5 +135,13 @@ export class DashboardApp {
     }
 
     this.hooks.onRun(chosen)
+  }
+
+  /** Opens the tool under the cursor in a window of its own, and leaves the terminal here. */
+  private openWindow(): void {
+    const tool = TOOLS[this.state.cursor]
+    if (tool === undefined) return
+    this.state.message = this.hooks.onOpenWindow(tool)
+    this.draw()
   }
 }
