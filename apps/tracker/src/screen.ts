@@ -27,6 +27,7 @@ import {
   defaultForeground,
   duration,
   fe,
+  price,
   fitEnd,
   num,
   rowChunks,
@@ -649,12 +650,12 @@ export class TrackerScreen {
       )
       return
     }
-    const valueWidth = Math.max(13, ...prices.map((row) => visibleLength(fe(row.price))))
+    const valueWidth = Math.max(13, ...prices.map((row) => visibleLength(price(row.price))))
     const rows: Row[] = prices.map((row, index) => ({
       selected: state.focus === 'prices' && index === state.pricesAt,
       cells: [
         { text: row.name },
-        { text: fe(row.price), tone: row.price > 0 ? 'gold' : 'dim', width: valueWidth, align: 'right' },
+        { text: price(row.price), tone: row.price > 0 ? 'gold' : 'dim', width: valueWidth, align: 'right' },
         {
           text: row.source === 'set' ? '*' : '·',
           tone: row.source === 'set' ? 'accent' : 'dim',
