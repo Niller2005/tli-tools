@@ -165,7 +165,7 @@ export class Launcher {
   /** Opens a pane of the player's own tmux session. */
   private openInTmux(request: OpenRequest, socket: TmuxSocket | null): OpenResult {
     const mode = tmuxMode(this.env)
-    const argv = tmuxArgv(request, { mode, socket, envFlag: this.takesEnv(socket) })
+    const argv = tmuxArgv(request, { mode, socket, envFlag: this.takesEnv() })
 
     let output: string
     try {
@@ -218,14 +218,12 @@ export class Launcher {
   }
 
   /** Whether tmux takes the environment of the pane with `-e`. */
-  private takesEnv(socket: TmuxSocket | null): boolean {
+  private takesEnv(): boolean {
     if (this.tmuxEnv !== null) return this.tmuxEnv
     let commands: string
     try {
-      commands = this.host.run(
-        ['tmux', ...(socket === null ? [] : [socket.flag, socket.name]), 'list-commands'],
-        { cwd: process.cwd(), env: this.env },
-      )
+      // the list of commands does not need a server
+      commands = this.host.run(['tmux', 'list-commands'], { cwd: process.cwd(), env: this.env })
     } catch {
       commands = ''
     }
