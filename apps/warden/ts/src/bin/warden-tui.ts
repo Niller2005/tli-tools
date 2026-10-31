@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
-//! Warden in a terminal, for Linux under Niri: captures the game window (niri
-//! screenshot-window), reads the board when the screen changes and shows the
-//! move it recommends. Never clicks or types in the game.
+//! Warden in a terminal, for Linux under Niri: captures the game window with
+//! silent grim, reads the board when the screen changes and shows the move it
+//! recommends. Never clicks or types in the game.
 //!
-//!   warden-tui [--title TEXT] [--rollouts N] [--no-log] [--no-color]
+//!   warden-tui [--title TEXT] [--rollouts N] [--log FILE] [--no-log] [--no-color]
 //!   warden-tui [--capture-cmd <command writing a PNG of the game to {out}>]
+//!   warden-tui [--niri-screenshot]  allow Niri's announced window screenshot
 //!   warden-tui --image <frame.png> [--rollouts N]    read one screenshot, print, exit
 //!
 //! Keys: r read now, q quit.
@@ -18,7 +19,7 @@
 //! `app/niri.rs` logic.
 
 import { createCapture } from '@tli/capture'
-import { logHint, watchMinigames } from '@tli/gamelog'
+import { captureMinigame, logHint, minigameCaptureGate, watchMinigames } from '@tli/gamelog'
 import { asBytes } from '@tli/png'
 import { startApp } from '@tli/tui'
 import type { KeyEvent } from '@opentui/core'
@@ -36,10 +37,20 @@ interface Args {
   image: string | null
   noLog: boolean
   captureCmd: string | null
+  logPath: string | null
+  niriScreenshot: boolean | undefined
 }
 
 function args(): Args {
-  const a: Args = { title: 'Torchlight', rollouts: 1600, image: null, noLog: false, captureCmd: null }
+  const a: Args = {
+    title: 'Torchlight',
+    rollouts: 1600,
+    image: null,
+    noLog: false,
+    captureCmd: null,
+    logPath: null,
+    niriScreenshot: undefined,
+  }
   const argv = process.argv.slice(2)
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i]
@@ -56,6 +67,15 @@ function args(): Args {
         a.captureCmd = value
         break
       }
+      case '--log': {
+        const value = argv[++i]
+        if (value === undefined) throw new Error('--log needs a file')
+        a.logPath = value
+        break
+      }
+      case '--niri-screenshot':
+        a.niriScreenshot = true
+        break
       case '--rollouts': {
         const raw = argv[++i]
         const n = raw !== undefined && /^\+?\d+$/.test(raw) ? Number(raw) : NaN
@@ -76,7 +96,7 @@ function args(): Args {
         break
       default:
         throw new Error(
-          `unexpected argument ${arg}; usage: warden-tui [--title TEXT] [--rollouts N] [--capture-cmd COMMAND] [--no-log] [--no-color] | warden-tui --image <frame.png>`,
+          `unexpected argument ${arg}; usage: warden-tui [--title TEXT] [--rollouts N] [--capture-cmd COMMAND] [--log FILE] [--niri-screenshot] [--no-log] [--no-color] | warden-tui --image <frame.png>`,
         )
     }
   }
@@ -139,36 +159,54 @@ async function run(): Promise<void> {
   })
 
   const watch = new Watch()
-  const capture = createCapture({ title: new RegExp(escapeRegExp(a.title), 'i'), command: a.captureCmd ?? undefined })
+  const capture = createCapture({
+    title: new RegExp(escapeRegExp(a.title), 'i'),
+    command: a.captureCmd ?? undefined,
+    niriScreenshot: a.niriScreenshot,
+  })
   // The game's log says whether the board is on screen; without it (the log is
   // missing, or it has no detail) the window is watched as before.
-  const log = a.noLog ? null : watchMinigames()
+  const log = a.noLog ? null : watchMinigames(a.logPath === null ? {} : { log: a.logPath })
   let wasClosed = false
   let next = performance.now()
+  let retryAt = 0
+  let lastCaptureError = ''
   try {
     app.draw('looking for the game window…')
     while (!quitting) {
       const view = log === null ? null : log.state()
-      const closed = view !== null && view.warden === 'closed'
+      const gate = minigameCaptureGate(view, 'warden')
+      const closed = !gate.allowed
       if (wasClosed && !closed) watch.readNext()
       wasClosed = closed
 
       let captureNote: string
       if (closed && !readNow) {
-        captureNote = 'board closed (waiting for the Tartarus board)'
+        captureNote = gate.status
+      } else if (!readNow && performance.now() < retryAt) {
+        captureNote = lastCaptureError
       } else {
         try {
-          const frame = asRgba(await capture.grab())
-          captureNote = `${frame.w} x ${frame.h}`
-          const print = fingerprint(frame)
-          if (readNow) {
-            watch.markRead(print)
-            session.readLive(frame)
-          } else if (watch.sample(print)) {
-            session.readLive(frame)
+          const attempt = await captureMinigame(capture, view, 'warden', readNow)
+          if (attempt.image === null) {
+            captureNote = attempt.status
+          } else {
+            const frame = asRgba(attempt.image)
+            captureNote = attempt.status === '' ? `${frame.w} x ${frame.h}` : `${attempt.status} · ${frame.w} x ${frame.h}`
+            const print = fingerprint(frame)
+            if (readNow) {
+              watch.markRead(print)
+              session.readLive(frame)
+            } else if (watch.sample(print)) {
+              session.readLive(frame)
+            }
           }
+          retryAt = 0
+          lastCaptureError = ''
         } catch (e) {
           captureNote = e instanceof Error ? e.message : String(e)
+          lastCaptureError = captureNote
+          retryAt = performance.now() + 2000
         }
       }
       if (quitting) break
