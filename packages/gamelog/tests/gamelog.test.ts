@@ -36,6 +36,9 @@ const board = (time: string, state: string): string => at(time, `PageName = S16B
 /** The Vorax game's page, opening or closing. */
 const vorax = (time: string, state: string): string => at(time, `PageName = S13GamePlayMain , PageRunState = ${state}`)
 
+/** The Tarot Path's page, opening or closing. */
+const taro = (time: string, state: string): string => at(time, `PageName = S9Taro , PageRunState = ${state}`)
+
 /** A line of the game that says nothing about the minigames. */
 const noise = (time: string): string => at(time, 'PageBase@ OpenFlow0! Switch = true S16BoardMain 532639')
 
@@ -53,6 +56,12 @@ describe('classifyLine', () => {
     expect(classifyLine(vorax(T1, 'Run'))).toEqual({ game: 'vorax', open: true })
     expect(classifyLine(vorax(T2, 'Hide'))).toEqual({ game: 'vorax', open: false })
     expect(classifyLine(vorax(T3, 'Destory'))).toEqual({ game: 'vorax', open: false })
+  })
+
+  test('the Tarot Path opening and closing', () => {
+    expect(classifyLine(taro(T1, 'Run'))).toEqual({ game: 'arcana', open: true })
+    expect(classifyLine(taro(T2, 'Hide'))).toEqual({ game: 'arcana', open: false })
+    expect(classifyLine(taro(T3, 'Destory'))).toEqual({ game: 'arcana', open: false })
   })
 
   test('the other lines of the log', () => {
@@ -78,6 +87,16 @@ describe('the tracker', () => {
     t.feed([board(T1, 'Run'), vorax(T2, 'Run'), board(T3, 'Destory')])
     expect(t.warden.state).toBe('closed')
     expect(t.vorax.state).toBe('open')
+  })
+
+  test('the Tarot Path has its own state', () => {
+    const t = new MinigameTracker()
+    t.feed([taro(T1, 'Run')])
+    expect(t.arcana.state).toBe('open')
+    expect(t.warden.state).toBe('unknown')
+    expect(t.vorax.state).toBe('unknown')
+    t.feed([taro(T2, 'Hide')])
+    expect(t.arcana.state).toBe('closed')
   })
 
   test('the time of the last change is the line\'s own', () => {
@@ -148,8 +167,15 @@ describe('scanBack', () => {
     const scan = scanBack(join(dir, 'nothing.log'))
     expect(scan.warden.state).toBe('unknown')
     expect(scan.vorax.state).toBe('unknown')
+    expect(scan.arcana.state).toBe('unknown')
     expect(scan.detail).toBe(false)
     expect(scan.size).toBe(0)
+  })
+
+  test('the Tarot Path in the tail', () => {
+    const file = logFile('taro.log', [taro(T1, 'Run'), taro(T2, 'Hide')])
+    const scan = scanBack(file)
+    expect(scan.arcana.state).toBe('closed')
   })
 
   test('a log without the game\'s own lines', () => {
@@ -204,6 +230,7 @@ describe('watchMinigames', () => {
     const watcher = watchMinigames({ log: file, intervalMs: 10 })
     expect(watcher.state().warden).toBe('open')
     expect(watcher.state().vorax).toBe('unknown')
+    expect(watcher.state().arcana).toBe('unknown')
     expect(watcher.state().log).toBe('ok')
     writeFileSync(file, `${board(T2, 'Destory')}\n`, { flag: 'a' })
     vi.advanceTimersByTime(20)
@@ -212,9 +239,16 @@ describe('watchMinigames', () => {
     vi.useRealTimers()
   })
 
+  test('the Tarot Path is watched too', () => {
+    const file = logFile('watch-taro.log', [taro(T1, 'Run')])
+    const watcher = watchMinigames({ log: file })
+    expect(watcher.state().arcana).toBe('open')
+    watcher.close()
+  })
+
   test('a log that is not there', () => {
     const watcher = watchMinigames({ log: join(dir, 'nothing.log') })
-    expect(watcher.state()).toEqual({ warden: 'unknown', vorax: 'unknown', log: 'missing' })
+    expect(watcher.state()).toEqual({ warden: 'unknown', vorax: 'unknown', arcana: 'unknown', log: 'missing' })
     watcher.close()
   })
 
@@ -251,6 +285,7 @@ describe('the game\'s own log', () => {
     const took = performance.now() - started
     expect(['open', 'closed', 'unknown']).toContain(scan.warden.state)
     expect(['open', 'closed', 'unknown']).toContain(scan.vorax.state)
+    expect(['open', 'closed', 'unknown']).toContain(scan.arcana.state)
     expect(took).toBeLessThan(5000)
   })
 })

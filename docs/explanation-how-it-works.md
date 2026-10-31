@@ -47,6 +47,33 @@ The log can be hundreds of megabytes, so it is read in pieces and never held in 
 its place in the file, so it can be stopped and started again and carry on where it left off; a log that was truncated
 or rotated is read from its beginning again.
 
+## The Arcana tracker's pieces
+
+The Arcana tracker ([`apps/arcana`](../apps/arcana), [`packages/arcana`](../packages/arcana)) reads the log for the
+season's minigame: the Tarot Path, a board of tiles you walk along spending Notes of Arcana, and the Fateful Contest,
+the fight you enter to open the Chests of Destiny you collected. It works out three things:
+
+1. **When the player was on the board, and what they did there.** The game names the pages it opens (`S9Taro` for the
+   Tarot Path, `S9Challenge` for the Fateful Contest), so a visit is the time between the board opening and closing.
+   Inside a visit, every move is a run of `S9Taro HandleOrderAni` steps: `CardDraw` (a card is used), `MoveTo` (the
+   marker walks), `CardGroupAdd` (cards come into the hand), `RewardRarityUp` (a chest's rarity is raised) and
+   `HPTo` (life changes). The path the marker walked is read from the `S9Line` segments it lit, the cells it revealed
+   from the `S9Tile` animations, and the chests it took from the `S9Reward` widgets. The life comes from the game's own
+   messages (`Life -1`).
+2. **Which trials were fought.** A tarot card turning over in a stage is `Play_Obj_S9_SMTL_KaPai_Turn_Slow`, and the
+   trial's story is `Play_VO_Story_S9_3_<n>_<Arcana>`, which names it. The Fateful Contest is its own level (type 19),
+   so the fight has a start and an end, and the chest of destiny that is opened (`Play_Obj_S9_SMTL_BaoXiang_Open_01`)
+   can be given the loot that is picked up in the seconds after it.
+3. **What the contests' chests gave.** The item changes are read by the loot tracker's package, which already knows
+   how the game writes them and how the exchange's prices come back, so the rewards can be valued the same way the
+   loot is.
+
+What the log does **not** carry is the board itself. The widget ids are handed out as the game scrolls the board, so
+they say nothing about where a cell is: the absolute position of the marker, the shape of the path and what is on the
+next tile cannot be recovered, and the tracker does not pretend otherwise. It reports the shape of the walk (how many
+cells were crossed, and on which side the path revealed itself) and stops there. A solver for the Tarot Path would
+need the board as it is drawn on the screen, which is a different job from reading the log.
+
 ## Warden's pieces
 
 All under `apps/warden/ts/src`:
