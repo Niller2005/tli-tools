@@ -45,29 +45,43 @@ export const FE_ITEM = 100300
 export class ExchangeParser {
   private mode: 'idle' | 'send' | 'recv' = 'idle'
   private body: string[] = []
+  private synId = ''
+  /** The item each recent request asked for, by SynId: some answers (currency, materials) don't name the item. */
+  private readonly asked = new Map<string, number>()
 
   /** A line of the log; a quote when the line finished an answer. */
   feed(line: string): Quote | null {
-    if (RE_SEND.test(line)) {
+    const send = RE_SEND.exec(line)
+    if (send !== null) {
       this.mode = 'send'
+      this.synId = send[1]
       this.body = []
       return null
     }
-    if (RE_RECV.test(line)) {
+    const recv = RE_RECV.exec(line)
+    if (recv !== null) {
       this.mode = 'recv'
+      this.synId = recv[1]
       this.body = []
       return null
     }
     if (this.mode === 'send' && RE_SEND_END.test(line)) {
+      const item = parseRequest(this.body.join('\n'))
+      if (item !== null && item !== 0) {
+        this.asked.set(this.synId, item)
+        if (this.asked.size > 32) this.asked.delete(this.asked.keys().next().value as string)
+      }
       this.mode = 'idle'
       this.body = []
       return null
     }
     if (this.mode === 'recv' && RE_RECV_END.test(line)) {
       const body = this.body.join('\n')
+      const asked = this.asked.get(this.synId) ?? null
+      this.asked.delete(this.synId)
       this.mode = 'idle'
       this.body = []
-      return parseQuote(body)
+      return parseQuote(body, asked)
     }
     if (this.mode !== 'idle') this.body.push(line)
     return null
@@ -79,9 +93,10 @@ export class ExchangeParser {
   }
 }
 
-/** The item and the prices in the body of an answer. */
-export function parseQuote(body: string): Quote | null {
-  const item = RE_ITEM_GOLD.exec(body)
+/** The item and the prices in the body of an answer; `asked` is the item the request named, for answers that don't. */
+export function parseQuote(body: string, asked: number | null = null): Quote | null {
+  const named = RE_ITEM_GOLD.exec(body)
+  const item = named !== null ? +named[1] : asked
   if (item === null) return null
 
   // The body holds one or more price sections, each with its own currency.
@@ -95,7 +110,7 @@ export function parseQuote(body: string): Quote | null {
     for (const m of section.matchAll(RE_PRICE)) prices.push(Number(m[1]))
   }
   if (!found || prices.length === 0) return null
-  return { item: +item[1], prices }
+  return { item, prices }
 }
 
 /** The item a search asked for, from the body of a request. */
