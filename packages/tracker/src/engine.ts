@@ -209,11 +209,9 @@ export class Tracker {
         this.takeDeltas(deltas)
         return
       }
-      case 'screen': {
-        const ended = this.segmenter.screen(fact.name, fact.state, fact.at)
-        if (ended !== null) this.finish(ended)
+      case 'screen':
+        this.segmenter.screen(fact.name, fact.state, fact.at)
         return
-      }
     }
   }
 
