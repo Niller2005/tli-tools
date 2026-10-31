@@ -30,6 +30,20 @@ export const MONEY_PROTOS: Record<string, true> = { XchgReceive: true }
 /** How many finished runs the tracker keeps. */
 export const MAX_RUNS = 500
 
+/** How long an item can be waited for after the block that named it. */
+export const EQUIP_WINDOW_MS = 30_000
+
+/** How many blocks the tracker keeps, waiting to be told what was put on. */
+const MAX_EQUIP_BLOCKS = 16
+
+/** One item the log named, with the page and the slot it was in. */
+interface NamedItem {
+  uuid: string
+  item: number
+  page: number
+  slot: number
+}
+
 /** What the tracker worked out. */
 export interface Stats {
   /** how many runs there were */
@@ -89,6 +103,8 @@ export interface SavedState {
   prices: [number, { price: number; samples: number; listings: number; at: number }][]
   /** the prices the player set */
   overrides: [number, number][]
+  /** the legendary id of the gear bases the log has named */
+  gear?: [number, number][]
   /** the number the next run gets */
   nextRunId: number
   /** whether the trade tax counts against the value */
@@ -139,6 +155,12 @@ export class Tracker {
   private proto: string | null = null
   /** when the last line came, in ms */
   private lastAt = 0
+  /** the legendary id of each gear base the log has named */
+  private readonly gear = new Map<number, number>()
+  /** the items the block that is going on named */
+  private blockItems: NamedItem[] = []
+  /** the blocks that could hold the item that was put on */
+  private readonly equipBlocks: { at: number; items: NamedItem[] }[] = []
 
   constructor(opts: TrackerOptions = {}) {
     this.names = opts.names ?? new ItemNames({})
@@ -192,7 +214,16 @@ export class Tracker {
         this.segmenter.path(zoneOf(fact.path))
         return
       case 'proto':
-        this.proto = fact.start ? fact.name : null
+        if (fact.start) {
+          this.proto = fact.name
+          this.blockItems = []
+        } else {
+          this.proto = null
+          this.closeBlock(fact.at)
+        }
+        return
+      case 'equip':
+        this.equip(fact)
         return
       case 'pageReset': {
         const deltas = this.inventory.resetPage(fact.page)
@@ -200,6 +231,9 @@ export class Tracker {
         return
       }
       case 'bagSet': {
+        if (fact.uuid !== null) {
+          this.blockItems.push({ uuid: fact.uuid, item: fact.item, page: fact.page, slot: fact.slot })
+        }
         const deltas = this.inventory.set(fact.page, fact.slot, fact.item, fact.num, fact.uuid, fact.op)
         this.takeDeltas(deltas)
         return
@@ -213,6 +247,59 @@ export class Tracker {
         this.segmenter.screen(fact.name, fact.state, fact.at)
         return
     }
+  }
+
+  /** The block is over: keep what it named, waiting to be told what was put on. */
+  private closeBlock(at: number): void {
+    if (this.blockItems.length === 0) return
+    this.equipBlocks.push({ at, items: this.blockItems })
+    while (this.equipBlocks.length > MAX_EQUIP_BLOCKS) this.equipBlocks.shift()
+    this.blockItems = []
+  }
+
+  /**
+   * The player put something on: the log says which legendary it is.
+   *
+   * The line names the base of the gear and the legendary it became, but not the item itself. The
+   * item is found in the block that named it: the gear on the character says which slot it is in,
+   * and a bag item is only used when the block named one item of that base.
+   */
+  private equip(fact: Extract<Fact, { t: 'equip' }>): void {
+    if (fact.legendary === 0) return
+    const item = this.equippedItem(fact)
+    if (item === null) return
+    const old = this.gear.get(item.item)
+    if (old !== undefined && old !== fact.legendary) this.gear.delete(item.item)
+    else this.gear.set(item.item, fact.legendary)
+  }
+
+  /** The item that was put on, when the log names it. */
+  private equippedItem(fact: Extract<Fact, { t: 'equip' }>): NamedItem | null {
+    for (let index = this.equipBlocks.length - 1; index >= 0; index -= 1) {
+      const block = this.equipBlocks[index]
+      if (block === undefined) continue
+      if (fact.at - block.at > EQUIP_WINDOW_MS) break
+      const same = block.items.filter((item) => item.item === fact.base)
+      const worn = same.filter((item) => item.page < 0 && item.slot === fact.slot)
+      if (worn.length === 1) return worn[0] ?? null
+      if (same.length === 1) return same[0] ?? null
+    }
+    return null
+  }
+
+  /**
+   * The item an id stands for.
+   *
+   * The log names the legendary of a piece of gear only when it is put on, so a gear base is
+   * worth the legendary the player put on, and is worth its own name until then.
+   */
+  itemOf(item: number): number {
+    return this.gear.get(item) ?? item
+  }
+
+  /** The legendary id of a gear base, when the log has named one. */
+  legendaryOf(item: number): number | null {
+    return this.gear.get(item) ?? null
   }
 
   /** A run is over. */
@@ -251,9 +338,9 @@ export class Tracker {
 
   /** What a run was worth. */
   valueOfRun(run: Run): Value {
-    const loot = valueOf(run.loot, (i) => this.prices.price(i), this.taxed)
+    const loot = valueOf(run.loot, (i) => this.prices.price(this.itemOf(i)), this.taxed)
     const cost = this.mapCosts
-      ? valueOf(run.cost, (i) => this.prices.price(i), false).gross
+      ? valueOf(run.cost, (i) => this.prices.price(this.itemOf(i)), false).gross
       : 0
     return {
       gross: loot.gross - cost,
@@ -265,7 +352,7 @@ export class Tracker {
 
   /** What the player has now. */
   netWorth(): number {
-    return valueOf(this.inventory.totals(), (i) => this.prices.price(i), this.taxed).net
+    return valueOf(this.inventory.totals(), (i) => this.prices.price(this.itemOf(i)), this.taxed).net
   }
 
   /** What the tracker worked out. */
@@ -322,6 +409,7 @@ export class Tracker {
       instances: this.inventory.instancesSnapshot(),
       prices: prices.learned,
       overrides: prices.overrides,
+      gear: [...this.gear],
       nextRunId: (last?.id ?? 0) + 1,
       taxed: this.taxed,
       mapCosts: this.mapCosts,
@@ -334,6 +422,8 @@ export class Tracker {
     if (migrated === null) return
     this.inventory.restore(migrated.slots, migrated.instances)
     this.prices.restore(migrated.prices, migrated.overrides)
+    this.gear.clear()
+    for (const [base, legendary] of migrated.gear ?? []) this.gear.set(base, legendary)
     this.taxed = migrated.taxed
     this.mapCosts = migrated.mapCosts
     this.runs.length = 0

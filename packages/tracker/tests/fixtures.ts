@@ -202,3 +202,31 @@ export const EXCHANGE_SEARCH = [
 export const ENGINE_NOISE = [
   '[2026.10.29-21.10.01:826][815]LogDataTable: Warning: UDataTable::FindRow : \'Play_UI_Gen_Card_Select\' requested row not in DataTable.',
 ]
+
+/** A legendary dropped in a map: the log says the base of the gear and nothing more. */
+export const PICK_LEGENDARY = [
+  '[2026.10.31-02.33.08:973][413]TLLua: Display: [Game] ItemChange@ ProtoName=PickItem start',
+  '[2026.10.31-02.33.08:973][413]TLLua: Display: [Game] ItemChange@ Add Id=3010_68f93dc1-d4d3-11f1-a1ef-000000000066 BagNum=1 in PageId=100 SlotId=6',
+  '[2026.10.31-02.33.08:973][413]TLLua: Display: [Game] ItemChange@ ProtoName=PickItem end',
+]
+
+/** The player puts the legendary on: the block names the item, the line names the legendary. */
+export const PUT_ON_LEGENDARY = [
+  '[2026.10.31-02.33.15:333][788]TLLua: Display: [Game] ItemChange@ ProtoName=EvaluateOneKey start',
+  '[2026.10.31-02.33.15:334][788]TLLua: Display: [Game] ItemChange@ Update Id=3010_68f93dc1-d4d3-11f1-a1ef-000000000066 BagNum=1 in PageId=100 SlotId=6',
+  '[2026.10.31-02.33.15:334][788]TLLua: Display: [Game] ItemChange@ ProtoName=EvaluateOneKey end',
+  '[2026.10.31-02.33.16:299][969]TLLua: Display: [Game] AttributeMgr:SetPlayerEquipment(BaseId=3010, GoldId=112151, 4)',
+]
+
+/** The gear on the character: the log says which slot it is in. */
+export const WORN_GEAR = [
+  '[2026.10.31-03.36.36:292][922]TLLua: Display: [Game] ItemChange@ ProtoName=Push2 start',
+  '[2026.10.31-03.36.36:292][922]TLLua: Display: [Game] ItemChange@ Add Id=4520_9db6087b-cf4d-11f1-8f75-000000000051 BagNum=1 in PageId=-1 SlotId=5',
+  '[2026.10.31-03.36.36:292][922]TLLua: Display: [Game] ItemChange@ ProtoName=Push2 end',
+  '[2026.10.31-03.36.37:101][924]TLLua: Display: [Game] AttributeMgr:SetPlayerEquipment(BaseId=4520, GoldId=113201, 5)',
+]
+
+/** Something ordinary put on: the log says there is no legendary. */
+export const PUT_ON_PLAIN = [
+  '[2026.10.31-02.24.12:536][  6]TLLua: Display: [Game] AttributeMgr:SetPlayerEquipment(BaseId=4642, GoldId=0, 6)',
+]

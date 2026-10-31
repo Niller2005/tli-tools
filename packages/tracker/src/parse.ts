@@ -46,6 +46,8 @@ export type Fact =
   | { t: 'pageReset'; page: number; at: number }
   /** the start or the end of a protocol block: the item changes inside it share a cause */
   | { t: 'proto'; name: string; start: boolean; at: number }
+  /** the player put something on: the base of the gear and the legendary it is, if any */
+  | { t: 'equip'; base: number; legendary: number; slot: number; at: number }
   /** a page of the game opened, was hidden, or was destroyed */
   | { t: 'screen'; name: string; state: 'run' | 'hide' | 'destory'; at: number }
 
@@ -59,6 +61,7 @@ const RE_ITEM_SET = /ItemChange@ (Add|Update) Id=(\d+)_([0-9a-fA-F-]+)(?: BagNum
 const RE_ITEM_DEL = /ItemChange@ Delete Id=(\d+)_([0-9a-fA-F-]+) in PageId=(-?\d+) SlotId=(\d+)/
 const RE_ITEM_RESET = /ItemChange@ Reset PageId=(-?\d+)/
 const RE_PROTO = /ItemChange@ ProtoName=(\w+) (start|end)/
+const RE_EQUIP = /AttributeMgr:SetPlayerEquipment\(BaseId=(\d+), GoldId=(\d+), (\d+)\)/
 const RE_SCREEN = /\] (\w+) (Run|Hide|Destory)\b/
 
 /** What a log line says; null when the line is about none of the things we follow. */
@@ -77,6 +80,9 @@ export function parseLine(line: string): Fact | null {
 
   m = RE_PROTO.exec(line)
   if (m) return { t: 'proto', name: m[1], start: m[2] === 'start', at }
+
+  m = RE_EQUIP.exec(line)
+  if (m) return { t: 'equip', base: +m[1], legendary: +m[2], slot: +m[3], at }
 
   m = RE_ITEM_SET.exec(line)
   if (m) {
