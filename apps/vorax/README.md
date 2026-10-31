@@ -43,15 +43,21 @@ bun scripts/tui.ts
 - Needs [Bun](https://bun.sh) and `tesseract` with the English data (Arch: `pacman -S tesseract tesseract-data-eng`).
 - The game (Steam / Proton) is found through your Steam libraries; the window through `niri msg`. A game that is on the
   screen is captured with `grim` (silent): the whole output when the game fills it, and the part of the output the game
-  is in otherwise. Niri only says where a *floating* window is, so a tiled game that does not fill its output, and a game
-  on a workspace that is not the one on the screen, come from `niri msg action screenshot-window`, which Niri always
-  announces with a "Screenshot captured" notification (it can't be turned off): keep the game on the screen (its workspace
-  the active one on its output) to keep it silent.
+  is in otherwise. Niri's own window screenshot always produces a "Screenshot captured" notification, so it is never used
+  by default. If the game is on another workspace, behind the overview, or otherwise not visible to `grim`, the helper
+  takes no picture and says that the game is not on screen.
+- The game's log gates the capture: while it says the Vorax board is closed, the helper does not take pictures at all.
+  A readable log with detail lines but no Vorax board state is also treated as closed. Only a missing log, or one without
+  detail lines, falls back to watching the screen. `--no-log` keeps the screen-watch fallback explicitly.
 - Other compositors: `--capture-cmd='<command that writes a PNG of the game to {out}>'`.
+- `--niri-screenshot` (or `TLI_NIRI_SCREENSHOT=1`) allows Niri's announced window screenshot. Leave it off to avoid the
+  notification completely.
 - `TLI_NO_CAPTURE=1` turns every picture off: the helper says `capture disabled` and neither niri nor `grim` is run. The
   tests run with it, so they never touch your own desktop.
-- Keys: `r` read now · `t` target (600k, 700k, 925k, 1.12M) · `d` deep check on/off · `q` quit.
-- Options: `--log=<UE_game.log>`, `--game-title=<regex>`, `--target=<score>`, `--no-deep`, `--no-color`.
+- Keys: `r` read now (one forced read, even when the log says the board is closed) · `t` target (600k, 700k, 925k,
+  1.12M) · `d` deep check on/off · `q` quit.
+- Options: `--log=<UE_game.log>`, `--game-title=<regex>`, `--target=<score>`, `--no-deep`, `--no-log`,
+  `--niri-screenshot`, `--no-color`.
 - `bun scripts/tui.ts --image=shot.png` reads one screenshot, prints the advice and exits.
 
 ## The overlay

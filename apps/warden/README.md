@@ -45,7 +45,8 @@ bun run tui --image frame.png     # read one screenshot, print, exit
 
 The keys are `r` to read the board now and `q` to quit. The game's log says whether the Tartarus
 board is open; while it is closed the game window is not captured, and the board is read as soon as
-it opens. `--no-log` turns that gate off. The terminal screen is drawn with
+it opens. A readable log without a board state is also treated as closed. `--no-log` keeps the
+screen-watch fallback explicit. The terminal screen is drawn with
 [OpenTUI](https://opentui.com/docs), so the terminal is restored on every way out. See
 [LINUX.md](LINUX.md) for capture and OCR requirements.
 
