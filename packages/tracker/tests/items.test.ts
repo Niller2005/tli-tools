@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { ItemNames } from '../src/items'
 import { addWiki, displayName, normalize } from '../scripts/generate-items'
-import { parseCard, parsePage } from '../scripts/scrape-tlidb'
+import { parseCard, parsePage, slugName } from '../scripts/scrape-tlidb'
 
 /** A piece of the upstream data, as the TITrack project writes it. */
 const UPSTREAM = {
@@ -114,6 +114,13 @@ describe('the wiki pages', () => {
     expect(card.name).toBe('Imperishable Feet')
     expect(card.family).toBe('INT Boots')
     expect(card.level).toBe(70)
+  })
+
+  test('the name of a page is the name in its address', () => {
+    expect(slugName('All_Magic_Shoes')).toBe('All Magic Shoes')
+    expect(slugName('Vorax_Limb_Head')).toBe('Vorax Limb Head')
+    expect(slugName('Memory_Thread_-_Magic')).toBe('Memory Thread - Magic')
+    expect(slugName('%22Banker%22')).toBe('"Banker"')
   })
 })
 

@@ -2,6 +2,7 @@
 //
 //   bun scripts/scrape-tlidb.ts                    scrape the wiki and write data/tlidb-items.json
 //   bun scripts/scrape-tlidb.ts --ids=<file>       also look up the ids listed in a file
+//   bun scripts/scrape-tlidb.ts --no-crawl          only look up the ids, do not read the pages
 //   bun scripts/scrape-tlidb.ts --max=<n>          scrape at most n pages and stop
 //   bun scripts/scrape-tlidb.ts --delay=<ms>       wait longer between the requests
 //   bun scripts/scrape-tlidb.ts --out=<file>       write the table somewhere else
@@ -18,7 +19,10 @@
 //
 // The script is polite: it asks for one page at a time and waits between the requests. It keeps
 // the pages it fetched under .cache/tlidb and what it read in them in .cache/tlidb/index.json, so
-// a run that is interrupted can be continued without asking the wiki for the same page twice.
+// a run that is interrupted can be continued without asking the wiki for the same page twice. The
+// names it found are kept in the file it writes, so a run that is interrupted does not lose them
+// either. The ids the tracker's table already names are not looked up again: the wiki only has to
+// name the ones the table does not know.
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -311,6 +315,17 @@ export function parseCard(html: string): {
   }
 }
 
+/**
+ * The name of the item a page is about, from the page's own address.
+ *
+ * The heading of a page is not always the name of the item: the pages of the gear have a tab per
+ * kind of gear, and the heading is the name of the tab that happens to be open. The address of the
+ * page always names what the page is about.
+ */
+export function slugName(slug: string): string {
+  return decodeURIComponent(slug).replace(/_/g, ' ').trim()
+}
+
 /** The file name a page is cached under. */
 function cacheName(slug: string): string {
   return `${slug.replace(/[^A-Za-z0-9_.-]/g, '_')}.html`
@@ -416,6 +431,28 @@ async function main(): Promise<void> {
 
   const listed = await wikiPages()
 
+  // the names the last run found, so that a run which is interrupted does not lose them
+  const known: Record<string, TlidbEntry> = {}
+  try {
+    const previous = JSON.parse(await readFile(out, 'utf8')) as TlidbTable
+    for (const [id, entry] of Object.entries(previous.items ?? {})) known[id] = entry
+  } catch {
+    /* the first run */
+  }
+
+  // the ids the table already names need no name from the wiki
+  const named = new Set<string>()
+  try {
+    const table = JSON.parse(await readFile(join(pkg, 'data', 'items.json'), 'utf8')) as {
+      items: Record<string, { name?: string }>
+    }
+    for (const [id, item] of Object.entries(table.items)) {
+      if (item.name !== undefined && item.name !== '') named.add(id)
+    }
+  } catch {
+    /* no table yet: every id is looked up */
+  }
+
   // the ids the player has seen in the logs, and the names the wiki gives them
   const wanted = new Set<number>()
   if (idsFile !== null) {
@@ -499,16 +536,18 @@ async function main(): Promise<void> {
   // the names the pages give the ids, for the ids no card has a name for
   const fromPages: Record<number, { name: string; slug: string; page: Page }> = {}
   for (const [slug, page] of Object.entries(state.done)) {
-    if (page.name === null || page.name === '') continue
+    const name = slugName(slug)
+    if (name === '') continue
     for (const id of page.ids ?? []) {
       if (fromPages[id] !== undefined) continue
-      fromPages[id] = { name: page.name, slug, page }
+      fromPages[id] = { name, slug, page }
     }
   }
 
   const items: Record<string, TlidbEntry> = {}
   const ids = [...wanted].sort((a, b) => a - b)
   for (const id of ids) {
+    if (named.has(String(id))) continue
     const card = await fetchCard(id, cache, delay)
     if (card !== null) {
       const parsed = parseCard(card)
@@ -545,9 +584,9 @@ async function main(): Promise<void> {
     meta: {
       generatedAt: new Date().toISOString(),
       source: `${SITE} (the Torchlight: Infinite wiki; a fan-made site, not affiliated with XD)`,
-      count: Object.keys(items).length,
+      count: Object.keys({ ...known, ...items }).length,
     },
-    items,
+    items: { ...known, ...items },
   }
   await writeFile(out, `${JSON.stringify(table, null, 1)}\n`)
   process.stderr.write(
