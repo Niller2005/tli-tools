@@ -8,6 +8,11 @@
 //   [2026.10.29-21.28.21:751][925]TLLua: Display: [Game] ItemChange@ Update Id=5140_4a4fdeb8-... BagNum=26 in PageId=102 SlotId=23
 //   [2026.10.29-21.28.21:751][925]TLLua: Display: [Game] BagMgr@:Modfy BagItem PageId = 102 SlotId = 23 ConfigBaseId = 5140 Num = 26
 //
+// and the pages of the game open and close like this:
+//
+//   [2026.10.31-02.57.37:312][681]TLLua: Display: [Game] S16BoardMain Run
+//   [2026.10.31-03.10.06:232][500]TLLua: Display: [Game] S16BoardMain Destory
+//
 // A line's time is in its bracket at the front. Everything after "Display: [Game]" is the game's own
 // words; the rest is the engine's.
 
@@ -41,6 +46,8 @@ export type Fact =
   | { t: 'pageReset'; page: number; at: number }
   /** the start or the end of a protocol block: the item changes inside it share a cause */
   | { t: 'proto'; name: string; start: boolean; at: number }
+  /** a page of the game opened, was hidden, or was destroyed */
+  | { t: 'screen'; name: string; state: 'run' | 'hide' | 'destory'; at: number }
 
 const RE_LEVEL = /LevelMgr@ LevelUid, LevelType, LevelId = (\d+) (\d+) (\d+)/
 const RE_LEVEL_PATH = /LevelMgr@:LevelPath, Model = \S*?\/Maps\/(\S+?)\.umap/
@@ -52,6 +59,7 @@ const RE_ITEM_SET = /ItemChange@ (Add|Update) Id=(\d+)_([0-9a-fA-F-]+)(?: BagNum
 const RE_ITEM_DEL = /ItemChange@ Delete Id=(\d+)_([0-9a-fA-F-]+) in PageId=(-?\d+) SlotId=(\d+)/
 const RE_ITEM_RESET = /ItemChange@ Reset PageId=(-?\d+)/
 const RE_PROTO = /ItemChange@ ProtoName=(\w+) (start|end)/
+const RE_SCREEN = /\] (\w+) (Run|Hide|Destory)\b/
 
 /** What a log line says; null when the line is about none of the things we follow. */
 export function parseLine(line: string): Fact | null {
@@ -98,6 +106,9 @@ export function parseLine(line: string): Fact | null {
 
   m = RE_ITEM_RESET.exec(line)
   if (m) return { t: 'pageReset', page: +m[1], at }
+
+  m = RE_SCREEN.exec(line)
+  if (m) return { t: 'screen', name: m[1], state: m[2] === 'Run' ? 'run' : m[2] === 'Hide' ? 'hide' : 'destory', at }
 
   return null
 }

@@ -3,16 +3,31 @@
 // The game says which level the player is in, with a type: 0 is the hideout, 3 is a map. A run
 // starts when a map level is entered and ends when the player goes back to the hideout or into
 // another level. The map's name comes from the level's path, which the game sends just after.
+//
+// The Tartarus prison is a run of its own. The board the warden reads opens in the town, and the
+// challenge it leads into is a level of its own (type 28). The visit begins when the board opens
+// and ends when the player leaves the prison level.
 
-import { zoneName } from './zones'
+import { PRISON_NAME, zoneName } from './zones'
 
 /** The level types that are a map the player farms. */
 export const MAP_LEVEL_TYPES: Record<number, true> = { 3: true, 16: true, 17: true, 25: true, 27: true }
+
+/** The level types that are the Tartarus prison. */
+export const PRISON_LEVEL_TYPES: Record<number, true> = { 28: true }
+
+/** The page that is the Tartarus prison board: the visit begins when the board opens. */
+export const PRISON_PAGES: Record<string, true> = { S16BoardMain: true }
+
+/** What kind of run it is: a trip into a map, or a visit to the Tartarus prison. */
+export type RunKind = 'map' | 'prison'
 
 /** One trip into a map. */
 export interface Run {
   /** the run's number, in order */
   id: number
+  /** what kind of run it is */
+  kind: RunKind
   /** the map's own name, as the game calls it */
   zone: string
   /** the map's English name */
@@ -56,33 +71,78 @@ export class RunSegmenter {
 
   /** The level the player is in changed. Ends the run that was going on, if any. */
   level(ltype: number, lid: number, at: number): Run | null {
+    if (PRISON_LEVEL_TYPES[ltype] === true) return this.prison(lid, at)
     const ended = this.endRun(at)
     if (MAP_LEVEL_TYPES[ltype] !== true) return ended
-    const run: Run = {
-      id: this.nextId++,
-      zone: '',
-      name: 'Unknown',
-      levelId: lid,
-      start: at,
-      end: null,
-      loot: new Map(),
-      cost: new Map(this.pendingCost),
-      fe: 0,
-    }
-    this.pendingCost.clear()
-    this.current = run
+    this.current = this.newRun('map', lid, at)
     return ended
+  }
+
+  /**
+   * The Tartarus prison's level began.
+   *
+   * The visit that began on the board goes on into the level: the board is closed by the game
+   * when the level opens, so the visit is one run, from the board to the end of the level.
+   */
+  private prison(lid: number, at: number): Run | null {
+    const current = this.current
+    if (current !== null && current.kind === 'prison') {
+      current.levelId = lid
+      return null
+    }
+    const ended = this.endRun(at)
+    this.current = this.newRun('prison', lid, at)
+    return ended
+  }
+
+  /** A page of the game opened, was hidden, or was destroyed. */
+  screen(name: string, state: 'run' | 'hide' | 'destory', at: number): Run | null {
+    if (PRISON_PAGES[name] !== true) return null
+    if (state === 'run') return this.board(at)
+    if (state === 'destory') return this.boardClosed()
+    return null
+  }
+
+  /** The prison board opened: the visit begins. */
+  private board(at: number): Run | null {
+    if (this.current !== null) return null
+    this.current = this.newRun('prison', 0, at)
+    return null
+  }
+
+  /**
+   * The prison board was destroyed.
+   *
+   * The game closes the board when the prison level opens, so a visit that is already in its
+   * level goes on. A visit that never had a level is not a run: the player closed the board
+   * without a challenge, so there is nothing to show.
+   */
+  private boardClosed(): Run | null {
+    const current = this.current
+    if (current === null || current.kind !== 'prison') return null
+    if (current.levelId !== 0) return null
+    this.dropCurrent()
+    return null
+  }
+
+  /** Throws the run that was going on away: it never became a run. */
+  private dropCurrent(): void {
+    if (this.current === null) return
+    // the number of a run that never was is free again
+    this.nextId = this.current.id
+    this.current = null
   }
 
   /** The map the player is in was named. The game sends this right after the level it belongs to. */
   path(zone: string): void {
-    if (this.current === null) return
-    if (this.current.zone !== '') return
-    this.current.zone = zone
-    this.current.name = zoneName(zone)
+    const current = this.current
+    if (current === null) return
+    if (current.zone !== '') return
+    current.zone = zone
+    if (current.kind !== 'prison') current.name = zoneName(zone)
   }
 
-  /** Ends the run that is going on, if there is one. */
+  /** Ends the run that was going on, if there is one. */
   endRun(at: number): Run | null {
     if (this.current === null) return null
     this.current.end = at
@@ -116,5 +176,23 @@ export class RunSegmenter {
   fe(qty: number): void {
     if (this.current === null) return
     this.current.fe += qty
+  }
+
+  /** A run that begins now. */
+  private newRun(kind: RunKind, lid: number, at: number): Run {
+    const run: Run = {
+      id: this.nextId++,
+      kind,
+      zone: '',
+      name: kind === 'prison' ? PRISON_NAME : 'Unknown',
+      levelId: lid,
+      start: at,
+      end: null,
+      loot: new Map(),
+      cost: new Map(this.pendingCost),
+      fe: 0,
+    }
+    this.pendingCost.clear()
+    return run
   }
 }

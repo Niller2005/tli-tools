@@ -97,7 +97,7 @@ export const ZONE_NAMES: Record<string, string> = {
 
   // Other places
   YJ_XiuShiShenYuan: 'Rusted Abyss',
-  ZhongZuiDiYu: 'Tartarus in Riot',
+  ZhongZuiDiYu: 'Tartarus Prison',
   CC1_SiWangMiCheng: 'Ruins of Aeterna: Boundless',
   XueYuRongLu: 'The Frozen Canvas',
   DiXiaZhenSuo: "Vorax - Shelly's Operating Theater",
@@ -125,3 +125,11 @@ export function zoneName(zone: string): string {
   if (loose !== undefined) return loose
   return zone
 }
+
+/**
+ * The name of the Tartarus prison.
+ *
+ * The prison is the board the warden reads and the level the board leads into. The visit is
+ * known before the level is, so the run carries this name from the moment the board opens.
+ */
+export const PRISON_NAME = 'Tartarus Prison'
