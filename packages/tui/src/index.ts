@@ -29,6 +29,7 @@ export {
   fitEnd,
   num,
   pad,
+  price,
   padStart,
   visibleLength,
 } from './format'

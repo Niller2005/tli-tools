@@ -14,6 +14,13 @@ export function fe(n: number): string {
   return `${num(n)} FE`
 }
 
+/** A unit price in FE, small ones keep their first digits: 533 -> "533 FE", 0.0003 -> "0.0003 FE". */
+export function price(n: number): string {
+  if (n >= 1 || n <= 0) return fe(n)
+  const digits = Math.min(8, Math.max(2, 1 - Math.floor(Math.log10(n))))
+  return `${Number(n.toFixed(digits)).toString()} FE`
+}
+
 /** A time: "3h 37m", "12m 04s", "45s". */
 export function duration(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000))
