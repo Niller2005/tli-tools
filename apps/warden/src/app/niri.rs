@@ -15,9 +15,42 @@ const APP_ID: &str = "steam_app_1974050";
 
 const PNG_END: [u8; 8] = [0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82];
 
+/// A `niri` command that talks to the niri that is running. A shell that outlives its niri session (a
+/// tmux server from before the last login) keeps an old NIRI_SOCKET; the sockets are named
+/// niri.<display>.<pid>.sock, and the one whose process is alive is the right one.
+fn niri_command() -> Command {
+    let mut cmd = Command::new("niri");
+    if let Some(sock) = live_niri_socket() {
+        cmd.env("NIRI_SOCKET", sock);
+    }
+    cmd
+}
+
+fn live_niri_socket() -> Option<std::path::PathBuf> {
+    let alive = |p: &std::path::Path| {
+        let name = p.file_name()?.to_str()?;
+        let pid = name.strip_suffix(".sock")?.rsplit('.').next()?.parse::<u32>().ok()?;
+        Some(std::path::Path::new(&format!("/proc/{pid}")).exists())
+    };
+    if let Some(given) = std::env::var_os("NIRI_SOCKET").map(std::path::PathBuf::from) {
+        if alive(&given).unwrap_or(true) {
+            return Some(given);
+        }
+    }
+    let dir = std::env::var_os("XDG_RUNTIME_DIR")?;
+    let mut found: Vec<_> = std::fs::read_dir(dir)
+        .ok()?
+        .filter_map(|e| e.ok().map(|e| e.path()))
+        .filter(|p| p.file_name().and_then(|n| n.to_str()).is_some_and(|n| n.starts_with("niri.") && n.ends_with(".sock")))
+        .filter(|p| alive(p) == Some(true))
+        .collect();
+    found.sort();
+    found.pop()
+}
+
 /// What `niri msg --json <what>` answers.
 fn niri_json(what: &str) -> Result<Value, String> {
-    let out = Command::new("niri").args(["msg", "--json", what]).output().map_err(|e| format!("cannot run niri: {e}"))?;
+    let out = niri_command().args(["msg", "--json", what]).output().map_err(|e| format!("cannot run niri: {e}"))?;
     if !out.status.success() {
         return Err(format!("niri msg failed: {}", String::from_utf8_lossy(&out.stderr).trim()));
     }
@@ -63,7 +96,7 @@ fn grim(output: &str) -> Result<Rgba, String> {
 fn niri_shot(id: u64) -> Result<Rgba, String> {
     static N: AtomicU32 = AtomicU32::new(0);
     let path = std::env::temp_dir().join(format!("warden-{}-{}.png", std::process::id(), N.fetch_add(1, Relaxed)));
-    let out = Command::new("niri")
+    let out = niri_command()
         .args(["msg", "action", "screenshot-window", "--id", &id.to_string(), "--path"])
         .arg(&path)
         .output()

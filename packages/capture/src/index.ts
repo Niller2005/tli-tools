@@ -5,7 +5,7 @@
 // taken with `grim` whenever the game is on the screen: the whole output when the game fills it, and the part of the
 // output the game is in otherwise. `TLI_NO_CAPTURE=1` turns every picture off, which is how the tests keep away from the
 // player's own desktop.
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { decodePngClamped, type Image } from '@tli/png'
@@ -30,8 +30,32 @@ export interface Capture {
 
 const IEND = Buffer.from([0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82])
 
+/**
+ * The socket of the niri that is running. A shell that outlives its niri session (a tmux server started
+ * before the last login) keeps an old NIRI_SOCKET, and `niri msg` then fails with "error connecting to the
+ * niri socket". The sockets are named niri.<display>.<pid>.sock: the one of a live process is the right one.
+ */
+export function liveNiriSocket(env: Record<string, string | undefined> = process.env): string | undefined {
+  const alive = (sock: string): boolean => {
+    const pid = /\.(\d+)\.sock$/.exec(sock)?.[1]
+    return pid !== undefined && existsSync(`/proc/${pid}`)
+  }
+  const given = env.NIRI_SOCKET
+  if (given !== undefined && (alive(given) || !/\.\d+\.sock$/.test(given))) return given
+  const dir = env.XDG_RUNTIME_DIR
+  if (dir === undefined) return given
+  try {
+    const found = readdirSync(dir)
+      .filter(name => /^niri\..+\.\d+\.sock$/.test(name))
+      .map(name => join(dir, name))
+      .filter(alive)
+    return found.sort().at(-1) ?? given
+  } catch { return given }
+}
+
 async function run(cmd: string[]): Promise<{ ok: boolean; out: string; err: string }> {
-  const p = Bun.spawn(cmd, { stdout: 'pipe', stderr: 'pipe' })
+  const socket = liveNiriSocket()
+  const p = Bun.spawn(cmd, { stdout: 'pipe', stderr: 'pipe', env: socket === undefined ? process.env : { ...process.env, NIRI_SOCKET: socket } })
   const [out, err] = await Promise.all([new Response(p.stdout).text(), new Response(p.stderr).text()])
   return { ok: (await p.exited) === 0, out, err }
 }
