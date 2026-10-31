@@ -1,15 +1,8 @@
 # Warden on Linux (terminal, Niri)
 
-`warden-tui` is a terminal version of Warden for Linux under Niri. It uses the same reader, solver and session as the
-Windows window; only the window capture and the text reader differ.
-
-```
-cargo build --release --bin warden-tui --bin warden-cli
-target/release/warden-tui                       # follow the running game
-target/release/warden-tui --image frame.png     # read one screenshot, print, exit
-```
-
-The same program runs from TypeScript, without the Rust build:
+Warden's terminal version for Linux under Niri. It is written in TypeScript (`ts/`) and runs with `bun`; it is the
+main version of Warden. (The Rust `warden-tui` is deprecated and no longer kept in step: see the notice in
+[README.md](README.md).)
 
 ```
 bun run tui                                      # follow the running game
@@ -21,7 +14,7 @@ bun run cli solve frame.png --seed 1 --rollouts 400
 ```
 
 `bun run tui` and `bun run cli` are the scripts in `package.json`; they run `ts/src/bin/warden-tui.ts` and
-`ts/src/bin/warden-cli.ts`. They need `bun` and the same `tesseract` as the Rust build.
+`ts/src/bin/warden-cli.ts`. They need `bun` and `tesseract`.
 
 - Needs `tesseract` with the English data (Arch: `pacman -S tesseract tesseract-data-eng`). It replaces Windows OCR.
 - The game window is found through `niri msg` (app id `steam_app_1974050`, else a title containing "Torchlight";

@@ -93,15 +93,16 @@ All under `apps/warden/ts/src`:
 ## Why Warden was ported from Rust
 
 Warden began as a Rust app. The monorepo is all TypeScript on Bun so the tools can share code and run from one
-dashboard. The Rust source stays in `apps/warden/src` and is the reference: the port was accepted only when it matched
-it.
+dashboard. The TypeScript version is now the main Warden and the only one that gets changes. The Rust source stays in
+`apps/warden/src` for its Windows window and is deprecated: the port was accepted when it matched the Rust, and the
+recorded games and solves below stay as regression tests, but nothing keeps the two in step any more.
 
 - The engine replays the same recorded games as the Rust, state for state.
 - The solver and board model match the recorded solves and boards.
 - The reader gives the same model JSON, and the CLI the same text, on the real screenshots tested.
 
-The TypeScript solver is slower than the Rust one, by roughly a factor of five. The results are identical, but the
-Rust version is faster if you need many rollouts.
+The TypeScript solver was slower than the Rust one when the port was made (by roughly a factor of five); the solve now
+runs in a worker so it no longer blocks the screen.
 
 ## Why there are shared packages
 

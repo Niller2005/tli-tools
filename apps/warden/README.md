@@ -1,5 +1,7 @@
 # Warden
 
+> **Deprecated: the Rust version.** The TypeScript version (`ts/`, run with `bun run tui` / `bun run cli`, see [LINUX.md](LINUX.md)) is the main Warden and gets all changes. The Rust source in `src/` is kept for its Windows window only and is no longer kept in step with it.
+
 A Windows companion app for the Tartarus prison board (season 16) of *Torchlight: Infinite*. Warden watches the game window, reads the board from the screen, and shows the move it recommends: which destination to take, which Inmate to consume or replace, which Torture Instrument or Warden's Treasure reward to pick, and when to re-roll an instrument offer.
 
 Unofficial. Not affiliated with or endorsed by the developers or publishers of *Torchlight: Infinite*. Warden only reads pixels from the game window: it never touches the game's memory, files or network traffic, and it never clicks or types for you.
