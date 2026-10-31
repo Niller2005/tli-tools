@@ -35,13 +35,19 @@ Its command line takes it too, for the `capture` command:
 bun run cli capture --capture-cmd 'grim -g "0,0 1920x1080" {out}' Torchlight frame.png
 ```
 
-Without it, Warden captures through Niri only, and `--title TEXT` only changes
-which Niri window it looks for. On another compositor you can still read single
+Without it, Warden's TypeScript build uses Niri to locate the game and `grim`
+for a silent picture of a game that is on the screen. Niri's own window
+screenshot is not used by default because it always sends a "Screenshot
+captured" notification. `--niri-screenshot` or `TLI_NIRI_SCREENSHOT=1` opts
+in to it explicitly. On another compositor you can still read single
 screenshots:
 
 ```
 bun run warden -- --image /full/path/to/screenshot.png
 ```
+
+The same rules apply to Vorax Helper. Its `--no-log` option keeps the
+screen-watch fallback when the game's log cannot say whether the board is open.
 
 ## Turning every picture off
 

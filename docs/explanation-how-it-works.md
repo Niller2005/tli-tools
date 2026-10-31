@@ -7,10 +7,11 @@ it is. For steps to follow, see the [getting-started tutorial](tutorial-getting-
 
 Both tools do the same four things:
 
-1. **Capture.** `@tli/capture` takes a picture of the game window. On Niri it takes the picture itself when the game is
-   on the screen: the whole output with `grim` when the game fills it, and the part of the output the game is in
-   otherwise. Niri announces every window screenshot it takes itself with a notification that can't be turned off, so
-   that is only the fallback, for a game that is not on the screen.
+1. **Capture.** `@tli/capture` takes a picture of the game window. On Niri it uses only silent `grim` paths: the whole
+   output when the game fills it, and the part of the output the game is in otherwise. Niri announces every window
+   screenshot it takes itself with a notification that can't be turned off, so it is never used by default. When the game
+   is not visible to `grim`, no picture is taken; an explicit `--niri-screenshot` or `TLI_NIRI_SCREENSHOT=1` opts in to
+   the announced path.
 2. **Read.** The picture becomes a model of the board. Template matching and pixel measurements find the cells,
    Inmates and instruments. Text such as the day counter and card names goes through `tesseract` (`@tli/ocr`).
 3. **Solve.** The model is rebuilt as a game state for the rules engine, and the solver plays it out many times to
@@ -22,9 +23,10 @@ picture. Warden samples the screen about four times a second and reads again whe
 
 The log also says which minigame is on screen, because the game names the pages it opens: the Tartarus board is
 `S16BoardMain` and the Vorax game is `S13GamePlayMain`. `@tli/gamelog` reads those lines out of the log, so the
-dashboard can show a tool's minigame as open or closed, and Warden can leave the game window alone while the board is
-closed instead of reading a board that is not there. The log only has those lines when the game writes its own lines
-(Esc → Account Related → Enable Log); without them the tools carry on as before.
+dashboard can show a tool's minigame as open or closed, and Vorax and Warden can leave the game window alone while the
+board is closed instead of reading a board that is not there. A readable log with detail lines but no board state is
+also treated as closed. The log only has those lines when the game writes its own lines (Esc → Account Related → Enable
+Log); without them the tools fall back to watching the screen.
 
 ## The loot tracker's pieces
 
