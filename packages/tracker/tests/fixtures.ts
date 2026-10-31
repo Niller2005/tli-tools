@@ -1,5 +1,78 @@
 // Lines from a real game log, as they are written. They are the yardstick for the parsers.
 
+/**
+ * What the community prices API answered, trimmed down to five items.
+ *
+ * It is the answer of the public API of [TLI Companion](https://tlicompanion.com/api), the site
+ * that collects the prices players saw on the auction house.
+ */
+export const COMMUNITY_PRICES = {
+  source: 'TLI Companion',
+  sourceUrl: 'https://tlicompanion.com',
+  attribution: 'Prices: tlicompanion.com',
+  currency: 'FE',
+  minPlayers: 3,
+  updatedAt: '2026-10-31T07:42:20.813Z',
+  count: 1691,
+  items: [
+    {
+      id: 5030,
+      name: 'Twin Reflection',
+      icon: 'https://tlicompanion.com/icons/items/5030.webp',
+      category: 'materials',
+      price: 68900,
+      players7d: 29,
+      updatedAt: '2026-10-31T02:26:16.098Z',
+      change24h: -0.3574,
+      change7d: -0.005,
+    },
+    {
+      id: 100200,
+      name: 'Flame Sand',
+      icon: 'https://cdn.tlidb.com/UI/Textures/Common/Icon/Item/128/UI_Item_chuhuolingshaV3_Icon_128.webp',
+      category: 'materials',
+      price: 0.0006,
+      players7d: 171,
+      updatedAt: '2026-10-31T07:35:55.287Z',
+      change24h: 0.5,
+      change7d: -0.5714,
+    },
+    {
+      id: 5028,
+      name: 'Netherrealm resonance',
+      icon: 'https://cdn.tlidb.com/UI/Textures/Common/Icon/Item/128/UI_Item_Echo_01_Icon_128.webp',
+      category: 'materials',
+      price: 0.1097,
+      players7d: 475,
+      updatedAt: '2026-10-31T07:39:58.772Z',
+      change24h: 0.0645,
+      change7d: -0.0161,
+    },
+    {
+      id: 5210,
+      name: 'Divinity Stone',
+      icon: 'https://cdn.tlidb.com/UI/Textures/Common/Icon/Item/128/UI_Item_SixGodsChallenge_PowerStone_Icon_128.webp',
+      category: 'divinity',
+      price: 0.0192,
+      players7d: 200,
+      updatedAt: '2026-10-31T07:24:10.662Z',
+      change24h: 0.0075,
+      change7d: -0.0446,
+    },
+    {
+      id: 110306,
+      name: 'Will',
+      icon: 'https://tlicompanion.com/icons/unique_items/Will.webp',
+      category: 'gear',
+      price: 1,
+      players7d: 16,
+      updatedAt: '2026-10-30T18:13:51.182Z',
+      change24h: 0,
+      change7d: 0,
+    },
+  ],
+}
+
 /** The lines the game writes when the player is in the hideout. */
 export const IN_HIDEOUT = [
   '[2026.10.29-21.09.59:736][368]TLShipping: Display: [Game] LevelMgr@ LevelUid, LevelType, LevelId = 111000 0 110',

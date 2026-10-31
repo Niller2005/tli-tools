@@ -3,6 +3,10 @@
 // The exchange's prices are what the tracker learns: when the player looks an item up, the prices of
 // the listings come back and the tracker keeps the tenth of them, which is close to what a quick
 // sale gets. The player can also set a price by hand, which wins over what was learned.
+//
+// Under both of them sits the baseline: the community prices from TITrack (see `baseline.ts`). The
+// baseline is only a floor for the items nobody looked up: it is kept apart from what was learned,
+// and a learned or a hand-set price always wins over it.
 
 import { FE_ITEM } from './exchange'
 
@@ -31,10 +35,11 @@ export function referencePrice(prices: number[]): number {
   return sorted[index] ?? 0
 }
 
-/** The prices the tracker knows: what it learned, and what the player set. */
+/** The prices the tracker knows: what it learned, what the player set, and the baseline. */
 export class PriceStore {
   private readonly learned = new Map<number, PriceInfo>()
   private readonly overrides = new Map<number, number>()
+  private readonly baselines = new Map<number, number>()
 
   /** What the player set by hand, or null when the price was only learned. */
   override(item: number): number | null {
@@ -60,18 +65,21 @@ export class PriceStore {
     })
   }
 
-  /** Drops everything known about an item's price, the learned one and the hand-set one. */
+  /** Drops everything known about an item's price: the learned one, the hand-set one and the baseline. */
   forget(item: number): boolean {
     const had = this.learned.delete(item)
-    return this.overrides.delete(item) || had
+    const wasBaseline = this.baselines.delete(item)
+    return this.overrides.delete(item) || had || wasBaseline
   }
 
-  /** What the item is worth: what the player set, else what was learned. */
+  /** What the item is worth: what the player set, else what was learned, else the baseline. */
   price(item: number): number {
     const set = this.overrides.get(item)
     if (set !== undefined) return set
     if (item === FE_ITEM) return 1
-    return this.learned.get(item)?.price ?? 0
+    const learned = this.learned.get(item)?.price
+    if (learned !== undefined) return learned
+    return this.baselines.get(item) ?? 0
   }
 
   /** Whether the price was set by hand. */
@@ -79,12 +87,49 @@ export class PriceStore {
     return this.overrides.has(item)
   }
 
+  /** Where the price of an item comes from. */
+  source(item: number): 'set' | 'learned' | 'baseline' | 'none' {
+    if (this.overrides.has(item)) return 'set'
+    if (this.learned.has(item)) return 'learned'
+    if (this.baselines.has(item)) return 'baseline'
+    return 'none'
+  }
+
   /** What was learned about an item. */
   info(item: number): PriceInfo | null {
     return this.learned.get(item) ?? null
   }
 
-  /** Everything the tracker knows, for saving. */
+  /** Puts the community prices in; they are the floor under everything else. */
+  setBaseline(prices: Iterable<[number, number]>): void {
+    this.baselines.clear()
+    for (const [item, price] of prices) {
+      if (!Number.isFinite(price) || price <= 0) continue
+      this.baselines.set(item, price)
+    }
+  }
+
+  /** The community price of an item, or null when there is none. */
+  baseline(item: number): number | null {
+    return this.baselines.get(item) ?? null
+  }
+
+  /** Whether the price of an item comes from the community prices. */
+  isBaseline(item: number): boolean {
+    return this.baselines.has(item)
+  }
+
+  /** The community prices, as they are. */
+  baselineEntries(): [number, number][] {
+    return [...this.baselines]
+  }
+
+  /** How many community prices there are. */
+  get baselineCount(): number {
+    return this.baselines.size
+  }
+
+  /** Everything the tracker knows, for saving. The baseline is not in here: it has a file of its own. */
   snapshot(): { learned: [number, PriceInfo][]; overrides: [number, number][] } {
     return {
       learned: [...this.learned],
