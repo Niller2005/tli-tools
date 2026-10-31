@@ -12,7 +12,7 @@
 //
 // Keys: up/down move, tab changes panel, enter detail, esc back, t tax, c map cost, e price,
 // x csv report, p pause, a/v/w open Arcana, Vorax or Warden in a window of their own,
-// ? help, q quits.
+// / searches the list that has the focus, ? help, q quits.
 
 import { findLog } from '@tli/gamelog'
 import { Launcher, openTool } from '@tli/launch'
