@@ -38,7 +38,8 @@ effect. The layout and all the text stay exactly the same when colour is off.
 
 The screen is drawn with [OpenTUI](https://opentui.com/docs), so the terminal is put back the way
 it was on every way out, and the layout follows the size of the window. The parts the other tools
-share are in [`packages/tui`](../../packages/tui/README.md).
+share are in [`packages/tui`](../../packages/tui/README.md), and the tools that can be started, and
+the windows they can be started in, are in [`packages/launch`](../../packages/launch/README.md).
 
 To draw the screen from a real log without starting the terminal UI, run this from `apps/tracker`:
 
@@ -67,8 +68,30 @@ The keys:
 | `s` | Change how the list is sorted |
 | `x` | Write the loot report to a csv file |
 | `r` | Read the log again from where it was |
+| `a` | Open Arcana in a window of its own |
+| `v` | Open Vorax in a window of its own |
+| `w` | Open Warden in a window of its own |
 | `?` | The help |
 | `q` | Quit |
+
+## A minigame in a window of its own
+
+The tracker follows the log while the game is being played, so it cannot show another full-screen
+tool at the same time. `a`, `v` and `w` open Arcana, Vorax and Warden in a window of their own,
+and the tracker carries on: the log is still read, the numbers still change.
+
+The window is opened in the terminal the player uses: `ghostty`, `kitty`, `foot`, `alacritty`,
+`wezterm` or `xterm`, whichever is installed. `TLI_TERMINAL` says which one to use. The tool gets
+the log the tracker reads (`--log=`) and the colours the tracker has (`--no-color`).
+
+In tmux the tool opens as a pane of the session the tracker is in, so the tracker keeps the focus.
+`TLI_TMUX_MODE` says how: `split-h` (the default) puts the pane beside the tracker, `split-v`
+below it and `window` gives it a window of its own.
+
+Opening the same tool twice does nothing: the second key says that it is already open. The window
+is closed with the tool, or by closing the window.
+
+Where the window ends up on the screen is the compositor's business.
 
 ## What it reads from the log
 

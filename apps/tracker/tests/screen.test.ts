@@ -54,7 +54,7 @@ async function setup(width = 120, height = 24, tracker = trackerWithItems()) {
   // The kitty keyboard protocol sends every key on its own, so the escape key does not have to
   // wait for the terminal's parser to see whether more of a sequence is coming.
   const test = await createTestRenderer({ width, height, kittyKeyboard: true })
-  const state = { quit: false, reported: false, read: false }
+  const state = { quit: false, reported: false, read: false, opened: [] as string[] }
   const app = new TrackerApp(
     test.renderer,
     tracker,
@@ -69,6 +69,11 @@ async function setup(width = 120, height = 24, tracker = trackerWithItems()) {
       },
       onRead: () => {
         state.read = true
+      },
+      onOpenWindow: (tool) => {
+        // the tests never open a window: they only remember what was asked for
+        state.opened.push(tool.id)
+        return `${tool.name} is open in a new window`
       },
     },
     NOW,
@@ -329,6 +334,27 @@ describe('the tracker screen', () => {
     expect(state.read).toBe(true)
     test.mockInput.pressKey('q')
     expect(state.quit).toBe(true)
+    test.renderer.destroy()
+  })
+
+  test('a, v and w open the minigame tools in a window of their own', async () => {
+    const { test, app, state } = await setup(120, 24)
+    test.mockInput.pressKey('a')
+    test.mockInput.pressKey('v')
+    test.mockInput.pressKey('w')
+    expect(state.opened).toEqual(['arcana', 'vorax', 'warden'])
+    expect(app.state.message).toContain('is open in a new window')
+    test.renderer.destroy()
+  })
+
+  test('the tracker keeps following the log while a tool is open', async () => {
+    const { test, app, state } = await setup(120, 24)
+    test.mockInput.pressKey('v')
+    expect(state.opened).toEqual(['vorax'])
+    expect(app.state.focus).toBe('runs')
+    expect(app.state.paused).toBe(false)
+    test.mockInput.pressKey('j')
+    expect(app.state.runsAt).toBe(1)
     test.renderer.destroy()
   })
 

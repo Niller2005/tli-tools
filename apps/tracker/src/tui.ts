@@ -11,9 +11,11 @@
 //   bun src/tui.ts --no-color          draw without colours
 //
 // Keys: up/down move, tab changes panel, enter detail, esc back, t tax, c map cost, e price,
-// x csv report, p pause, ? help, q quits.
+// x csv report, p pause, a/v/w open Arcana, Vorax or Warden in a window of their own,
+// ? help, q quits.
 
 import { findLog } from '@tli/gamelog'
+import { Launcher, openTool } from '@tli/launch'
 import { ITEM_TABLE_PATH, ItemNames, LogReader, Tracker, loadTracker, saveTracker, userItemsPath } from '@tli/tracker'
 import { startApp } from '@tli/tui'
 import type { KeyEvent } from '@opentui/core'
@@ -82,9 +84,15 @@ const renderer = terminal.renderer
 
 /* ---------- the app ---------- */
 
+const launcher = new Launcher()
+
 const app = new TrackerApp(renderer, tracker, names, logFile, {
   onQuit: () => {
     void quit()
+  },
+  onOpenWindow: (tool) => {
+    // the tool goes into a window of its own, so the tracker keeps following the log
+    return openTool(launcher, tool, { parentArgv: process.argv }).message
   },
   onReport: () => {
     void writeReport(tracker, names).then(
