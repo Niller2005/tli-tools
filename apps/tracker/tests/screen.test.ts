@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { ItemNames, Tracker } from '@tli/tracker'
 import { KeyCodes, createTestRenderer } from '@opentui/core/testing'
 import { TrackerApp } from '../src/app'
+import { matchesFilter } from '../src/view'
 
 const NOW = Date.UTC(2026, 9, 30, 12, 0, 0)
 
@@ -365,5 +366,286 @@ describe('the tracker screen', () => {
     await test.mockMouse.click(90, 6)
     expect(app.state.focus).toBe('runs')
     test.renderer.destroy()
+  })
+})
+
+/** The part of the frame a column of the screen has, from left to right. */
+function column(frame: string, from: number, to: number): string {
+  return frame
+    .split('\n')
+    .map((line) => line.slice(from, to))
+    .join('\n')
+}
+
+describe('the search of the tracker screen', () => {
+  test('the bag can be searched', async () => {
+    const { test, app } = await setup(120, 24)
+    app.state.focus = 'inventory'
+    app.draw()
+    await test.renderOnce()
+    test.mockInput.pressKey('/')
+    await test.mockInput.typeText('ember')
+    await test.renderOnce()
+    const frame = test.captureCharFrame()
+    const bag = column(frame, 0, 54)
+    expect(bag).toContain('Ember Core')
+    expect(bag).not.toContain('Silver Shard')
+    expect(bag).not.toContain('Ancient Relic')
+    expect(bag).toContain('Bag /ember (1/3)')
+    expect(app.state.inventoryFilter).toBe('ember')
+    test.renderer.destroy()
+  })
+
+  test('the search does not mind capitals', async () => {
+    const { test, app } = await setup(120, 24)
+    app.state.focus = 'inventory'
+    app.draw()
+    await test.renderOnce()
+    test.mockInput.pressKey('/')
+    await test.mockInput.typeText('EMBER')
+    await test.renderOnce()
+    const bag = column(test.captureCharFrame(), 0, 54)
+    expect(bag).toContain('Ember Core')
+    expect(bag).not.toContain('Silver Shard')
+    test.renderer.destroy()
+  })
+
+  test('the search finds an item by its number', async () => {
+    const { test, app } = await setup(120, 24)
+    app.state.focus = 'inventory'
+    app.draw()
+    await test.renderOnce()
+    test.mockInput.pressKey('/')
+    await test.mockInput.typeText('200')
+    await test.renderOnce()
+    const bag = column(test.captureCharFrame(), 0, 54)
+    expect(bag).toContain('Silver Shard')
+    expect(bag).not.toContain('Ember Core')
+    test.renderer.destroy()
+  })
+
+  test('every word of the search has to match', async () => {
+    const { test, app } = await setup(120, 24)
+    app.state.focus = 'inventory'
+    app.draw()
+    await test.renderOnce()
+    test.mockInput.pressKey('/')
+    await test.mockInput.typeText('ember core')
+    await test.renderOnce()
+    expect(column(test.captureCharFrame(), 0, 54)).toContain('Ember Core')
+    test.mockInput.pressBackspace()
+    test.mockInput.pressBackspace()
+    test.mockInput.pressBackspace()
+    test.mockInput.pressBackspace()
+    await test.mockInput.typeText('silver')
+    await test.renderOnce()
+    const bag = column(test.captureCharFrame(), 0, 54)
+    expect(bag).not.toContain('Ember Core')
+    expect(bag).not.toContain('Silver Shard')
+    expect(bag).toContain('no item matches "ember silver"')
+    test.renderer.destroy()
+  })
+
+  test('the prices can be searched too, and the filters are apart', async () => {
+    const { test, app } = await setup(120, 24)
+    app.state.focus = 'prices'
+    app.draw()
+    await test.renderOnce()
+    test.mockInput.pressKey('/')
+    await test.mockInput.typeText('relic')
+    await test.renderOnce()
+    const frame = test.captureCharFrame()
+    const prices = column(frame, 54, 120)
+    expect(prices).toContain('Ancient Relic')
+    expect(prices).not.toContain('Silver Shard')
+    expect(prices).toContain('Prices (* set) /relic (1/3)')
+    expect(app.state.pricesFilter).toBe('relic')
+    expect(app.state.inventoryFilter).toBe('')
+    expect(frame).toContain('/relic')
+    test.renderer.destroy()
+  })
+
+  test('nothing matches says so', async () => {
+    const { test, app } = await setup(120, 24)
+    app.state.focus = 'inventory'
+    app.draw()
+    await test.renderOnce()
+    test.mockInput.pressKey('/')
+    await test.mockInput.typeText('zzz')
+    await test.renderOnce()
+    const bag = column(test.captureCharFrame(), 0, 54)
+    expect(bag).toContain('no item matches "zzz"')
+    expect(bag).toContain('Bag /zzz (0/3)')
+    test.renderer.destroy()
+  })
+
+  test('the keys of the search box do nothing else', async () => {
+    const { test, app, tracker } = await setup(120, 24)
+    app.state.focus = 'inventory'
+    app.draw()
+    await test.renderOnce()
+    test.mockInput.pressKey('/')
+    await test.mockInput.typeText('tcp')
+    await test.renderOnce()
+    expect(tracker.taxed).toBe(true)
+    expect(tracker.mapCosts).toBe(false)
+    expect(app.state.paused).toBe(false)
+    expect(app.state.searching).toBe('inventory')
+    expect(app.state.inventoryFilter).toBe('tcp')
+    test.renderer.destroy()
+  })
+
+  test('enter keeps the filter and gives the keys back', async () => {
+    const { test, app } = await setup(120, 24)
+    app.state.focus = 'inventory'
+    app.draw()
+    await test.renderOnce()
+    test.mockInput.pressKey('/')
+    await test.mockInput.typeText('ember')
+    test.mockInput.pressEnter()
+    await test.renderOnce()
+    expect(app.state.searching).toBeNull()
+    expect(app.state.inventoryFilter).toBe('ember')
+    expect(column(test.captureCharFrame(), 0, 54)).toContain('Ember Core')
+    test.mockInput.pressKey('j')
+    expect(app.state.inventoryAt).toBe(0)
+    test.renderer.destroy()
+  })
+
+  test('escape while typing takes the filter away and leaves the search', async () => {
+    const { test, app } = await setup(120, 24)
+    app.state.focus = 'inventory'
+    app.draw()
+    await test.renderOnce()
+    test.mockInput.pressKey('/')
+    await test.mockInput.typeText('ember')
+    test.mockInput.pressEscape()
+    await test.renderOnce()
+    expect(app.state.searching).toBeNull()
+    expect(app.state.inventoryFilter).toBe('')
+    const bag = column(test.captureCharFrame(), 0, 54)
+    expect(bag).toContain('Silver Shard')
+    expect(bag).toContain('Bag (3)')
+    test.renderer.destroy()
+  })
+
+  test('escape takes the filter away when the keys are back', async () => {
+    const { test, app } = await setup(120, 24)
+    app.state.focus = 'inventory'
+    app.draw()
+    await test.renderOnce()
+    test.mockInput.pressKey('/')
+    await test.mockInput.typeText('ember')
+    test.mockInput.pressEnter()
+    await test.renderOnce()
+    expect(app.state.inventoryFilter).toBe('ember')
+    test.mockInput.pressEscape()
+    await test.renderOnce()
+    expect(app.state.inventoryFilter).toBe('')
+    expect(app.state.message).toContain('filter')
+    expect(column(test.captureCharFrame(), 0, 54)).toContain('Bag (3)')
+    test.renderer.destroy()
+  })
+
+  test('escape closes the detail of a run before it takes the filter away', async () => {
+    const { test, app } = await setup(120, 24)
+    app.state.focus = 'inventory'
+    app.state.inventoryFilter = 'ember'
+    app.draw()
+    await test.renderOnce()
+    test.mockInput.pressEnter()
+    expect(app.state.detail).not.toBeNull()
+    test.mockInput.pressEscape()
+    expect(app.state.detail).toBeNull()
+    expect(app.state.inventoryFilter).toBe('ember')
+    test.renderer.destroy()
+  })
+
+  test('the keys work on the row that is left by the filter', async () => {
+    const tracker = trackerWithItems()
+    const { test, app } = await setup(120, 24, tracker)
+    app.state.focus = 'inventory'
+    app.draw()
+    await test.renderOnce()
+    test.mockInput.pressKey('/')
+    await test.mockInput.typeText('ember')
+    test.mockInput.pressEnter()
+    await test.renderOnce()
+    test.mockInput.pressKey('e')
+    expect(app.state.editing?.item).toBe(100)
+    test.mockInput.pressBackspace()
+    await test.mockInput.typeText('42')
+    test.mockInput.pressEnter()
+    expect(tracker.prices.price(100)).toBe(42)
+    expect(tracker.prices.price(300)).toBe(25)
+    test.renderer.destroy()
+  })
+
+  test('the pointer stays inside the rows that are left', async () => {
+    const { test, app } = await setup(120, 24)
+    app.state.focus = 'inventory'
+    app.draw()
+    await test.renderOnce()
+    test.mockInput.pressKey('j')
+    test.mockInput.pressKey('j')
+    expect(app.state.inventoryAt).toBe(2)
+    test.mockInput.pressKey('/')
+    await test.mockInput.typeText('ember')
+    await test.renderOnce()
+    expect(app.state.inventoryAt).toBe(0)
+    test.mockInput.pressKey('j')
+    expect(app.state.inventoryAt).toBe(0)
+    test.renderer.destroy()
+  })
+
+  test('the runs cannot be searched', async () => {
+    const { test, app } = await setup(120, 24)
+    test.mockInput.pressKey('/')
+    await test.renderOnce()
+    expect(app.state.searching).toBeNull()
+    expect(app.state.message).toContain('nothing to search')
+    test.renderer.destroy()
+  })
+
+  test('the help says how the search works', async () => {
+    const { test } = await setup(120, 24)
+    test.mockInput.pressKey('?')
+    await test.renderOnce()
+    expect(test.captureCharFrame()).toContain('search the list that has the focus')
+    test.renderer.destroy()
+  })
+
+  test('the search box fits at every size', async () => {
+    for (const width of [60, 80, 120, 200]) {
+      for (const height of [10, 24, 50]) {
+        const { test, app } = await setup(width, height)
+        app.state.focus = 'inventory'
+        app.draw()
+        test.mockInput.pressKey('/')
+        await test.renderOnce()
+        const frame = test.captureSpans()
+        expect(frame.rows).toBe(height)
+        expect(frame.cols).toBe(width)
+        for (const line of frame.lines) {
+          const used = line.spans.reduce((sum, span) => sum + span.width, 0)
+          expect(used).toBeLessThanOrEqual(width)
+        }
+        test.renderer.destroy()
+      }
+    }
+  })
+})
+
+describe('the words of a filter', () => {
+  test('a word matches the name of an item, its number, or the start of a word of its name', () => {
+    expect(matchesFilter('Ember Core', 100, 'ember')).toBe(true)
+    expect(matchesFilter('Ember Core', 100, 'EMBER')).toBe(true)
+    expect(matchesFilter('Ember Core', 100, 'core')).toBe(true)
+    expect(matchesFilter('Ember Core', 100, '100')).toBe(true)
+    expect(matchesFilter('Ember Core', 100, 'ember core')).toBe(true)
+    expect(matchesFilter('Ember Core', 100, 'ember silver')).toBe(false)
+    expect(matchesFilter('Ember Core', 100, 'silver')).toBe(false)
+    expect(matchesFilter('Ember Core', 100, '10')).toBe(false)
+    expect(matchesFilter('Ember Core', 100, '')).toBe(true)
   })
 })
