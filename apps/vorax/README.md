@@ -32,7 +32,9 @@ and from which round you play on your own (round 11, the protocols, by default).
 ## Linux (terminal)
 `scripts/tui.ts` is a terminal version for Linux: no overlay, the same reader and advice. It follows the game's log, takes a
 picture of the game window after every move (and watches the window for changes when the log has no detail lines),
-reads the board and shows the move, the chance of reaching your target and the next-best options.
+reads the board and shows the move, the chance of reaching your target and the next-best options. The screen is drawn
+with [OpenTUI](https://opentui.com/docs): the header, the **Next move**, **Options** and **Board** panels, and the keys at
+the bottom.
 
 ```
 bun scripts/tui.ts
@@ -45,7 +47,7 @@ bun scripts/tui.ts
   turned off): keep the game the active window on its screen (run the TUI on another monitor or workspace).
 - Other compositors: `--capture-cmd='<command that writes a PNG of the game to {out}>'`.
 - Keys: `r` read now · `t` target (600k, 700k, 925k, 1.12M) · `d` deep check on/off · `q` quit.
-- Options: `--log=<UE_game.log>`, `--game-title=<regex>`, `--target=<score>`, `--no-deep`.
+- Options: `--log=<UE_game.log>`, `--game-title=<regex>`, `--target=<score>`, `--no-deep`, `--no-color`.
 - `bun scripts/tui.ts --image=shot.png` reads one screenshot, prints the advice and exits.
 
 ## The overlay

@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 // Vorax Helper in a terminal, for Linux (built for Niri on Wayland). Follows the game's log, takes a picture of the
 // game window after every move, reads the board and shows the best move. It only reads and advises: it never clicks
 // or types in the game.
@@ -7,6 +8,9 @@
 //
 // Options: --log=<UE_game.log>  --game-title=<regex>  --target=<score>  --no-deep
 //          --capture-cmd='<command writing a PNG of the game to {out}>'   (any compositor but Niri)
+//          --no-color
+//
+// Keys: r read now · t target (600k, 700k, 925k, 1.12M) · d deep check on/off · q quit.
 import { readFileSync } from 'node:fs'
 import { CHECK_MS, createLiveLoop, POLL_MS, type LiveEvent } from '@/reader/live/liveLoop'
 import { createFollower } from '@/reader/live/logFollower'
@@ -20,11 +24,15 @@ import { decodePngClamped } from '@tli/png'
 import { tesseractFound } from '@tli/ocr'
 import { createCapture, type Capture } from '@tli/capture'
 import { findLog } from '@tli/gamelog'
+import { startApp } from '@tli/tui'
+import type { KeyEvent } from '@opentui/core'
+import { VoraxApp } from './tui/app'
 import { createAdvisor } from './tui/advice'
 import { fileHandle } from './tui/log'
 import { readWithTesseract } from './tui/ocr'
 import { createReader } from './tui/read'
-import { render, TARGETS, type Board, type View } from './tui/render'
+import { reportLines } from './tui/report'
+import { freshView, type Board } from './tui/view'
 
 const arg = (name: string) => process.argv.find(a => a.startsWith(`--${name}=`))?.slice(name.length + 3) ?? null
 const flag = (name: string) => process.argv.includes(`--${name}`)
@@ -41,16 +49,14 @@ const reader = createReader(readWithTesseract)
 const advisor = createAdvisor()
 let tracker = newTracker()
 let lastSig = ''
-let target = Number(arg('target')) || 925_000
-let deepOn = !flag('no-deep')
+const target = Number(arg('target')) || 925_000
+const deepOn = !flag('no-deep')
 let gen = 0
 
-const view: View = {
-  capture: 'looking for the game window', log: 'looking for the game log', logLines: 0, pictures: 0, status: '', target,
-  deepOn, board: null, quick: null, ahead: null, aheadPending: false, table: null, deep: null,
-}
+const view = freshView(target, deepOn)
 
-let redraw = () => {}
+/** Draws the screen. The terminal is only there in the live loop, so it starts as a nothing. */
+let draw = () => {}
 
 /* ---------- a reading becomes a board ---------- */
 
@@ -138,22 +144,22 @@ function advise(board: Board) {
     if (view.quick.note) return
   }
   view.aheadPending = true
-  redraw()
+  draw()
   advisor.ahead(x).then(a => {
     if (mine !== gen || !a) return
     view.ahead = a; view.aheadPending = false
-    redraw()
-    if (board.phase === 'potion' && deepOn) startDeep(board, mine)
-  }).catch(err => { if (mine === gen) { view.aheadPending = false; view.status = `look-ahead failed: ${err}`; redraw() } })
+    draw()
+    if (board.phase === 'potion' && view.deepOn) startDeep(board, mine)
+  }).catch(err => { if (mine === gen) { view.aheadPending = false; view.status = `look-ahead failed: ${err}`; draw() } })
 }
 
 function startDeep(board: Board, mine = gen) {
   advisor.cancelDeep()
   view.deep = { rows: [], done: 0, total: 60, finished: false }
-  advisor.deep(board.x, target, {
-    rows: (rows, done, total) => { if (mine === gen) { view.deep = { rows, done, total, finished: false }; redraw() } },
-    done: rows => { if (mine === gen) { view.deep = { rows, done: 60, total: 60, finished: true }; redraw() } },
-    error: message => { if (mine === gen) { view.deep = { rows: [], done: 0, total: 0, finished: true, error: message }; redraw() } },
+  advisor.deep(board.x, view.target, {
+    rows: (rows, done, total) => { if (mine === gen) { view.deep = { rows, done, total, finished: false }; draw() } },
+    done: rows => { if (mine === gen) { view.deep = { rows, done: 60, total: 60, finished: true }; draw() } },
+    error: message => { if (mine === gen) { view.deep = { rows: [], done: 0, total: 0, finished: true, error: message }; draw() } },
   })
 }
 
@@ -175,7 +181,7 @@ if (image) {
     // wait for the look-ahead and the deep check to finish
     for (let i = 0; i < 600 && (view.aheadPending || (view.deep && !view.deep.finished)); i++) await Bun.sleep(100)
   }
-  console.log(render(view, 100).join('\n'))
+  console.log(reportLines(view).join('\n'))
   if (result === 'kept') process.exitCode = 2
   advisor.close()
   process.exit()
@@ -200,7 +206,7 @@ async function snap(kind: string) {
   } finally {
     view.capture = cap.status()
     snapping = false; rebase = true
-    redraw()
+    draw()
     if (pending) { const k = pending; pending = null; void snap(k) }
   }
 }
@@ -217,7 +223,7 @@ async function look() {
   } catch (err) {
     view.capture = err instanceof Error ? err.message : String(err)
     firstLook = true
-    redraw()
+    draw()
   } finally { watchBusy = false }
 }
 
@@ -238,6 +244,47 @@ function connectLog() {
   })
 }
 
+/* ---------- the terminal ---------- */
+
+const terminal = await startApp({
+  onShutdown: () => {
+    advisor.close()
+    cap.close()
+  },
+})
+const renderer = terminal.renderer
+
+const app = new VoraxApp(renderer, view, {
+  onQuit: () => {
+    void quit()
+  },
+  onSnap: () => {
+    void snap('manual')
+  },
+  onTarget: () => {
+    if (view.board && view.ahead && view.deepOn && view.board.phase === 'potion') startDeep(view.board)
+  },
+  onDeep: deep => {
+    if (!deep) { advisor.cancelDeep(); view.deep = null }
+    else if (view.board && view.ahead && view.board.phase === 'potion') startDeep(view.board)
+  },
+})
+draw = () => app.draw()
+
+const onKey = (key: KeyEvent): void => {
+  app.key(key)
+}
+renderer.keyInput.on('keypress', onKey)
+renderer.on('destroy', () => {
+  renderer.keyInput.off('keypress', onKey)
+})
+
+/** Leaves, and puts the terminal back. */
+async function quit(): Promise<void> {
+  await terminal.stop()
+  process.exit(0)
+}
+
 connectLog()
 let polling = false
 setInterval(async () => {
@@ -249,43 +296,8 @@ setInterval(async () => {
 setInterval(() => loop?.check(), CHECK_MS)
 setInterval(() => { if (!loop) connectLog() }, 5000)
 setInterval(look, 450)
+setInterval(() => app.draw(), 1000)
 
-/* ---------- the terminal ---------- */
+app.draw()
 
-const out = process.stdout
-redraw = () => {
-  view.target = target; view.deepOn = deepOn
-  const lines = render(view, out.columns || 100).map(l => l + '\x1b[K')
-  out.write('\x1b[H' + lines.join('\n') + '\n\x1b[J')
-}
-function quit() {
-  out.write('\x1b[?25h\x1b[?1049l')
-  advisor.close(); cap.close()
-  process.exit()
-}
-
-out.write('\x1b[?1049h\x1b[?25l')
-process.on('SIGINT', quit)
-process.on('SIGTERM', quit)
-out.on('resize', redraw)
-setInterval(redraw, 1000)
-if (process.stdin.isTTY) {
-  process.stdin.setRawMode(true)
-  process.stdin.resume()
-  process.stdin.on('data', d => {
-    for (const k of d.toString()) {
-      if (k === 'q' || k === '\x03') quit()
-      else if (k === 'r') void snap('manual')
-      else if (k === 't') {
-        target = TARGETS[(TARGETS.indexOf(target) + 1) % TARGETS.length]
-        if (view.board && view.ahead && deepOn && view.board.phase === 'potion') startDeep(view.board)
-      } else if (k === 'd') {
-        deepOn = !deepOn
-        if (!deepOn) { advisor.cancelDeep(); view.deep = null }
-        else if (view.board && view.ahead && view.board.phase === 'potion') startDeep(view.board)
-      }
-    }
-    redraw()
-  })
-}
-redraw()
+await terminal.done

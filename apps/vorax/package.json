@@ -5,13 +5,16 @@
   "scripts": {
     "tui": "bun scripts/tui.ts",
     "build:web": "bun scripts/build-web.mjs",
+    "test": "bun test",
     "typecheck": "tsc -p ."
   },
   "dependencies": {
+    "@opentui/core": "0.8.0",
     "@tli/capture": "workspace:*",
     "@tli/gamelog": "workspace:*",
     "@tli/ocr": "workspace:*",
-    "@tli/png": "workspace:*"
+    "@tli/png": "workspace:*",
+    "@tli/tui": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",
