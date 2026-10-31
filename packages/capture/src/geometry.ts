@@ -49,6 +49,8 @@ export interface NiriOutput {
 
 /** How to take the picture of the game window. */
 export type Plan =
+  /** no silent picture is possible; Niri's own picture needs an explicit opt-in */
+  | { kind: 'none'; reason: string }
   /** Niri's own window picture: it works for any window, but Niri announces it */
   | { kind: 'window' }
   /** the whole output, through grim: silent */
@@ -153,30 +155,40 @@ export function planCapture(o: {
   outputs: Record<string, NiriOutput | undefined>
   /** Niri's overview is open: the screen shows the workspaces, not the game */
   overviewOpen: boolean
+  /** whether Niri's announced window screenshot may be used */
+  niriScreenshot?: boolean
 }): Plan {
   const game = o.window
+  const unavailable = (why: string): Plan =>
+    o.niriScreenshot === true
+      ? { kind: 'window' }
+      : {
+          kind: 'none',
+          reason: `the game is not on screen (${why}); no picture taken so that niri does not notify`,
+        }
+
   // The overview draws the whole workspace small: the game is not on the screen.
-  if (o.overviewOpen) return { kind: 'window' }
+  if (o.overviewOpen) return unavailable('the niri overview is open')
   const workspace = o.workspaces.find(s => s.id === game.workspace_id)
-  if (!workspace) return { kind: 'window' }
+  if (!workspace) return unavailable('niri does not know its workspace')
   const output = o.outputs[workspace.output]
-  if (!output) return { kind: 'window' }
+  if (!output) return unavailable('niri does not know its output')
   // The workspace is not the one on the screen: the game is not on the screen.
-  if (!workspace.is_active) return { kind: 'window' }
+  if (!workspace.is_active) return unavailable('its workspace is not showing')
 
   const rect = windowRect(game)
   if (!rect) {
     // Niri does not say where a tiled window is. It fills its output when it is
     // the only window of the workspace, and then the whole output is the game.
-    if (!fillsOutput(game, output)) return { kind: 'window' }
-    if (workspace.active_window_id !== game.id) return { kind: 'window' }
-    if (obscured(o.windows, game, outputRect(output))) return { kind: 'window' }
+    if (!fillsOutput(game, output)) return unavailable('niri cannot see the position of this tiled window')
+    if (workspace.active_window_id !== game.id) return unavailable('it is not the active window')
+    if (obscured(o.windows, game, outputRect(output))) return unavailable('another window is over it')
     return { kind: 'output', output: workspace.output }
   }
 
-  if (obscured(o.windows, game, rect)) return { kind: 'window' }
+  if (obscured(o.windows, game, rect)) return unavailable('another window is over it')
   if (coversOutput(rect, output)) return { kind: 'output', output: workspace.output }
   const region = clipToOutput(rect, output)
-  if (!region) return { kind: 'window' }
+  if (!region) return unavailable('it is outside the output')
   return { kind: 'region', output: workspace.output, region }
 }
