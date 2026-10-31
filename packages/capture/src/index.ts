@@ -104,7 +104,9 @@ export function createCapture(o: { title: RegExp; command?: string }): Capture {
     if (!workspace || !workspace.is_active) return { kind: 'window' }
     const [outputs, overview] = await Promise.all([
       niriJson('outputs') as Promise<Record<string, NiriOutput>>,
-      niriJson('overview-state') as Promise<{ is_open: boolean }>,
+      // An older niri cannot say whether the overview is open: the picture is
+      // then taken as if it were closed.
+      niriJson('overview-state').catch(() => ({ is_open: false })) as Promise<{ is_open: boolean }>,
     ])
     return planCapture({ window: w, windows, workspaces, outputs, overviewOpen: overview.is_open })
   }
