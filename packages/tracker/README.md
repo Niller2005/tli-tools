@@ -80,6 +80,20 @@ bun scripts/coverage.ts --missing       # only the ids the table does not name
 An item the table does not know is shown as `Item #<id>`. The player can name items in
 `~/.config/tli-tracker/items.json`; those names win over the ones in the table.
 
+The ids the wiki does not name either are left alone, rather than guessed at. The logs of this
+machine show four of them, and the wiki has a card for none of them (the card comes back empty, in
+every language the site has):
+
+| Id | What the logs show | What the ids around it say |
+|----|--------------------|-----------------------------|
+| 5141 | the stash, in `ResetItemsLayout` and `ExchangeItem` blocks | 5140 is Memory Scrap, 5142 to 5144 are Memory Thread - Magic, Rare and Epic: a tier of Memory Thread the wiki does not have a page for |
+| 100400 | the stash, in `ResetItemsLayout`, `ExchangeItem` and `BuyVendorGoods` blocks; the largest pile in the logs (68,167 items) | 100200 is Flame Sand and 100300 is Flame Elementium, the two fuels the wiki has pages for |
+| 250001 | the stash, in `ResetItemsLayout` blocks | the ids around it are the Divinity Slates (260001 and up) and the legendaries (210003 and down) |
+| 502100 | the stash, in `ResetItemsLayout` blocks | 502000 is Tempering Medal and 502001 is Tempering Medal (Origin) |
+
+The game gives no name for them either: the blocks the logs write for an item carry its id, its
+count and its rarity, but no name.
+
 ## The tests
 
 ```
