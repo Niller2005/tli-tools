@@ -85,7 +85,8 @@ const HELP: [string, string][] = [
   ['t', 'the trade tax on and off'],
   ['c', 'the cost of the map counts against the profit, or not'],
   ['p', 'stop and start the clock'],
-  ['e', 'set the price of the item that is picked out'],
+  ['e', 'set the price of the item that is picked out (empty = reset)'],
+  ['u', 'reset a hand-set price to the learned one'],
   ['s', 'change how the list is sorted'],
   ['x', 'write the loot report to a csv file'],
   ['r', 'read the log again from where it was'],
@@ -708,6 +709,7 @@ export class TrackerScreen {
       ['t', 'tax'],
       ['c', 'map cost'],
       ['e', 'price'],
+      ['u', 'reset price'],
       ['x', 'csv'],
       ['p', 'pause'],
       ['?', 'help'],
@@ -720,7 +722,7 @@ export class TrackerScreen {
     this.hintText.content = new StyledText(this.pack(segments, width))
     this.hintText.width = width
     this.hintText.visible = state.editing === null
-    this.priceHint.content = new StyledText([tone('dim', 'enter keeps it · esc leaves it')])
+    this.priceHint.content = new StyledText([tone('dim', 'enter keeps it · empty enter resets · esc leaves it')])
   }
 
   /** The help, or the detail of a run, over the whole screen. */

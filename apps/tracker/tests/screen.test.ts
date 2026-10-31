@@ -206,6 +206,32 @@ describe('the tracker screen', () => {
     test.renderer.destroy()
   })
 
+  test('u takes a set price away, and an empty price does the same', async () => {
+    const tracker = trackerWithItems()
+    tracker.prices.setOverride(300, null)
+    tracker.prices.learn(300, [8, 8, 8], 0)
+    const learned = tracker.prices.price(300)
+    expect(learned).toBeGreaterThan(0)
+    const { test, app } = await setup(120, 24, tracker)
+    tracker.prices.setOverride(300, 42)
+    expect(tracker.prices.price(300)).toBe(42)
+    test.mockInput.pressKey('u')
+    expect(tracker.prices.price(300)).toBe(learned)
+    expect(app.state.message).toContain('is gone')
+
+    tracker.prices.setOverride(300, 42)
+    test.mockInput.pressKey('e')
+    test.mockInput.pressBackspace()
+    test.mockInput.pressBackspace()
+    test.mockInput.pressEnter()
+    expect(app.state.editing).toBeNull()
+    expect(tracker.prices.price(300)).toBe(learned)
+
+    test.mockInput.pressKey('u')
+    expect(app.state.message).toContain('no price set by hand')
+    test.renderer.destroy()
+  })
+
   test('escape leaves the price without keeping it', async () => {
     const tracker = trackerWithItems()
     const { test, app } = await setup(120, 24, tracker)

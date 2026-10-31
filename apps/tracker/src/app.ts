@@ -181,6 +181,15 @@ export class TrackerApp {
         this.screen.beginPrice(item, this.names.name(item), this.state.editing.text)
         return
       }
+      case 'u': {
+        const item = this.selectedItem()
+        if (item === null) {
+          this.state.message = 'there is nothing to reset'
+          return
+        }
+        this.resetPrice(item)
+        return
+      }
       case 's': {
         if (this.state.focus === 'inventory') {
           const order = ['value', 'qty', 'name'] as const
@@ -211,11 +220,30 @@ export class TrackerApp {
   /** Sets the price of an item, when the player confirms one. */
   private setPrice(item: number, price: string): void {
     const value = Number(price)
+    if (price.trim() === '') {
+      this.resetPrice(item)
+      return
+    }
     if (Number.isFinite(value) && value >= 0) {
       this.tracker.prices.setOverride(item, value)
       this.state.message = `the price of ${this.names.name(item)} is ${value} FE`
     } else {
       this.state.message = `${price} is not a price`
+    }
+    this.state.editing = null
+    this.screen.endPrice()
+    this.draw()
+  }
+
+  /** Takes a hand-set price away, so the learned one counts again. */
+  private resetPrice(item: number): void {
+    const name = this.names.name(item)
+    if (this.tracker.prices.override(item) === null) {
+      this.state.message = `${name} has no price set by hand`
+    } else {
+      this.tracker.prices.setOverride(item, null)
+      const learned = this.tracker.prices.price(item)
+      this.state.message = `the set price of ${name} is gone${learned > 0 ? `, the learned ${learned} FE counts` : ''}`
     }
     this.state.editing = null
     this.screen.endPrice()
