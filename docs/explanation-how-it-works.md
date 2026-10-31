@@ -7,9 +7,10 @@ it is. For steps to follow, see the [getting-started tutorial](tutorial-getting-
 
 Both tools do the same four things:
 
-1. **Capture.** `@tli/capture` takes a picture of the game window. On Niri it asks the compositor for the window; if
-   the game fills its output and is the active window it uses `grim` instead, because Niri announces every window
-   screenshot with a notification that can't be turned off.
+1. **Capture.** `@tli/capture` takes a picture of the game window. On Niri it takes the picture itself when the game is
+   on the screen: the whole output with `grim` when the game fills it, and the part of the output the game is in
+   otherwise. Niri announces every window screenshot it takes itself with a notification that can't be turned off, so
+   that is only the fallback, for a game that is not on the screen.
 2. **Read.** The picture becomes a model of the board. Template matching and pixel measurements find the cells,
    Inmates and instruments. Text such as the day counter and card names goes through `tesseract` (`@tli/ocr`).
 3. **Solve.** The model is rebuilt as a game state for the rules engine, and the solver plays it out many times to

@@ -41,10 +41,12 @@ bun scripts/tui.ts
 ```
 
 - Needs [Bun](https://bun.sh) and `tesseract` with the English data (Arch: `pacman -S tesseract tesseract-data-eng`).
-- The game (Steam / Proton) is found through your Steam libraries; the window through `niri msg`. A fullscreen game that is
-  its workspace's active window is captured with `grim` (silent). Otherwise the picture comes from
-  `niri msg action screenshot-window`, which Niri always announces with a "Screenshot captured" notification (it can't be
-  turned off): keep the game the active window on its screen (run the TUI on another monitor or workspace).
+- The game (Steam / Proton) is found through your Steam libraries; the window through `niri msg`. A game that is on the
+  screen is captured with `grim` (silent): the whole output when the game fills it, and the part of the output the game
+  is in otherwise. Niri only says where a *floating* window is, so a tiled game that does not fill its output, and a game
+  on a workspace that is not the one on the screen, come from `niri msg action screenshot-window`, which Niri always
+  announces with a "Screenshot captured" notification (it can't be turned off): keep the game on the screen (its workspace
+  the active one on its output) to keep it silent.
 - Other compositors: `--capture-cmd='<command that writes a PNG of the game to {out}>'`.
 - Keys: `r` read now · `t` target (600k, 700k, 925k, 1.12M) · `d` deep check on/off · `q` quit.
 - Options: `--log=<UE_game.log>`, `--game-title=<regex>`, `--target=<score>`, `--no-deep`, `--no-color`.

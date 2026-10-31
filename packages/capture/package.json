@@ -6,7 +6,16 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "scripts": {
+    "test": "TLI_NO_CAPTURE=1 bun test",
+    "typecheck": "tsc -p ."
+  },
   "dependencies": {
     "@tli/png": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "latest",
+    "typescript": "^5.9.0"
   }
 }
