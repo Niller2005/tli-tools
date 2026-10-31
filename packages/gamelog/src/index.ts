@@ -12,6 +12,8 @@
 //! PageName = S16BoardMain , PageRunState = Destory    ... and closes
 //! PageName = S13GamePlayMain , PageRunState = Run     the Vorax game opens
 //! PageName = S13GamePlayMain , PageRunState = Hide    ... and closes
+//! PageName = S9Taro , PageRunState = Run              the Tarot Path opens
+//! PageName = S9Taro , PageRunState = Hide             ... and closes
 //! ```
 //!
 //! The game spells "destroyed" "Destory", and the page name is followed by a
@@ -86,7 +88,7 @@ export function findLog(given?: string): { file: string; exists: boolean } | nul
 /* ---------- what a line says ---------- */
 
 /** The minigames the log can talk about. */
-export type GameName = 'warden' | 'vorax'
+export type GameName = 'warden' | 'vorax' | 'arcana'
 
 /** Whether a minigame is on screen: open, closed, or unknown when the log says nothing about it. */
 export type MinigameState = 'open' | 'closed' | 'unknown'
@@ -106,6 +108,7 @@ export interface GameStatus {
 const PAGES: Record<string, { game: GameName; open: string[]; closed: string[] }> = {
   S16BoardMain: { game: 'warden', open: ['Run'], closed: ['Destory'] },
   S13GamePlayMain: { game: 'vorax', open: ['Run'], closed: ['Hide', 'Destory'] },
+  S9Taro: { game: 'arcana', open: ['Run'], closed: ['Hide', 'Destory'] },
 }
 
 /** The line that names the page and the state it went to. */
@@ -142,6 +145,7 @@ export class MinigameTracker {
   private readonly states: Record<GameName, GameStatus> = {
     warden: UNKNOWN,
     vorax: UNKNOWN,
+    arcana: UNKNOWN,
   }
   private sawDetail = false
 
@@ -149,6 +153,7 @@ export class MinigameTracker {
   seed(scan: ScanResult): void {
     this.states.warden = scan.warden
     this.states.vorax = scan.vorax
+    this.states.arcana = scan.arcana
     this.sawDetail = scan.detail
   }
 
@@ -161,7 +166,7 @@ export class MinigameTracker {
       if (c === null) continue
       this.states[c.game] = { state: c.open ? 'open' : 'closed', at: logTime(line) }
     }
-    return { warden: this.states.warden, vorax: this.states.vorax }
+    return { warden: this.states.warden, vorax: this.states.vorax, arcana: this.states.arcana }
   }
 
   /** What the log says about the Tartarus board. */
@@ -172,6 +177,11 @@ export class MinigameTracker {
   /** What the log says about the Vorax game. */
   get vorax(): GameStatus {
     return this.states.vorax
+  }
+
+  /** What the log says about the Tarot Path. */
+  get arcana(): GameStatus {
+    return this.states.arcana
   }
 
   /** Whether the log had any of the game's own lines. */
@@ -188,6 +198,8 @@ export interface ScanResult {
   warden: GameStatus
   /** what the log says about the Vorax game */
   vorax: GameStatus
+  /** what the log says about the Tarot Path */
+  arcana: GameStatus
   /** the log had some of the game's own lines */
   detail: boolean
   /** the log's size when it was read; a follower goes on from there */
@@ -246,10 +258,10 @@ function tail(file: string, maxBytes: number): { lines: string[]; size: number }
  */
 export function scanBack(file: string, maxBytes = SCAN_BYTES): ScanResult {
   const read = tail(file, maxBytes)
-  if (read === null) return { warden: UNKNOWN, vorax: UNKNOWN, detail: false, size: 0 }
+  if (read === null) return { warden: UNKNOWN, vorax: UNKNOWN, arcana: UNKNOWN, detail: false, size: 0 }
   const tracker = new MinigameTracker()
   tracker.feed(read.lines)
-  return { warden: tracker.warden, vorax: tracker.vorax, detail: tracker.detail, size: read.size }
+  return { warden: tracker.warden, vorax: tracker.vorax, arcana: tracker.arcana, detail: tracker.detail, size: read.size }
 }
 
 /* ---------- following the log ---------- */
@@ -337,6 +349,8 @@ export interface MinigameView {
   warden: MinigameState
   /** the Vorax game: open, closed, or unknown */
   vorax: MinigameState
+  /** the Tarot Path: open, closed, or unknown */
+  arcana: MinigameState
   /** what the log itself can tell us */
   log: LogState
 }
@@ -350,14 +364,15 @@ export interface Watcher {
 }
 
 /**
- * Watches the game's log for the minigames: the Tartarus board and the Vorax
- * game. The log's tail is read once at the start, so a tool that starts in the
- * middle of a minigame is right at once, and the log is followed after that.
+ * Watches the game's log for the minigames: the Tartarus board, the Vorax game
+ * and the Tarot Path. The log's tail is read once at the start, so a tool that
+ * starts in the middle of a minigame is right at once, and the log is followed
+ * after that.
  */
 export function watchMinigames(opts: { log?: string; intervalMs?: number } = {}): Watcher {
   const file = opts.log !== undefined ? resolve(opts.log) : findLog()?.file
   if (file === undefined) {
-    return { state: () => ({ warden: 'unknown', vorax: 'unknown', log: 'missing' }), close: () => {} }
+    return { state: () => ({ warden: 'unknown', vorax: 'unknown', arcana: 'unknown', log: 'missing' }), close: () => {} }
   }
   const scan = scanBack(file)
   const tracker = new MinigameTracker()
@@ -369,7 +384,12 @@ export function watchMinigames(opts: { log?: string; intervalMs?: number } = {})
       const bytes = size(file)
       // a log that is still empty says nothing, but it is not the game's fault
       const log: LogState = bytes === null ? 'missing' : bytes === 0 || tracker.detail ? 'ok' : 'no-detail'
-      return { warden: tracker.warden.state, vorax: tracker.vorax.state, log }
+      return {
+        warden: tracker.warden.state,
+        vorax: tracker.vorax.state,
+        arcana: tracker.arcana.state,
+        log,
+      }
     },
     close(): void {
       clearInterval(timer)

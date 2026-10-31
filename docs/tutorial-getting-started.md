@@ -129,5 +129,7 @@ the dashboard tells you to select one tool instead.
 - [`apps/warden/LINUX.md`](../apps/warden/LINUX.md): Warden options, including `--title` and `--rollouts`.
 - [`apps/vorax/README.md`](../apps/vorax/README.md): Vorax options, including `--log`, `--target` and
   `--capture-cmd` for compositors other than Niri.
+- [How to track your Tarot Path](how-to-track-your-arcana.md): the Arcana tracker, which reads the log for the
+  Tarot Path and the Fateful Contests.
 - If a board doesn't read, check that the game is 16:9 or wider and that `tesseract` is installed with the English
   data (step "Before you start").
