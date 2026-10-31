@@ -54,7 +54,8 @@ as before.
 - `tesseract` with the English data (Arch: `pacman -S tesseract tesseract-data-eng`).
 - Window capture: [Niri](https://github.com/YaLTeR/niri) is supported out of the box, with `grim` for a silent capture of
   a game that is on the screen. Other compositors can supply a command that writes a PNG (see each app's README).
-- `tmux`, only to run several tools at once from the dashboard.
+- `tmux`, to run several tools at once from the dashboard, and to open a tool in a pane of your own
+  session when the tracker or the dashboard runs inside one.
 
 ## Quick start
 
