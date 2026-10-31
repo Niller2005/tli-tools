@@ -63,6 +63,7 @@ The keys:
 | `p` | Stop and start the clock |
 | `e` | Set the price of the item that is picked out (empty enter resets it) |
 | `u` | Reset a hand-set price back to the learned one |
+| `d` | Remove the item from the prices (a new exchange search brings it back) |
 | `s` | Change how the list is sorted |
 | `x` | Write the loot report to a csv file |
 | `r` | Read the log again from where it was |

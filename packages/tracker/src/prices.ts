@@ -60,6 +60,12 @@ export class PriceStore {
     })
   }
 
+  /** Drops everything known about an item's price, the learned one and the hand-set one. */
+  forget(item: number): boolean {
+    const had = this.learned.delete(item)
+    return this.overrides.delete(item) || had
+  }
+
   /** What the item is worth: what the player set, else what was learned. */
   price(item: number): number {
     const set = this.overrides.get(item)
