@@ -10,8 +10,8 @@
 //   tracker.feed(lines)
 //
 // The parts: `parse` reads the log's lines, `inventory` keeps the bag, `runs` splits the log into
-// runs, `prices` keeps what the exchange said, `valuation` turns loot into FE, `engine` ties them
-// together and `store` saves the result.
+// runs, `prices` keeps what the exchange said, `baseline` brings the community prices, `valuation`
+// turns loot into FE, `engine` ties them together and `store` saves the result.
 
 export { Tracker, LOOT_PROTOS, COST_PROTOS, MONEY_PROTOS, MAX_RUNS, STATE_VERSION, migrateState } from './engine'
 export type { Stats, TrackerOptions, SavedRun, SavedState } from './engine'
@@ -26,6 +26,22 @@ export {
   type RunKind,
 } from './runs'
 export { PriceStore, referencePrice, type PriceInfo } from './prices'
+export {
+  ATTRIBUTION,
+  ATTRIBUTION_URL,
+  BASELINE_FILE,
+  BASELINE_MAX_AGE_MS,
+  PRICES_SITE,
+  PRICES_URL,
+  baselineAge,
+  baselineIsStale,
+  baselinePath,
+  fetchBaseline,
+  parsePrices,
+  readBaseline,
+  writeBaseline,
+  type BaselineData,
+} from './baseline'
 export { ExchangeParser, FE_ITEM, parseQuote, parseRequest, type Quote } from './exchange'
 export { valueOf, durationOf, perHour, TRADE_TAX, type Value } from './valuation'
 export { ItemNames, ITEM_TABLE_PATH, userItemsPath, configDir, dataDir, dataPath, type ItemEntry } from './items'
