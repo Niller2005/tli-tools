@@ -19,6 +19,7 @@ import {
   type NiriWorkspace,
   type Plan,
 } from './geometry'
+import { ppmToRgba } from './ppm'
 
 export const STEAM_APP = '1974050'
 
@@ -163,10 +164,15 @@ export function createCapture(o: { title: RegExp; command?: string; niriScreensh
     })
   }
   const grim = async (args: string[]): Promise<Image<Uint8ClampedArray>> => {
-    const p = Bun.spawn(['grim', '-l', '0', ...args, '-'], { stdout: 'pipe', stderr: 'pipe' })
+    // grim writes the pixels as they are, in a PPM: there is no PNG to
+    // decode, which is the dearest part of a capture.
+    const p = Bun.spawn(['grim', '-t', 'ppm', ...args, '-'], { stdout: 'pipe', stderr: 'pipe' })
     const [bytes, err] = await Promise.all([new Response(p.stdout).arrayBuffer(), new Response(p.stderr).text()])
     if ((await p.exited) !== 0) throw new Error(`grim failed: ${err.trim()}`)
-    return decodePngClamped(Buffer.from(bytes))
+    const raw = Buffer.from(bytes)
+    const img = ppmToRgba(raw)
+    // A grim without the PPM format writes a PNG.
+    return img ?? decodePngClamped(raw)
   }
   const niriShot = async (id: number) => {
     const out = nextPath()
