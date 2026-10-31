@@ -232,6 +232,18 @@ describe('the tracker screen', () => {
     test.renderer.destroy()
   })
 
+  test('d removes an item from the prices', async () => {
+    const tracker = trackerWithItems()
+    tracker.prices.learn(300, [8, 8, 8], 0)
+    const { test, app } = await setup(120, 24, tracker)
+    expect(tracker.prices.price(300)).toBe(25)
+    test.mockInput.pressKey('d')
+    expect(tracker.prices.price(300)).toBe(0)
+    expect(tracker.prices.info(300)).toBeNull()
+    expect(app.state.message).toContain('out of the prices')
+    test.renderer.destroy()
+  })
+
   test('escape leaves the price without keeping it', async () => {
     const tracker = trackerWithItems()
     const { test, app } = await setup(120, 24, tracker)

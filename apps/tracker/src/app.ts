@@ -190,6 +190,18 @@ export class TrackerApp {
         this.resetPrice(item)
         return
       }
+      case 'd': {
+        const item = this.selectedItem()
+        if (item === null) {
+          this.state.message = 'there is nothing to remove'
+          return
+        }
+        const name = this.names.name(item)
+        this.state.message = this.tracker.prices.forget(item)
+          ? `${name} is out of the prices (a new search on the exchange brings it back)`
+          : `${name} is not in the prices`
+        return
+      }
       case 's': {
         if (this.state.focus === 'inventory') {
           const order = ['value', 'qty', 'name'] as const
