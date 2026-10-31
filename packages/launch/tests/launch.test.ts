@@ -535,4 +535,27 @@ describe('opening a tool', () => {
     expect(result.ok).toBe(false)
     expect(result.message).toContain('Vorax Helper needs')
   })
+
+  test('the window of a real tool runs it in its own folder', () => {
+    const started: string[][] = []
+    const launcher = new Launcher({
+      env: { TLI_TERMINAL: 'ghostty' },
+      host: {
+        which: (program: string) => `/usr/bin/${program}`,
+        spawn: (argv): Child => {
+          started.push(argv)
+          return { exited: Promise.resolve(0) }
+        },
+      },
+    })
+    const vorax = toolById('vorax')
+    expect(vorax).toBeDefined()
+    openTool(launcher, vorax!, { which: () => '/usr/bin/bun' })
+    const argv = started[0]
+    expect(argv).toBeDefined()
+    expect(argv?.[0]).toBe('ghostty')
+    expect(argv?.[1]).toBe('--title=Vorax Helper')
+    expect(argv?.[2]).toBe(`--working-directory=${vorax!.cwd}`)
+    expect(argv?.slice(4)).toEqual(['bun', 'scripts/tui.ts'])
+  })
 })
