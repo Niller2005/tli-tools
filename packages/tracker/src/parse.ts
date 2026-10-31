@@ -127,3 +127,31 @@ export function zoneOf(path: string): string {
   const dot = last.indexOf('.')
   return dot > 0 ? last.slice(0, dot) : last
 }
+
+const RE_DUMP_ID = /\+Id \[(\d+)_([0-9a-fA-F-]{36})\]/
+const RE_DUMP_LEGENDARY = /\+UniqueItmId \[(\d+)\]/
+
+/**
+ * The scope a line of a dump is in: the part of the line before the field it names.
+ *
+ * The game dumps the bag as the raw lines of its protocol, each field on its own line, with the
+ * nesting in the bars at the front. The fields of one item are the ones in the same scope.
+ */
+function dumpScope(line: string): string {
+  const at = line.indexOf('+')
+  return at < 0 ? '' : line.slice(0, at)
+}
+
+/** The item a line of a dump names, and the scope it was in. */
+export function parseDumpItem(line: string): { scope: string; uuid: string; base: number } | null {
+  const m = RE_DUMP_ID.exec(line)
+  if (m === null) return null
+  return { scope: dumpScope(line), uuid: m[2], base: +m[1] }
+}
+
+/** The legendary a line of a dump names, and the scope it was in. */
+export function parseDumpLegendary(line: string): { scope: string; legendary: number } | null {
+  const m = RE_DUMP_LEGENDARY.exec(line)
+  if (m === null) return null
+  return { scope: dumpScope(line), legendary: +m[1] }
+}
