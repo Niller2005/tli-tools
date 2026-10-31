@@ -169,6 +169,8 @@ def run(keys, log=None, wait=None, no_color=False):
         os.chdir(APP)
         env = dict(os.environ, TERM="xterm-256color", COLUMNS=str(COLS), LINES=str(ROWS))
         env.pop("NO_COLOR", None)
+        # The test runs where the player is: no picture of the game, no niri, no grim.
+        env["TLI_NO_CAPTURE"] = "1"
         cmd = ["bun", "src/tui.ts", "--reset"]
         if log is not None:
             cmd.append(f"--log={log}")

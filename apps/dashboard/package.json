@@ -5,8 +5,8 @@
   "bin": { "tli": "src/main.ts" },
   "scripts": {
     "start": "bun src/main.ts",
-    "smoke": "python3 tests/tui-smoke.py",
-    "test": "bun test",
+    "smoke": "TLI_NO_CAPTURE=1 python3 tests/tui-smoke.py",
+    "test": "TLI_NO_CAPTURE=1 bun test",
     "typecheck": "tsc -p ."
   },
   "dependencies": {

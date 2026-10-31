@@ -32,6 +32,12 @@ bun run warden -- --image /full/path/to/screenshot.png
 Adding `--capture-cmd` to Warden means passing `command` to `createCapture` in
 `apps/warden/ts/src/bin/warden-tui.ts`; the shared [`@tli/capture`](../packages/capture) package already supports it.
 
+## Turning every picture off
+
+`TLI_NO_CAPTURE=1` turns the capture off in both tools: the capture says
+`capture disabled` and neither Niri nor `grim` is run. The tests run with it,
+so they never take a picture of the player's own desktop.
+
 ## See also
 
 - [`packages/capture`](../packages/capture/README.md): how the capture works.

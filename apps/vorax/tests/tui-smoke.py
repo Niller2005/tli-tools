@@ -71,6 +71,13 @@ def run(keys, extra=None, wait=2.0, no_color=False, after=None):
             cmd += extra
         if no_color:
             cmd.append("--no-color")
+        # The test runs where the player is: the capture is off, so niri and grim
+        # are never run. A run that asks for a picture of a local fixture needs
+        # the capture, and that command touches nothing but the fixture.
+        if any(a.startswith("--capture-cmd=") for a in extra or []):
+            env.pop("TLI_NO_CAPTURE", None)
+        else:
+            env["TLI_NO_CAPTURE"] = "1"
         os.execvpe("bun", cmd, env)
     # A new pty has no size; the helper needs to know how big the terminal is.
     fcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack("HHHH", 40, 120, 0, 0))

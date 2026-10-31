@@ -51,6 +51,17 @@ async function readWhole(path: string): Promise<Buffer> {
 }
 
 export function createCapture(o: { title: RegExp; command?: string }): Capture {
+  // The tests run where the player is: no picture at all, and nothing is run.
+  if (process.env.TLI_NO_CAPTURE) {
+    return {
+      status: () => 'capture disabled (TLI_NO_CAPTURE)',
+      async grab() {
+        throw new Error('capture disabled')
+      },
+      close: () => {},
+    }
+  }
+
   const dir = mkdtempSync(join(tmpdir(), 'tli-capture-'))
   let n = 0
   let state = 'looking for the game window'

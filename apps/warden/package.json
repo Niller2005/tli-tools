@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "bun test",
+    "test": "TLI_NO_CAPTURE=1 bun test",
     "typecheck": "tsc -p ts",
     "tui": "bun ts/src/bin/warden-tui.ts",
     "cli": "bun ts/src/bin/warden-cli.ts"

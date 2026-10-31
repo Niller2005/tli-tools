@@ -87,6 +87,9 @@ def spawn(log=None, no_color=False, home=None):
         os.chdir(APP)
         env = dict(os.environ, TERM="xterm-256color", COLUMNS="120", LINES="40")
         env.pop("NO_COLOR", None)
+        # The test runs where the player is: the tools it starts take no picture of
+        # the game, so niri and grim are never run.
+        env["TLI_NO_CAPTURE"] = "1"
         if home is not None:
             env["HOME"] = home
         cmd = ["bun", "src/main.ts"]

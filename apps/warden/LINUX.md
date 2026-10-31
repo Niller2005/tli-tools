@@ -39,3 +39,5 @@ bun run cli solve frame.png --seed 1 --rollouts 400
   **Enable Log** on (Esc → Account Related → Enable Log). Without the log, or with `--no-log`, the window is watched
   as before and the reading is never held up.
 - `warden-cli read|solve|capture|bench` work on Linux too (`capture` uses niri).
+- `TLI_NO_CAPTURE=1` turns every picture off: the tool says `capture disabled` and neither niri nor grim is run. The
+  tests run with it, so they never touch the player's own desktop.

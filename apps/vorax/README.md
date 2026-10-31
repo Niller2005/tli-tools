@@ -48,6 +48,8 @@ bun scripts/tui.ts
   announces with a "Screenshot captured" notification (it can't be turned off): keep the game on the screen (its workspace
   the active one on its output) to keep it silent.
 - Other compositors: `--capture-cmd='<command that writes a PNG of the game to {out}>'`.
+- `TLI_NO_CAPTURE=1` turns every picture off: the helper says `capture disabled` and neither niri nor `grim` is run. The
+  tests run with it, so they never touch your own desktop.
 - Keys: `r` read now · `t` target (600k, 700k, 925k, 1.12M) · `d` deep check on/off · `q` quit.
 - Options: `--log=<UE_game.log>`, `--game-title=<regex>`, `--target=<score>`, `--no-deep`, `--no-color`.
 - `bun scripts/tui.ts --image=shot.png` reads one screenshot, prints the advice and exits.
