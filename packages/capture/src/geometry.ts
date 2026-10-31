@@ -175,13 +175,13 @@ export function planCapture(o: {
   if (!output) return unavailable('niri does not know its output')
   // The workspace is not the one on the screen: the game is not on the screen.
   if (!workspace.is_active) return unavailable('its workspace is not showing')
+  if (workspace.active_window_id !== game.id) return unavailable('it is not the active window')
 
   const rect = windowRect(game)
   if (!rect) {
     // Niri does not say where a tiled window is. It fills its output when it is
     // the only window of the workspace, and then the whole output is the game.
     if (!fillsOutput(game, output)) return unavailable('niri cannot see the position of this tiled window')
-    if (workspace.active_window_id !== game.id) return unavailable('it is not the active window')
     if (obscured(o.windows, game, outputRect(output))) return unavailable('another window is over it')
     return { kind: 'output', output: workspace.output }
   }

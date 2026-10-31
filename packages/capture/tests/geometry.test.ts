@@ -122,6 +122,14 @@ describe('a game that does not fill its output', () => {
     })
   })
 
+  test('is not taken silently when it is not the active window', () => {
+    const game = win({ size: [1280, 720], tile: [100, 200] })
+    expect(plan({ window: game, workspaces: [workspace({ active_window_id: 2 })] })).toEqual({
+      kind: 'none',
+      reason: 'the game is not on screen (it is not the active window); no picture taken so that niri does not notify',
+    })
+  })
+
   test('is cut off at the edge of the output', () => {
     const game = win({ size: [1280, 720], tile: [-200, 0] })
     expect(plan({ window: game })).toEqual({
