@@ -15,6 +15,10 @@ export interface ItemEntry {
   nameCn?: string
   /** the kind of item */
   type?: string
+  /** the kind of item, in English */
+  typeEn?: string
+  /** where the entry's data came from */
+  sources?: string[]
 }
 
 /** The table the tracker ships. */
@@ -70,6 +74,16 @@ export class ItemNames {
   /** The kind of an item, when the table has one. */
   type(item: number): string | null {
     return this.known[String(item)]?.type ?? null
+  }
+
+  /** The kind of an item in English, when the table has one. */
+  typeEn(item: number): string | null {
+    return this.known[String(item)]?.typeEn ?? null
+  }
+
+  /** Where the table's data about an item came from. */
+  sources(item: number): string[] {
+    return this.known[String(item)]?.sources ?? []
   }
 
   /** Whether the tracker knows what this item is. */

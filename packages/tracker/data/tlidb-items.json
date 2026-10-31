@@ -1,0 +1,763 @@
+{
+ "meta": {
+  "generatedAt": "2026-10-31T01:45:16.075Z",
+  "source": "https://tlidb.com (the Torchlight: Infinite wiki; a fan-made site, not affiliated with XD)",
+  "count": 111
+ },
+ "items": {
+  "102": {
+   "name": "Pickaxe Claw",
+   "slot": "One-Handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_Claw_Norm_003_112.webp",
+   "from": "card"
+  },
+  "210": {
+   "name": "Thorny Hammer",
+   "slot": "One-Handed",
+   "level": 44,
+   "icon": "Icon_Equip_Weapon_1HMace_Norm_001_112.webp",
+   "from": "card"
+  },
+  "412": {
+   "name": "Hero's Longsword",
+   "slot": "One-Handed",
+   "level": 54,
+   "icon": "Icon_Equip_Weapon_1HSword_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1109": {
+   "name": "Doomsday Board Axe",
+   "slot": "Two-handed",
+   "level": 39,
+   "icon": "Icon_Equip_Weapon_2HAxe_Norm_005_112.webp",
+   "from": "card"
+  },
+  "1212": {
+   "name": "Wolfsoul Claymore",
+   "slot": "Two-handed",
+   "level": 54,
+   "icon": "Icon_Equip_Weapon_2HSword_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1411": {
+   "name": "Voodoo Staff",
+   "slot": "Two-handed",
+   "level": 49,
+   "icon": "Icon_Equip_Weapon_Staff_Norm_002_112.webp",
+   "from": "card"
+  },
+  "1505": {
+   "name": "Rottenbone Zapper",
+   "slot": "One-Handed",
+   "level": 19,
+   "icon": "Icon_Equip_Weapon_Pistol_Norm_001_112.webp",
+   "from": "card"
+  },
+  "1602": {
+   "name": "Beastbone Bow",
+   "slot": "Two-handed",
+   "level": 4,
+   "icon": "Icon_Equip_Weapon_Bow_Norm_003_112.webp",
+   "from": "card"
+  },
+  "1710": {
+   "name": "Muddy Long Crossbow",
+   "slot": "Two-handed",
+   "level": 44,
+   "icon": "Icon_Equip_Weapon_Crossbow_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2005": {
+   "name": "Wind Spirit Wand",
+   "slot": "One-Handed",
+   "level": 19,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2009": {
+   "name": "White Crystal Wand",
+   "slot": "One-Handed",
+   "level": 39,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_005_112.webp",
+   "from": "card"
+  },
+  "2210": {
+   "name": "Deception Scepter",
+   "slot": "One-Handed",
+   "level": 44,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "2218": {
+   "name": "Thorn Sea Scepter",
+   "slot": "One-Handed",
+   "level": 84,
+   "icon": "Icon_Equip_Weapon_Wand_Norm_001_112.webp",
+   "from": "card"
+  },
+  "3000": {
+   "name": "Brute's Chestguard",
+   "family": "STR Chest Armor",
+   "slot": "Chest",
+   "icon": "Icon_Equip_Armor_Str_Norm_001_112.webp",
+   "from": "card"
+  },
+  "3010": {
+   "name": "Old King's Armor",
+   "family": "STR Chest Armor",
+   "slot": "Chest",
+   "level": 76,
+   "icon": "Icon_Equip_Armor_Str_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "3204": {
+   "name": "Disciple's Coat",
+   "family": "INT Chest Armor",
+   "slot": "Chest",
+   "level": 39,
+   "icon": "Icon_Equip_Armor_Int_Norm_001_01_112.webp",
+   "from": "card"
+  },
+  "3205": {
+   "name": "Shaman's Short Robe",
+   "family": "INT Chest Armor",
+   "slot": "Chest",
+   "level": 52,
+   "icon": "Icon_Equip_Armor_Int_Norm_002_01_112.webp",
+   "from": "card"
+  },
+  "3209": {
+   "name": "Imperishable Black Robe",
+   "family": "INT Chest Armor",
+   "slot": "Chest",
+   "level": 70,
+   "icon": "Icon_Equip_Armor_Int_Norm_002_02_112.webp",
+   "from": "card"
+  },
+  "3210": {
+   "name": "All Magic Secret Robe",
+   "family": "INT Chest Armor",
+   "slot": "Chest",
+   "level": 76,
+   "icon": "Icon_Equip_Armor_Int_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "3211": {
+   "name": "Long Night Sorcerer's Robe",
+   "family": "INT Chest Armor",
+   "slot": "Chest",
+   "level": 82,
+   "icon": "Icon_Equip_Armor_Int_Norm_004_02_112.webp",
+   "from": "card"
+  },
+  "3402": {
+   "name": "Skirmisher's Gloves",
+   "family": "DEX Gloves",
+   "slot": "Hands",
+   "level": 9,
+   "icon": "Icon_Equip_Gloves_Agi_Norm_003_112.webp",
+   "from": "card"
+  },
+  "3403": {
+   "name": "Hunter's Gloves",
+   "family": "DEX Gloves",
+   "slot": "Hands",
+   "level": 24,
+   "icon": "Icon_Equip_Gloves_Agi_Norm_004_112.webp",
+   "from": "card"
+  },
+  "3404": {
+   "name": "Prospector Handguards",
+   "family": "DEX Gloves",
+   "slot": "Hands",
+   "level": 39,
+   "icon": "Icon_Equip_Gloves_Agi_Norm_001_01_112.webp",
+   "from": "card"
+  },
+  "3405": {
+   "name": "Wild Dominator Handguards",
+   "family": "DEX Gloves",
+   "slot": "Hands",
+   "level": 52,
+   "icon": "Icon_Equip_Gloves_Agi_Norm_002_01_112.webp",
+   "from": "card"
+  },
+  "3410": {
+   "name": "Demon Slayer's Hands",
+   "family": "DEX Gloves",
+   "slot": "Hands",
+   "level": 76,
+   "icon": "Icon_Equip_Gloves_Agi_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "3501": {
+   "name": "Scribe Handguards",
+   "family": "INT Gloves",
+   "slot": "Hands",
+   "icon": "Icon_Equip_Gloves_Int_Norm_002_112.webp",
+   "from": "card"
+  },
+  "3508": {
+   "name": "Elder Sage's Long Gloves",
+   "family": "INT Gloves",
+   "slot": "Hands",
+   "level": 66,
+   "icon": "Icon_Equip_Gloves_Int_Norm_001_02_112.webp",
+   "from": "card"
+  },
+  "3509": {
+   "name": "Imperishable Touch",
+   "family": "INT Gloves",
+   "slot": "Hands",
+   "level": 70,
+   "icon": "Icon_Equip_Gloves_Int_Norm_002_02_112.webp",
+   "from": "card"
+  },
+  "3510": {
+   "name": "All Magic Grip",
+   "family": "INT Gloves",
+   "slot": "Hands",
+   "level": 76,
+   "icon": "Icon_Equip_Gloves_Int_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "3511": {
+   "name": "Long Night Sorcerer's Wristband",
+   "family": "INT Gloves",
+   "slot": "Hands",
+   "level": 82,
+   "icon": "Icon_Equip_Gloves_Int_Norm_004_02_112.webp",
+   "from": "card"
+  },
+  "3602": {
+   "name": "Paladin's Heavy Helm",
+   "family": "STR Helmet",
+   "slot": "Helmet",
+   "level": 9,
+   "icon": "Icon_Equip_Helmet_Str_Norm_003_112.webp",
+   "from": "card"
+  },
+  "3705": {
+   "name": "Wild Dominator Headdress",
+   "family": "DEX Helmet",
+   "slot": "Helmet",
+   "level": 52,
+   "icon": "Icon_Equip_Helmet_Agi_Norm_002_01_112.webp",
+   "from": "card"
+  },
+  "3802": {
+   "name": "Acolyte's Crown",
+   "family": "INT Helmet",
+   "slot": "Helmet",
+   "level": 9,
+   "icon": "Icon_Equip_Helmet_Int_Norm_003_112.webp",
+   "from": "card"
+  },
+  "3803": {
+   "name": "Witchdoctor's Mask",
+   "family": "INT Helmet",
+   "slot": "Helmet",
+   "level": 24,
+   "icon": "Icon_Equip_Helmet_Int_Norm_004_112.webp",
+   "from": "card"
+  },
+  "3806": {
+   "name": "Envoy's Mask",
+   "family": "INT Helmet",
+   "slot": "Helmet",
+   "level": 57,
+   "icon": "Icon_Equip_Helmet_Int_Norm_003_01_112.webp",
+   "from": "card"
+  },
+  "3808": {
+   "name": "Elder Sage's Chapeau",
+   "family": "INT Helmet",
+   "slot": "Helmet",
+   "level": 66,
+   "icon": "Icon_Equip_Helmet_Int_Norm_001_02_112.webp",
+   "from": "card"
+  },
+  "3809": {
+   "name": "Imperishable Miter",
+   "family": "INT Helmet",
+   "slot": "Helmet",
+   "level": 70,
+   "icon": "Icon_Equip_Helmet_Int_Norm_002_02_112.webp",
+   "from": "card"
+  },
+  "3810": {
+   "name": "All Magic Crown",
+   "family": "INT Helmet",
+   "slot": "Helmet",
+   "level": 76,
+   "icon": "Icon_Equip_Helmet_Int_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "3902": {
+   "name": "Paladin's Iron Greaves",
+   "family": "STR Boots",
+   "slot": "Feet",
+   "level": 9,
+   "icon": "Icon_Equip_Shoes_Str_Norm_003_112.webp",
+   "from": "card"
+  },
+  "3910": {
+   "name": "Old King's Sabatons",
+   "family": "STR Boots",
+   "slot": "Feet",
+   "level": 76,
+   "icon": "Icon_Equip_Shoes_Str_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "4004": {
+   "name": "Prospector's Short Boots",
+   "family": "DEX Boots",
+   "slot": "Feet",
+   "level": 39,
+   "icon": "Icon_Equip_Shoes_Agi_Norm_001_01_112.webp",
+   "from": "card"
+  },
+  "4005": {
+   "name": "Wild Dominator Long Boots",
+   "family": "DEX Boots",
+   "slot": "Feet",
+   "level": 52,
+   "icon": "Icon_Equip_Shoes_Agi_Norm_002_01_112.webp",
+   "from": "card"
+  },
+  "4009": {
+   "name": "Boots of Calamity",
+   "family": "DEX Boots",
+   "slot": "Feet",
+   "level": 70,
+   "icon": "Icon_Equip_Shoes_Agi_Norm_002_02_112.webp",
+   "from": "card"
+  },
+  "4101": {
+   "name": "Scribe's Boots",
+   "family": "INT Boots",
+   "slot": "Feet",
+   "icon": "Icon_Equip_Shoes_Int_Norm_002_112.webp",
+   "from": "card"
+  },
+  "4103": {
+   "name": "Witchdoctor's Slippers",
+   "family": "INT Boots",
+   "slot": "Feet",
+   "level": 24,
+   "icon": "Icon_Equip_Shoes_Int_Norm_004_112.webp",
+   "from": "card"
+  },
+  "4104": {
+   "name": "Disciple's Cloth Boots",
+   "family": "INT Boots",
+   "slot": "Feet",
+   "level": 39,
+   "icon": "Icon_Equip_Shoes_Int_Norm_001_01_112.webp",
+   "from": "card"
+  },
+  "4106": {
+   "name": "Envoy's Soft Shoes",
+   "family": "INT Boots",
+   "slot": "Feet",
+   "level": 57,
+   "icon": "Icon_Equip_Shoes_Int_Norm_003_01_112.webp",
+   "from": "card"
+  },
+  "4108": {
+   "name": "Elder Sage's Treads",
+   "family": "INT Boots",
+   "slot": "Feet",
+   "level": 66,
+   "icon": "Icon_Equip_Shoes_Int_Norm_001_02_112.webp",
+   "from": "card"
+  },
+  "4109": {
+   "name": "Imperishable Feet",
+   "family": "INT Boots",
+   "slot": "Feet",
+   "level": 70,
+   "icon": "Icon_Equip_Shoes_Int_Norm_002_02_112.webp",
+   "from": "card"
+  },
+  "4110": {
+   "name": "All Magic Shoes",
+   "family": "INT Boots",
+   "slot": "Feet",
+   "level": 76,
+   "icon": "Icon_Equip_Shoes_Int_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "4304": {
+   "name": "Hunter's Buckler",
+   "family": "DEX Shield",
+   "slot": "Off-Hand",
+   "level": 39,
+   "icon": "Icon_Equip_Shield_Agi_Norm_001_112.webp",
+   "from": "card"
+  },
+  "4518": {
+   "name": "Sunlight Amulet",
+   "slot": "Neck",
+   "level": 56,
+   "icon": "Icon_Equip_Amulet_Norm_004_03_112.webp",
+   "from": "card"
+  },
+  "4520": {
+   "name": "Tortoiseshell Amulet",
+   "slot": "Neck",
+   "icon": "Icon_Equip_Amulet_Norm_005_02_112.webp",
+   "from": "card"
+  },
+  "4521": {
+   "name": "Cataclysm Amulet",
+   "slot": "Neck",
+   "level": 32,
+   "icon": "Icon_Equip_Amulet_Norm_001_03_112.webp",
+   "from": "card"
+  },
+  "4522": {
+   "name": "Flare Amulet",
+   "slot": "Neck",
+   "level": 38,
+   "icon": "Icon_Equip_Amulet_Norm_002_03_112.webp",
+   "from": "card"
+  },
+  "4523": {
+   "name": "Red Crystal Amulet",
+   "slot": "Neck",
+   "level": 56,
+   "icon": "Icon_Equip_Amulet_Norm_003_03_112.webp",
+   "from": "card"
+  },
+  "4524": {
+   "name": "Hero's Amulet",
+   "slot": "Neck",
+   "level": 78,
+   "icon": "Icon_Equip_Amulet_Norm_004_03_112.webp",
+   "from": "card"
+  },
+  "4526": {
+   "name": "Cinnabar Pendant",
+   "slot": "Neck",
+   "icon": "Icon_Equip_Amulet_Norm_005_02_112.webp",
+   "from": "card"
+  },
+  "4528": {
+   "name": "Ripple Pendant",
+   "slot": "Neck",
+   "level": 38,
+   "icon": "Icon_Equip_Amulet_Norm_002_03_112.webp",
+   "from": "card"
+  },
+  "4529": {
+   "name": "Opal Pendant",
+   "slot": "Neck",
+   "level": 56,
+   "icon": "Icon_Equip_Amulet_Norm_003_03_112.webp",
+   "from": "card"
+  },
+  "4530": {
+   "name": "Assassin's Pendant",
+   "slot": "Neck",
+   "level": 78,
+   "icon": "Icon_Equip_Amulet_Norm_004_03_112.webp",
+   "from": "card"
+  },
+  "4533": {
+   "name": "Shaman's Necklace",
+   "slot": "Neck",
+   "level": 32,
+   "icon": "Icon_Equip_Amulet_Norm_001_03_112.webp",
+   "from": "card"
+  },
+  "4534": {
+   "name": "Lunar Corona Necklace",
+   "slot": "Neck",
+   "level": 38,
+   "icon": "Icon_Equip_Amulet_Norm_002_03_112.webp",
+   "from": "card"
+  },
+  "4535": {
+   "name": "Moonstone Necklace",
+   "slot": "Neck",
+   "level": 56,
+   "icon": "Icon_Equip_Amulet_Norm_003_03_112.webp",
+   "from": "card"
+  },
+  "4536": {
+   "name": "Sage's Necklace",
+   "slot": "Neck",
+   "level": 78,
+   "icon": "Icon_Equip_Amulet_Norm_004_03_112.webp",
+   "from": "card"
+  },
+  "4601": {
+   "name": "Frozen Ring",
+   "slot": "Finger",
+   "level": 58,
+   "icon": "Icon_Equip_Ring_Norm_002_128.webp",
+   "from": "card"
+  },
+  "4621": {
+   "name": "Heated Flame Ring",
+   "slot": "Finger",
+   "level": 24,
+   "icon": "Icon_Equip_Ring_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "4623": {
+   "name": "Firestorm Flame Ring",
+   "slot": "Finger",
+   "level": 66,
+   "icon": "Icon_Equip_Ring_Norm_005_03_112.webp",
+   "from": "card"
+  },
+  "4624": {
+   "name": "Torched Flame Ring",
+   "slot": "Finger",
+   "level": 76,
+   "icon": "Icon_Equip_Ring_Norm_001_02_112.webp",
+   "from": "card"
+  },
+  "4627": {
+   "name": "Blight Ice Ring",
+   "slot": "Finger",
+   "level": 24,
+   "icon": "Icon_Equip_Ring_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "4629": {
+   "name": "Frost City Ice Ring",
+   "slot": "Finger",
+   "level": 66,
+   "icon": "Icon_Equip_Ring_Norm_005_03_112.webp",
+   "from": "card"
+  },
+  "4630": {
+   "name": "Sealed Ice Ring",
+   "slot": "Finger",
+   "level": 76,
+   "icon": "Icon_Equip_Ring_Norm_001_02_112.webp",
+   "from": "card"
+  },
+  "4633": {
+   "name": "Dazzling Lightning Ring",
+   "slot": "Finger",
+   "level": 24,
+   "icon": "Icon_Equip_Ring_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "4636": {
+   "name": "Punished Lightning Ring",
+   "slot": "Finger",
+   "level": 76,
+   "icon": "Icon_Equip_Ring_Norm_001_02_112.webp",
+   "from": "card"
+  },
+  "4642": {
+   "name": "Imprisoned Darkness Ring",
+   "slot": "Finger",
+   "level": 76,
+   "icon": "Icon_Equip_Ring_Norm_001_02_112.webp",
+   "from": "card"
+  },
+  "4654": {
+   "name": "Depicted Ward Ring",
+   "slot": "Finger",
+   "level": 76,
+   "icon": "Icon_Equip_Ring_Norm_001_02_112.webp",
+   "from": "card"
+  },
+  "4720": {
+   "name": "Rock Waistguard",
+   "slot": "Waist",
+   "icon": "Icon_Equip_Belt_Norm_004_01_112.webp",
+   "from": "card"
+  },
+  "4721": {
+   "name": "Wind Blade Waistguard",
+   "slot": "Waist",
+   "level": 32,
+   "icon": "Icon_Equip_Belt_Norm_005_02_112.webp",
+   "from": "card"
+  },
+  "4722": {
+   "name": "Dragon Scale Waistguard",
+   "slot": "Waist",
+   "level": 52,
+   "icon": "Icon_Equip_Belt_Norm_001_03_112.webp",
+   "from": "card"
+  },
+  "4723": {
+   "name": "Fearless Waistguard",
+   "slot": "Waist",
+   "level": 66,
+   "icon": "Icon_Equip_Belt_Norm_002_02_112.webp",
+   "from": "card"
+  },
+  "4724": {
+   "name": "Conqueror Waistguard",
+   "slot": "Waist",
+   "level": 76,
+   "icon": "Icon_Equip_Belt_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "4726": {
+   "name": "Spring Source Girdle",
+   "slot": "Waist",
+   "icon": "Icon_Equip_Belt_Norm_004_01_112.webp",
+   "from": "card"
+  },
+  "4727": {
+   "name": "God's Grace Girdle",
+   "slot": "Waist",
+   "level": 32,
+   "icon": "Icon_Equip_Belt_Norm_005_02_112.webp",
+   "from": "card"
+  },
+  "4728": {
+   "name": "Radiant Lunar Girdle",
+   "slot": "Waist",
+   "level": 52,
+   "icon": "Icon_Equip_Belt_Norm_001_03_112.webp",
+   "from": "card"
+  },
+  "4729": {
+   "name": "Magic Girdle",
+   "slot": "Waist",
+   "level": 66,
+   "icon": "Icon_Equip_Belt_Norm_002_02_112.webp",
+   "from": "card"
+  },
+  "4730": {
+   "name": "Arcanist Girdle",
+   "slot": "Waist",
+   "level": 76,
+   "icon": "Icon_Equip_Belt_Norm_003_02_112.webp",
+   "from": "card"
+  },
+  "7286": {
+   "name": "Resistance Dew",
+   "from": "card"
+  },
+  "7287": {
+   "name": "Steadfast Dew",
+   "from": "card"
+  },
+  "7288": {
+   "name": "Nimbleness Dew",
+   "from": "card"
+  },
+  "7317": {
+   "name": "Ominous",
+   "from": "card"
+  },
+  "8031": {
+   "name": "Activation Medium: Rejuvenation",
+   "from": "card"
+  },
+  "260003": {
+   "name": "Goddess of Hunting's Divinity",
+   "icon": "UI_TalantNG_L1_0_Icon_Agi_112.webp",
+   "from": "card"
+  },
+  "260004": {
+   "name": "Goddess of Hunting's Divinity",
+   "icon": "UI_TalantNG_L2_0_Icon_Agi_112.webp",
+   "from": "card"
+  },
+  "260005": {
+   "name": "Goddess of Hunting's Divinity",
+   "icon": "UI_TalantNG_O1_0_Icon_Agi_112.webp",
+   "from": "card"
+  },
+  "260006": {
+   "name": "Goddess of Hunting's Divinity",
+   "icon": "UI_TalantNG_T1_0_Icon_Agi_112.webp",
+   "from": "card"
+  },
+  "260102": {
+   "name": "Goddess of Deception's Divinity",
+   "icon": "UI_TalantNG_Z2_0_Icon_AI_112.webp",
+   "from": "card"
+  },
+  "260103": {
+   "name": "Goddess of Deception's Divinity",
+   "icon": "UI_TalantNG_L1_0_Icon_AI_112.webp",
+   "from": "card"
+  },
+  "260104": {
+   "name": "Goddess of Deception's Divinity",
+   "icon": "UI_TalantNG_L2_0_Icon_AI_112.webp",
+   "from": "card"
+  },
+  "260105": {
+   "name": "Goddess of Deception's Divinity",
+   "icon": "UI_TalantNG_O1_0_Icon_AI_112.webp",
+   "from": "card"
+  },
+  "260106": {
+   "name": "Goddess of Deception's Divinity",
+   "icon": "UI_TalantNG_T1_0_Icon_AI_112.webp",
+   "from": "card"
+  },
+  "260202": {
+   "name": "Goddess of Knowledge's Divinity",
+   "icon": "UI_TalantNG_Z2_0_Icon_Int_112.webp",
+   "from": "card"
+  },
+  "260204": {
+   "name": "Goddess of Knowledge's Divinity",
+   "icon": "UI_TalantNG_L2_0_Icon_Int_112.webp",
+   "from": "card"
+  },
+  "260206": {
+   "name": "Goddess of Knowledge's Divinity",
+   "icon": "UI_TalantNG_T1_0_Icon_Int_112.webp",
+   "from": "card"
+  },
+  "260305": {
+   "name": "God of War's Divinity",
+   "icon": "UI_TalantNG_O1_0_Icon_SA_112.webp",
+   "from": "card"
+  },
+  "260402": {
+   "name": "God of Machines' Divinity",
+   "icon": "UI_TalantNG_Z2_0_Icon_SI_112.webp",
+   "from": "card"
+  },
+  "260406": {
+   "name": "God of Machines' Divinity",
+   "icon": "UI_TalantNG_T1_0_Icon_SI_112.webp",
+   "from": "card"
+  },
+  "260502": {
+   "name": "God of Might's Divinity",
+   "icon": "UI_TalantNG_Z2_0_Icon_Str_112.webp",
+   "from": "card"
+  },
+  "382149": {
+   "name": "Organ: Unholy Prayer",
+   "slot": "Used during Grafting to add affixes related to [Unholy Prayer]",
+   "icon": "Icon_Organ_Ring_Epic_220_128.webp",
+   "from": "card"
+  },
+  "396100": {
+   "name": "Recommendation Letter - Lone Wolf",
+   "icon": "UI_mercenary_headicon_langnv_Icon1_112.webp",
+   "from": "card"
+  },
+  "396102": {
+   "name": "Recommendation Letter - Witch Rat",
+   "icon": "UI_mercenary_headicon_shunan_Icon1_112.webp",
+   "from": "card"
+  },
+  "396103": {
+   "name": "Recommendation Letter - Lion Queen",
+   "icon": "UI_mercenary_headicon_cishi_Icon1_112.webp",
+   "from": "card"
+  }
+ }
+}

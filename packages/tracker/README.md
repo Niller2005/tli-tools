@@ -33,13 +33,48 @@ console.log(tracker.stats())
 ## The data of the items
 
 `data/items.json` maps the game's item id to the item's English name, its Chinese name and its kind.
-It is built by `scripts/generate-items.ts` from the item data of the
-[Torchlight: Infinite wiki](https://tlidb.com), as the [TITrack](https://github.com/astockman99/TITrack)
-project builds it:
+It is built from two sources, both of them the
+[Torchlight: Infinite wiki](https://tlidb.com) (a fan-made site, not affiliated with XD).
+
+The first is the item data the [TITrack](https://github.com/astockman99/TITrack) project builds from
+the wiki and from the community translations. It carries the Chinese names and the kinds as well.
+`scripts/generate-items.ts` fetches it and writes the table:
 
 ```
 bun scripts/generate-items.ts                 # fetch the upstream data and write data/items.json
 bun scripts/generate-items.ts --from=<file>  # use a copy of the upstream data on disk
+```
+
+The second is the wiki itself, which `scripts/scrape-tlidb.ts` reads. The upstream data is older
+than the wiki and leaves out the gear bases, so the ids the player's log shows have nothing to name
+them with. The wiki has a page per item, and the page says which id the game knows the item by, so
+the script collects the ids and the names from there:
+
+```
+bun scripts/scrape-tlidb.ts                     # read the wiki and write data/tlidb-items.json
+bun scripts/scrape-tlidb.ts --ids=<file>        # also look up the ids listed in a file
+bun scripts/scrape-tlidb.ts --no-crawl           # only look up the ids, do not read the pages
+bun scripts/scrape-tlidb.ts --max=<n>           # read at most n pages and stop
+bun scripts/scrape-tlidb.ts --delay=<ms>        # wait longer between the requests
+```
+
+The script asks for one page at a time and waits a second between the requests. It keeps what it
+fetched under `.cache/tlidb`, so a run that is interrupted can be continued without asking the wiki
+for the same page twice. `scripts/generate-items.ts` merges the result into the table; the names the
+upstream data has are kept, and the wiki only fills in the ids the upstream data leaves out. Every
+entry in `data/items.json` says which sources it came from.
+
+The wiki names the gear the player picks up after the base type of the gear, so the names of the
+different stat families would be the same. The name in the table has the family in brackets:
+`Magic Shoes (Int)`.
+
+`scripts/coverage.ts` says how much of the loot in the game's logs the table can name, and which
+ids it does not know:
+
+```
+bun scripts/coverage.ts                 # the logs of this machine
+bun scripts/coverage.ts <log> [<log> …]  # the logs to read
+bun scripts/coverage.ts --missing       # only the ids the table does not name
 ```
 
 An item the table does not know is shown as `Item #<id>`. The player can name items in
