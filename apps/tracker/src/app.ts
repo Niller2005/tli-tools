@@ -1,0 +1,283 @@
+// What the tracker does when the player does something.
+//
+// The app holds the state of the screen and the rules for the keys and the mouse. It draws
+// itself through the screen, and it does not know anything about the terminal: that is the
+// renderer's business.
+
+import type { KeyEvent } from '@opentui/core'
+import type { CliRenderer } from '@opentui/core'
+import type { ItemNames, Tracker } from '@tli/tracker'
+import { TrackerScreen } from './screen'
+import { PANELS, bagRows, freshView, priceRows, type Panel, type ViewState } from './view'
+
+/** What the app tells the program around it. */
+export interface AppHooks {
+  /** the player wants to leave */
+  onQuit: () => void
+  /** the player wants the report */
+  onReport: () => void
+  /** the player wants the log read again */
+  onRead: () => void
+}
+
+/** The tracker, as a program the player can use. */
+export class TrackerApp {
+  /** the state of the screen */
+  readonly state: ViewState
+  /** the screen it draws on */
+  readonly screen: TrackerScreen
+
+  private readonly tracker: Tracker
+  private readonly names: ItemNames
+  private readonly hooks: AppHooks
+  private pausedAt: number | null = null
+
+  constructor(
+    renderer: CliRenderer,
+    tracker: Tracker,
+    names: ItemNames,
+    logFile: string,
+    hooks: AppHooks,
+    now = Date.now(),
+  ) {
+    this.tracker = tracker
+    this.names = names
+    this.hooks = hooks
+    this.state = freshView(logFile, now)
+    this.screen = new TrackerScreen(renderer, tracker, {
+      onFocus: (panel) => {
+        this.state.focus = panel
+        this.draw()
+      },
+      onPick: (panel, index) => {
+        this.state.focus = panel
+        this.select(panel, index)
+        this.draw()
+      },
+      onPrice: (item, price) => {
+        this.setPrice(item, price)
+      },
+    })
+    renderer.root.add(this.screen.root)
+  }
+
+  /** The time the screen shows: the clock stops when the player stops it. */
+  now(): number {
+    if (this.pausedAt !== null) return this.pausedAt
+    return Date.now()
+  }
+
+  /** Draws the screen. */
+  draw(): void {
+    this.state.now = this.now()
+    this.screen.draw(this.state)
+  }
+
+  /** Does a key press. */
+  key(key: KeyEvent): void {
+    if (key.ctrl && key.name === 'c') {
+      this.hooks.onQuit()
+      return
+    }
+
+    if (this.state.editing !== null) {
+      if (key.name === 'escape') {
+        this.state.editing = null
+        this.screen.endPrice()
+        key.preventDefault()
+        this.draw()
+      }
+      return
+    }
+
+    if (this.state.help) {
+      const char = this.typed(key)
+      if (key.name === 'escape' || char === 'q' || char === '?') this.state.help = false
+      key.preventDefault()
+      this.draw()
+      return
+    }
+
+    switch (key.name) {
+      case 'up':
+        this.move(-1)
+        break
+      case 'down':
+        this.move(1)
+        break
+      case 'pageup':
+        this.move(-10)
+        break
+      case 'pagedown':
+        this.move(10)
+        break
+      case 'tab': {
+        const at = PANELS.indexOf(this.state.focus)
+        const next = (at + (key.shift ? -1 : 1) + PANELS.length) % PANELS.length
+        this.state.focus = PANELS[next] ?? 'runs'
+        break
+      }
+      case 'return': {
+        if (this.state.detail !== null) {
+          this.state.detail = null
+          break
+        }
+        const run = this.selectedRun()
+        if (run !== null) this.state.detail = run
+        break
+      }
+      case 'escape':
+        this.state.detail = null
+        break
+      default:
+        this.action(this.typed(key))
+        break
+    }
+
+    key.preventDefault()
+    this.draw()
+  }
+
+  /** The character a key typed, or an empty string when it typed none. */
+  private typed(key: KeyEvent): string {
+    if (key.sequence.length === 1) return key.sequence
+    if (key.name.length === 1) return key.name
+    return ''
+  }
+
+  /** Does a key that is a letter. */
+  private action(char: string): void {
+    switch (char) {
+      case 'q':
+        this.hooks.onQuit()
+        return
+      case 'j':
+        this.move(1)
+        return
+      case 'k':
+        this.move(-1)
+        return
+      case 't':
+        this.tracker.taxed = !this.tracker.taxed
+        this.state.message = `the trade tax is ${this.tracker.taxed ? 'on' : 'off'}`
+        return
+      case 'c':
+        this.tracker.mapCosts = !this.tracker.mapCosts
+        this.state.message = `the cost of the map counts ${this.tracker.mapCosts ? 'against' : 'for nothing'} the profit`
+        return
+      case 'p':
+        this.pausedAt = this.pausedAt === null ? Date.now() : null
+        this.state.paused = this.pausedAt !== null
+        this.state.message = this.pausedAt === null ? 'the clock is going again' : 'the clock is stopped'
+        return
+      case 'e': {
+        const item = this.selectedItem()
+        if (item === null) {
+          this.state.message = 'there is nothing to set a price for'
+          return
+        }
+        const known = this.tracker.prices.price(item)
+        this.state.editing = { item, text: known > 0 ? String(known) : '' }
+        this.screen.beginPrice(item, this.names.name(item), this.state.editing.text)
+        return
+      }
+      case 's': {
+        if (this.state.focus === 'inventory') {
+          const order = ['value', 'qty', 'name'] as const
+          const at = order.indexOf(this.state.inventorySort)
+          this.state.inventorySort = order[(at + 1) % order.length] ?? 'value'
+        } else if (this.state.focus === 'prices') {
+          this.state.pricesSort = this.state.pricesSort === 'value' ? 'name' : 'value'
+        } else {
+          this.state.inventorySort = this.state.inventorySort === 'value' ? 'qty' : 'value'
+        }
+        return
+      }
+      case 'x':
+        this.hooks.onReport()
+        return
+      case 'r':
+        this.hooks.onRead()
+        this.state.message = 'the log was read again'
+        return
+      case '?':
+        this.state.help = true
+        return
+      default:
+        return
+    }
+  }
+
+  /** Sets the price of an item, when the player confirms one. */
+  private setPrice(item: number, price: string): void {
+    const value = Number(price)
+    if (Number.isFinite(value) && value >= 0) {
+      this.tracker.prices.setOverride(item, value)
+      this.state.message = `the price of ${this.names.name(item)} is ${value} FE`
+    } else {
+      this.state.message = `${price} is not a price`
+    }
+    this.state.editing = null
+    this.screen.endPrice()
+    this.draw()
+  }
+
+  /** How many rows the focused panel has. */
+  private panelSize(): number {
+    if (this.state.focus === 'runs') return this.tracker.runs.length
+    if (this.state.focus === 'inventory') return bagRows(this.tracker, this.state.inventorySort).length
+    return priceRows(this.tracker, this.state.pricesSort).length
+  }
+
+  /** The item the keys are pointing at. */
+  private selectedItem(): number | null {
+    if (this.state.focus === 'inventory') {
+      const rows = bagRows(this.tracker, this.state.inventorySort)
+      const row = rows[Math.min(this.state.inventoryAt, rows.length - 1)]
+      return row?.item ?? null
+    }
+    const rows = priceRows(this.tracker, this.state.pricesSort)
+    const row = rows[Math.min(this.state.pricesAt, rows.length - 1)]
+    return row?.item ?? null
+  }
+
+  /** Moves the pointer in the focused panel. */
+  private move(by: number): void {
+    const size = this.panelSize()
+    if (size === 0) return
+    if (this.state.focus === 'runs') {
+      this.state.runsAt = Math.max(0, Math.min(this.state.runsAt + by, size - 1))
+      this.state.detail = null
+    } else if (this.state.focus === 'inventory') {
+      this.state.inventoryAt = Math.max(0, Math.min(this.state.inventoryAt + by, size - 1))
+    } else {
+      this.state.pricesAt = Math.max(0, Math.min(this.state.pricesAt + by, size - 1))
+    }
+  }
+
+  /** Points at a row of a panel, as the mouse did. */
+  private select(panel: Panel, index: number): void {
+    const size =
+      panel === 'runs'
+        ? this.tracker.runs.length
+        : panel === 'inventory'
+          ? bagRows(this.tracker, this.state.inventorySort).length
+          : priceRows(this.tracker, this.state.pricesSort).length
+    if (size === 0) return
+    const at = Math.max(0, Math.min(index, size - 1))
+    if (panel === 'runs') {
+      this.state.runsAt = at
+      this.state.detail = null
+    } else if (panel === 'inventory') {
+      this.state.inventoryAt = at
+    } else {
+      this.state.pricesAt = at
+    }
+  }
+
+  /** The run the keys are pointing at. */
+  private selectedRun(): number | null {
+    const run = [...this.tracker.runs].reverse()[this.state.runsAt]
+    return run?.id ?? null
+  }
+}

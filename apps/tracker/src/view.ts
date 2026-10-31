@@ -1,9 +1,9 @@
 // What the screen is showing, and the rows it is made of.
 //
-// The rows are plain data: the drawing in `render.ts` turns them into lines. That way the numbers
-// can be looked at without a terminal.
+// The rows are plain data: the screen in `screen.ts` turns them into something that can be drawn.
+// That way the numbers can be looked at without a terminal.
 
-import type { Tracker } from '@tli/tracker'
+import type { Run, Tracker } from '@tli/tracker'
 
 /** The panels the player can move in. */
 export type Panel = 'runs' | 'inventory' | 'prices'
@@ -27,6 +27,8 @@ export interface ViewState {
   pricesSort: 'value' | 'name'
   /** the run whose detail is open, or null */
   detail: number | null
+  /** whether the help is open */
+  help: boolean
   /** the price that is being typed in, or null */
   editing: { item: number; text: string } | null
   /** whether the clock is stopped */
@@ -51,6 +53,7 @@ export function freshView(logFile: string, now: number): ViewState {
     inventorySort: 'value',
     pricesSort: 'value',
     detail: null,
+    help: false,
     editing: null,
     paused: false,
     message: '',
@@ -76,6 +79,28 @@ export interface PriceRow {
   price: number
   source: 'set' | 'learned'
   samples: number
+}
+
+/** A row of the recent runs list. */
+export interface RunRow {
+  id: number
+  name: string
+  /** when the run started */
+  started: number
+  /** when the run ended, or null when it is still going */
+  ended: number | null
+  /** how long the run took, in ms */
+  took: number
+  /** what the run was worth */
+  worth: number
+}
+
+/** A row of loot: the item, how many there are and what they are worth. */
+export interface LootRow {
+  item: number
+  name: string
+  qty: number
+  worth: number
 }
 
 /** The bag, as rows, in the order the screen shows them. */
@@ -116,4 +141,34 @@ export function priceRows(tracker: Tracker, sort: ViewState['pricesSort']): Pric
     return b.price - a.price
   })
   return rows
+}
+
+/** The runs, newest first. */
+export function runRows(tracker: Tracker, now: number): RunRow[] {
+  return [...tracker.runs]
+    .reverse()
+    .map((run) => ({
+      id: run.id,
+      name: run.name,
+      started: run.start,
+      ended: run.end,
+      took: Math.max(0, (run.end ?? now) - run.start),
+      worth: tracker.valueOfRun(run).gross,
+    }))
+}
+
+/** The loot of a run, the most valuable first. */
+export function lootRows(tracker: Tracker, loot: Map<number, number>): LootRow[] {
+  const rows: LootRow[] = []
+  for (const [item, qty] of loot) {
+    rows.push({ item, name: tracker.names.name(item), qty, worth: qty * tracker.prices.price(item) })
+  }
+  rows.sort((a, b) => b.worth - a.worth || b.qty - a.qty)
+  return rows
+}
+
+/** The run whose detail is open, or null. */
+export function findRun(tracker: Tracker, id: number | null): Run | null {
+  if (id === null) return null
+  return tracker.runs.find((candidate) => candidate.id === id) ?? null
 }
