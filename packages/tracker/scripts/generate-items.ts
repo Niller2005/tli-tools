@@ -183,9 +183,38 @@ export function addWiki(table: ItemTable, wiki: TlidbTable): ItemTable {
     if (entry.family !== undefined && known.typeEn === undefined) known.typeEn = entry.family
     if (known.name === undefined) known.name = name
   }
+  tellApart(items, wiki)
   return {
     meta: { ...table.meta, count: Object.keys(items).length },
     items,
+  }
+}
+
+/**
+ * Makes the names of the table tell the items apart.
+ *
+ * The wiki has two pages for some gear bases that carry the same name, one for each version of
+ * the base, and the tiers of a divinity slate all carry the same name. The name of an item that
+ * shares its name with another gets the level the item needs in brackets, when the items need
+ * different levels, and the id of the item when they do not.
+ */
+function tellApart(items: Record<string, ItemEntry>, wiki: TlidbTable): void {
+  const byName = new Map<string, string[]>()
+  for (const [id, entry] of Object.entries(items)) {
+    const name = entry.name
+    if (name === undefined || name === '') continue
+    const ids = byName.get(name) ?? []
+    ids.push(id)
+    byName.set(name, ids)
+  }
+  for (const [name, ids] of byName) {
+    if (ids.length < 2) continue
+    const levels = ids.map((id) => wiki.items?.[id]?.level)
+    const levelsTell = levels.every((level) => level !== undefined) && new Set(levels).size > 1
+    for (const [index, id] of ids.entries()) {
+      const level = levels[index]
+      items[id].name = levelsTell ? `${name} (lv ${level})` : `${name} (#${id})`
+    }
   }
 }
 

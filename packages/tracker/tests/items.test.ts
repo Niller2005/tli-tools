@@ -96,6 +96,32 @@ describe('the item table', () => {
     )
     expect(displayName({ name: 'Int Boots', family: 'INT Boots', from: 'card' })).toBe('Int Boots')
   })
+
+  test('two items with the same name are told apart', () => {
+    const table = normalize(UPSTREAM)
+    const merged = addWiki(table, {
+      items: {
+        '3007': {
+          name: 'Divine Arbiter\'s Defense',
+          family: 'STR Chest Armor',
+          level: 62,
+          from: 'card',
+        },
+        '3012': {
+          name: 'Divine Arbiter\'s Defense',
+          family: 'STR Chest Armor',
+          level: 61,
+          from: 'card',
+        },
+        '260003': { name: 'Goddess of Hunting\'s Divinity', from: 'card' },
+        '260004': { name: 'Goddess of Hunting\'s Divinity', from: 'card' },
+      },
+    })
+    expect(merged.items['3007']?.name).toBe("Divine Arbiter's Defense (Str) (lv 62)")
+    expect(merged.items['3012']?.name).toBe("Divine Arbiter's Defense (Str) (lv 61)")
+    expect(merged.items['260003']?.name).toBe("Goddess of Hunting's Divinity (#260003)")
+    expect(merged.items['260004']?.name).toBe("Goddess of Hunting's Divinity (#260004)")
+  })
 })
 
 describe('the wiki pages', () => {
@@ -147,5 +173,13 @@ describe('the table the tracker ships', () => {
     expect(names.knows(1001)).toBe(true)
     expect(names.name(999999)).toBe('Item #999999')
     expect(names.knows(999999)).toBe(false)
+  })
+
+  test('every item in the table has its own name', async () => {
+    const table = JSON.parse(
+      await readFile(join(import.meta.dir, '..', 'data', 'items.json'), 'utf8'),
+    ) as { items: Record<string, { name?: string }> }
+    const names = Object.values(table.items).map((entry) => entry.name)
+    expect(new Set(names).size).toBe(names.length)
   })
 })
