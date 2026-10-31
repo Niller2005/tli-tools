@@ -499,6 +499,12 @@ describe('the flags the child gets', () => {
     })
   })
 
+  test('the desktop session reaches the child, so a pane of an old tmux server finds niri', () => {
+    expect(
+      childEnv({ NIRI_SOCKET: '/run/user/1000/niri.sock', WAYLAND_DISPLAY: 'wayland-1', HOME: '/x' }),
+    ).toEqual({ NIRI_SOCKET: '/run/user/1000/niri.sock', WAYLAND_DISPLAY: 'wayland-1' })
+  })
+
   test('without NO_COLOR there is nothing to give', () => {
     expect(childEnv({ PATH: '/usr/bin' })).toEqual({ PATH: '/usr/bin' })
   })

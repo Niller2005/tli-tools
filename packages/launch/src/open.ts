@@ -15,11 +15,22 @@ export function childFlags(tool: Tool, parentArgv: readonly string[]): string[] 
   return flags
 }
 
+/** The variables of the desktop session that the child needs to reach the compositor. */
+const SESSION_VARS = [
+  'NIRI_SOCKET',
+  'WAYLAND_DISPLAY',
+  'DISPLAY',
+  'XDG_RUNTIME_DIR',
+  'XDG_SESSION_TYPE',
+  'XDG_CURRENT_DESKTOP',
+  'TLI_NO_CAPTURE',
+]
+
 /**
  * The environment the child gets from the parent.
  *
  * The colours stay off when they were off, and the path to the programs is the one of the
- * parent: a pane of a tmux session that was started long ago may have an old path.
+ * parent: a pane of a tmux session that was started long ago may have an old path, and a socket that is gone.
  */
 export function childEnv(
   parentEnv: Record<string, string | undefined> = process.env,
@@ -29,6 +40,12 @@ export function childEnv(
   if (noColor !== undefined) env.NO_COLOR = noColor
   const path = parentEnv.PATH
   if (path !== undefined) env.PATH = path
+  // The session of the desktop: a pane of a tmux server that was started before this niri session
+  // would otherwise point at a socket that is gone ("error connecting to the niri socket").
+  for (const name of SESSION_VARS) {
+    const value = parentEnv[name]
+    if (value !== undefined) env[name] = value
+  }
   return env
 }
 
