@@ -1,8 +1,9 @@
 //! The game window's picture on Linux under Niri. A fullscreen game is taken with
 //! `grim` (wlr-screencopy: the whole output, silent). Niri sends a "Screenshot
 //! captured" notification for every `niri msg action screenshot-window` and has no
-//! setting to turn it off, so that is only the fallback, for a game that is not
-//! fullscreen on a visible workspace. The reader wants a 16:9 or wider picture.
+//! setting to turn it off, so that picture needs an explicit opt-in. Without it,
+//! a game that is not fullscreen on the visible workspace is not captured. The
+//! reader wants a 16:9 or wider picture.
 
 use crate::reader::{Rgba, decode_png_raw};
 use serde_json::Value;
@@ -14,6 +15,23 @@ use std::time::{Duration, Instant};
 const APP_ID: &str = "steam_app_1974050";
 
 const PNG_END: [u8; 8] = [0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82];
+
+/// How the game window is captured.
+#[derive(Clone, Copy, Default)]
+pub struct CaptureOptions {
+    /// Whether Niri's announced window screenshot may be used. `None` leaves the
+    /// choice to `TLI_NIRI_SCREENSHOT=1`.
+    pub niri_screenshot: Option<bool>,
+}
+
+impl CaptureOptions {
+    /// Whether Niri's announced window screenshot may be used.
+    fn niri_screenshot(&self) -> bool {
+        self.niri_screenshot.unwrap_or_else(|| {
+            std::env::var_os("TLI_NIRI_SCREENSHOT").is_some_and(|value| value == std::ffi::OsStr::new("1"))
+        })
+    }
+}
 
 /// A `niri` command that talks to the niri that is running. A shell that outlives its niri session (a
 /// tmux server from before the last login) keeps an old NIRI_SOCKET; the sockets are named
@@ -121,25 +139,43 @@ fn niri_shot(id: u64) -> Result<Rgba, String> {
     result
 }
 
-fn shot(w: &Value) -> Result<Rgba, String> {
+fn shot(w: &Value, niri_screenshot: bool) -> Result<Rgba, String> {
     let id = w["id"].as_u64().ok_or("window without an id")?;
     match filled_output(w) {
-        Some(output) => grim(&output).or_else(|_| niri_shot(id)),
-        None => niri_shot(id),
+        Some(output) => match grim(&output) {
+            Ok(image) => Ok(image),
+            Err(_error) if niri_screenshot => niri_shot(id),
+            Err(error) => Err(format!("{error}; no picture taken so that niri does not notify")),
+        },
+        None if niri_screenshot => niri_shot(id),
+        None => Err(
+            "the game is not on screen (its workspace is not showing, or niri cannot see its position); no picture taken so that niri does not notify"
+                .to_string(),
+        ),
     }
 }
 
 /// The game window as the reader takes it, or the reason it can't be captured.
 pub fn capture(title: &str) -> Result<Rgba, String> {
+    capture_with(title, CaptureOptions::default())
+}
+
+/// The game window as the reader takes it, with the capture choices given.
+pub fn capture_with(title: &str, options: CaptureOptions) -> Result<Rgba, String> {
     // The tests run where the player is: no picture at all, and nothing is run.
     if std::env::var_os("TLI_NO_CAPTURE").is_some() {
         return Err("capture disabled".to_string());
     }
-    shot(&find(title)?)
+    shot(&find(title)?, options.niri_screenshot())
 }
 
 /// `frames` pictures in a row: the last and the time each took.
 pub fn time_frames(title: &str, frames: usize) -> Result<(Rgba, Vec<Duration>), String> {
+    time_frames_with(title, frames, CaptureOptions::default())
+}
+
+/// `frames` pictures in a row, with the capture choices given.
+pub fn time_frames_with(title: &str, frames: usize, options: CaptureOptions) -> Result<(Rgba, Vec<Duration>), String> {
     if std::env::var_os("TLI_NO_CAPTURE").is_some() {
         return Err("capture disabled".to_string());
     }
@@ -148,7 +184,7 @@ pub fn time_frames(title: &str, frames: usize) -> Result<(Rgba, Vec<Duration>), 
     let mut last = None;
     for _ in 0..frames.max(1) {
         let start = Instant::now();
-        last = Some(shot(&w)?);
+        last = Some(shot(&w, options.niri_screenshot())?);
         times.push(start.elapsed());
     }
     Ok((last.ok_or("no frame")?, times))

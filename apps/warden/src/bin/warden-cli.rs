@@ -4,7 +4,7 @@
 //!
 //!   warden-cli solve <board.json | frame.png> [--rollouts N] [--seed S] [--tools id,id]
 //!   warden-cli read <frame.png> [--tools id,id]
-//!   warden-cli capture [--frames N] <title text> <out.png>
+//!   warden-cli capture [--frames N] [--niri-screenshot] <title text> <out.png>
 //!   warden-cli bench [--games N] [--rollouts R] [--seed S] [--threads T]
 //!   warden-cli bench --strategy-only [--set name=value,...] [--hold id,id] [--rerolls N] [--save file] [--against file] [--games N] [--seed S] [--threads T]
 //!   warden-cli --version
@@ -13,7 +13,7 @@ use std::path::Path;
 #[cfg(windows)]
 use warden::app::capture::{capture, time_frames};
 #[cfg(not(windows))]
-use warden::app::niri::{capture, time_frames};
+use warden::app::niri::{CaptureOptions, capture_with, time_frames_with};
 use std::process::ExitCode;
 use warden::board::{Model, build_state};
 use warden::engine::data::Tool;
@@ -31,7 +31,7 @@ macro_rules! out {
     }};
 }
 
-const USAGE: &str = "usage: warden-cli solve <board.json | frame.png> [--rollouts N] [--seed S] [--tools id,id] | warden-cli read <frame.png> [--tools id,id] | warden-cli capture [--frames N] <title text> <out.png> | warden-cli bench [--games N] [--rollouts R] [--seed S] [--threads T] | warden-cli bench --strategy-only [--set name=value,...] [--hold id,id] [--rerolls N] [--save file] [--against file] [--games N] [--seed S] [--threads T] | warden-cli --version";
+const USAGE: &str = "usage: warden-cli solve <board.json | frame.png> [--rollouts N] [--seed S] [--tools id,id] | warden-cli read <frame.png> [--tools id,id] | warden-cli capture [--frames N] [--niri-screenshot] <title text> <out.png> | warden-cli bench [--games N] [--rollouts R] [--seed S] [--threads T] | warden-cli bench --strategy-only [--set name=value,...] [--hold id,id] [--rerolls N] [--save file] [--against file] [--games N] [--seed S] [--threads T] | warden-cli --version";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -82,11 +82,12 @@ fn is_png(file: &str) -> bool {
 /// With `--frames` it grabs N frames through one capture session, as auto read
 /// does, and prints the mean time per frame after the first.
 fn run_capture(args: &[String]) -> Result<ExitCode, String> {
-    let (mut frames, mut rest) = (None, Vec::new());
+    let (mut frames, mut niri_screenshot, mut rest) = (None, None, Vec::new());
     let mut it = args.iter();
     while let Some(arg) = it.next() {
         match arg.as_str() {
             "--frames" => frames = Some(number::<usize>("--frames", it.next())?),
+            "--niri-screenshot" => niri_screenshot = Some(true),
             _ => rest.push(arg),
         }
     }
@@ -94,9 +95,22 @@ fn run_capture(args: &[String]) -> Result<ExitCode, String> {
         return Err(USAGE.to_string());
     };
     let img = match frames {
-        None => capture(title)?,
+        None => {
+            #[cfg(windows)]
+            {
+                let _ = niri_screenshot;
+                capture(title)?
+            }
+            #[cfg(not(windows))]
+            {
+                capture_with(title, CaptureOptions { niri_screenshot })?
+            }
+        }
         Some(n) => {
+            #[cfg(windows)]
             let (img, times) = time_frames(title, n)?;
+            #[cfg(not(windows))]
+            let (img, times) = time_frames_with(title, n, CaptureOptions { niri_screenshot })?;
             let ms = |d: &std::time::Duration| d.as_secs_f64() * 1000.0;
             let after = &times[1..];
             out!("first frame {:.1} ms (opens the session)", ms(&times[0]));

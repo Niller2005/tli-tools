@@ -1,8 +1,8 @@
-//! Warden in a terminal, for Linux under Niri: captures the game window (niri
-//! screenshot-window), reads the board when the screen changes and shows the
-//! move it recommends. Never clicks or types in the game.
+//! Warden in a terminal, for Linux under Niri: captures the game window with
+//! silent grim, reads the board when the screen changes and shows the move it
+//! recommends. Never clicks or types in the game.
 //!
-//!   warden-tui [--title TEXT] [--rollouts N]
+//!   warden-tui [--title TEXT] [--rollouts N] [--niri-screenshot]
 //!   warden-tui --image <frame.png> [--rollouts N]    read one screenshot, print, exit
 //!
 //! Keys: r read now, q quit.
@@ -32,7 +32,7 @@ mod linux {
     use std::process::{Command, Stdio};
     use std::sync::mpsc::{Receiver, channel};
     use std::time::{Duration, Instant};
-    use warden::app::niri::capture;
+    use warden::app::niri::{CaptureOptions, capture_with};
     use warden::app::session::{Session, Watch, fingerprint};
     use warden::board::{CellModel, EventMark, Model};
     use warden::engine::Action;
@@ -55,17 +55,19 @@ mod linux {
         title: String,
         rollouts: usize,
         image: Option<String>,
+        niri_screenshot: Option<bool>,
     }
 
     fn args() -> Result<Args, String> {
-        let mut a = Args { title: "Torchlight".to_string(), rollouts: 1600, image: None };
+        let mut a = Args { title: "Torchlight".to_string(), rollouts: 1600, image: None, niri_screenshot: None };
         let mut it = std::env::args().skip(1);
         while let Some(arg) = it.next() {
             match arg.as_str() {
                 "--title" => a.title = it.next().ok_or("--title needs a text")?,
                 "--rollouts" => a.rollouts = it.next().and_then(|v| v.parse().ok()).filter(|&n| n > 0).ok_or("--rollouts needs a number above 0")?,
                 "--image" => a.image = Some(it.next().ok_or("--image needs a file")?),
-                _ => return Err(format!("unexpected argument {arg}; usage: warden-tui [--title TEXT] [--rollouts N] | warden-tui --image <frame.png>")),
+                "--niri-screenshot" => a.niri_screenshot = Some(true),
+                _ => return Err(format!("unexpected argument {arg}; usage: warden-tui [--title TEXT] [--rollouts N] [--niri-screenshot] | warden-tui --image <frame.png>")),
             }
         }
         Ok(a)
@@ -128,6 +130,9 @@ mod linux {
     fn live(session: &mut Session, a: &Args, keys: Option<&Receiver<u8>>) -> Result<(), String> {
         let mut watch = Watch::default();
         let mut next = Instant::now();
+        let mut retry_at: Option<Instant> = None;
+        let mut last_error = String::new();
+        let options = CaptureOptions { niri_screenshot: a.niri_screenshot };
         loop {
             let mut now = false;
             while let Some(k) = keys.and_then(|k| k.try_recv().ok()) {
@@ -137,19 +142,29 @@ mod linux {
                     _ => {}
                 }
             }
-            let capture_note = match capture(&a.title) {
-                Ok(frame) => {
-                    let note = format!("{} x {}", frame.w, frame.h);
-                    let print = fingerprint(&frame);
-                    if now {
-                        watch.mark_read(print);
-                        session.read_live(frame);
-                    } else if watch.sample(print) {
-                        session.read_live(frame);
+            let capture_note = if !now && retry_at.is_some_and(|at| Instant::now() < at) {
+                last_error.clone()
+            } else {
+                match capture_with(&a.title, options) {
+                    Ok(frame) => {
+                        last_error.clear();
+                        retry_at = None;
+                        let note = format!("{} x {}", frame.w, frame.h);
+                        let print = fingerprint(&frame);
+                        if now {
+                            watch.mark_read(print);
+                            session.read_live(frame);
+                        } else if watch.sample(print) {
+                            session.read_live(frame);
+                        }
+                        note
                     }
-                    note
+                    Err(e) => {
+                        last_error = e.clone();
+                        retry_at = Some(Instant::now() + Duration::from_secs(2));
+                        e
+                    }
                 }
-                Err(e) => e,
             };
             session.poll();
             if session.wants_reread() {
