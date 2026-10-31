@@ -6,8 +6,9 @@
 //   bun scripts/tui.ts                      follow the running game
 //   bun scripts/tui.ts --image=shot.png     read one screenshot, print the advice, exit
 //
-// Options: --log=<UE_game.log>  --game-title=<regex>  --target=<score>  --no-deep
+// Options: --log=<UE_game.log>  --game-title=<regex>  --target=<score>  --no-deep  --no-log
 //          --capture-cmd='<command writing a PNG of the game to {out}>'   (any compositor but Niri)
+//          --niri-screenshot  (allow Niri's announced window screenshot)
 //          --no-color
 //
 // Keys: r read now · t target (600k, 700k, 925k, 1.12M) · d deep check on/off · q quit.
@@ -23,7 +24,7 @@ import { instrumentAdvice, quick, type HelperInput } from '@/web/helper'
 import { decodePngClamped } from '@tli/png'
 import { tesseractFound } from '@tli/ocr'
 import { createCapture, type Capture } from '@tli/capture'
-import { findLog } from '@tli/gamelog'
+import { findLog, minigameCaptureGate, watchMinigames, type MinigameView, type Watcher } from '@tli/gamelog'
 import { startApp } from '@tli/tui'
 import type { KeyEvent } from '@opentui/core'
 import { VoraxApp } from './tui/app'
@@ -51,6 +52,7 @@ let tracker = newTracker()
 let lastSig = ''
 const target = Number(arg('target')) || 925_000
 const deepOn = !flag('no-deep')
+const noLog = flag('no-log')
 let gen = 0
 
 const view = freshView(target, deepOn)
@@ -189,22 +191,58 @@ if (image) {
 
 /* ---------- the live loop ---------- */
 
-const cap: Capture = createCapture({ title: new RegExp(arg('game-title') || '^Torchlight: Infinite\\s*$'), command: arg('capture-cmd') ?? undefined })
+const cap: Capture = createCapture({
+  title: new RegExp(arg('game-title') || '^Torchlight: Infinite\\s*$'),
+  command: arg('capture-cmd') ?? undefined,
+  niriScreenshot: flag('niri-screenshot') ? true : undefined,
+})
 const watch = createWatch()
 let snapping = false, pending: string | null = null, rebase = true, watchBusy = false, firstLook = true
+let minigames: Watcher | null = null
+let minigamesPath: string | null = null
+let retryAt = 0
+let lastCaptureError = ''
+
+/** What the game's log says about the Vorax board now. */
+function minigameView(): MinigameView | null {
+  return noLog ? null : minigames?.state() ?? null
+}
 
 async function snap(kind: string) {
   if (snapping) { pending = kind; return }
+  const manual = kind === 'manual'
+  const gate = minigameCaptureGate(minigameView(), 'vorax')
+  if (!gate.allowed && !manual) {
+    view.capture = gate.status
+    draw()
+    return
+  }
+  if (!manual && Date.now() < retryAt) {
+    view.capture = lastCaptureError
+    draw()
+    return
+  }
+
   snapping = true
+  const gateNote = !gate.allowed ? `${gate.status} (manual read forced)` : gate.status
+  let captureStatus = gateNote
   try {
     // a watched change has already held still; a log trigger waits for the cards to land
-    const img = kind === 'manual' || kind === 'watch' ? await cap.grab() : await waitStable(() => cap.grab() as never) as unknown as Img
+    const grab = () => cap.grab({ force: manual })
+    const img = kind === 'manual' || kind === 'watch' ? await grab() : await waitStable(() => grab() as never) as unknown as Img
     const r = await readPicture(img, kind)
     if (kind === 'watch') { if (r === 'new') watch.settle(); else if (r === 'same') watch.falseAlarm() }
+    retryAt = 0
+    lastCaptureError = ''
+    captureStatus = gateNote === '' ? cap.status() : `${gateNote} · ${cap.status()}`
   } catch (err) {
-    view.status = err instanceof Error ? err.message : String(err)
+    const message = err instanceof Error ? err.message : String(err)
+    view.status = message
+    lastCaptureError = message
+    retryAt = Date.now() + 2000
+    captureStatus = gateNote === '' ? message : `${message} · ${gateNote}`
   } finally {
-    view.capture = cap.status()
+    view.capture = captureStatus
     snapping = false; rebase = true
     draw()
     if (pending) { const k = pending; pending = null; void snap(k) }
@@ -214,14 +252,32 @@ async function snap(kind: string) {
 // the screen watch: a picture after every move, from the screen itself (works with the game's log detail off too)
 async function look() {
   if (watchBusy || snapping) return
+  const gate = minigameCaptureGate(minigameView(), 'vorax')
+  if (!gate.allowed) {
+    view.capture = gate.status
+    draw()
+    return
+  }
+  if (Date.now() < retryAt) {
+    view.capture = lastCaptureError
+    draw()
+    return
+  }
+
   watchBusy = true
   try {
     if (firstLook) { firstLook = false; void snap('watch'); return }
     const t = watchThumb(await cap.grab())
+    retryAt = 0
+    lastCaptureError = ''
+    view.capture = gate.status === '' ? cap.status() : `${gate.status} · ${cap.status()}`
     if (rebase) { watch.setBase(t); rebase = false; return }
     if (watch.feed(t, Date.now())) void snap('watch')
   } catch (err) {
-    view.capture = err instanceof Error ? err.message : String(err)
+    const message = err instanceof Error ? err.message : String(err)
+    view.capture = gate.status === '' ? message : `${message} · ${gate.status}`
+    lastCaptureError = message
+    retryAt = Date.now() + 2000
     firstLook = true
     draw()
   } finally { watchBusy = false }
@@ -232,7 +288,19 @@ interface Loop { poll(): Promise<void>; check(): void }
 let loop: Loop | null = null
 function connectLog() {
   const found = findLog(arg('log') ?? undefined)
-  if (!found) { view.log = 'Torchlight: Infinite is not in a Steam library (use --log=<UE_game.log>)'; return }
+  if (!found) {
+    view.log = 'Torchlight: Infinite is not in a Steam library (use --log=<UE_game.log>)'
+    if (!noLog && minigames === null) {
+      minigames = watchMinigames()
+      minigamesPath = null
+    }
+    return
+  }
+  if (!noLog && minigamesPath !== found.file) {
+    minigames?.close()
+    minigames = watchMinigames({ log: found.file })
+    minigamesPath = found.file
+  }
   if (!found.exists) { view.log = `${found.file} (not written yet: start the game, Esc → Account Related → Enable Log)`; return }
   view.log = found.file
   loop = createLiveLoop({
@@ -250,6 +318,7 @@ const terminal = await startApp({
   onShutdown: () => {
     advisor.close()
     cap.close()
+    minigames?.close()
   },
 })
 const renderer = terminal.renderer
@@ -269,7 +338,10 @@ const app = new VoraxApp(renderer, view, {
     else if (view.board && view.ahead && view.board.phase === 'potion') startDeep(view.board)
   },
 })
-draw = () => app.draw()
+draw = () => {
+  app.draw()
+  renderer.requestRender()
+}
 
 const onKey = (key: KeyEvent): void => {
   app.key(key)
@@ -296,8 +368,8 @@ setInterval(async () => {
 setInterval(() => loop?.check(), CHECK_MS)
 setInterval(() => { if (!loop) connectLog() }, 5000)
 setInterval(look, 450)
-setInterval(() => app.draw(), 1000)
+setInterval(draw, 1000)
 
-app.draw()
+draw()
 
 await terminal.done

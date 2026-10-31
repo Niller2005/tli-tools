@@ -112,6 +112,14 @@ describe('the helper screen', () => {
     test.renderer.destroy()
   })
 
+  test('the header says when the log gate is closed', async () => {
+    const state = freshView(925_000, true)
+    state.capture = 'board closed – waiting for the board'
+    const { test } = await setup(120, 30, state)
+    expect(test.captureCharFrame()).toContain('board closed – waiting for the board')
+    test.renderer.destroy()
+  })
+
   test('without a board it says what to do', async () => {
     const { test } = await setup(120, 30)
     const frame = test.captureCharFrame()
