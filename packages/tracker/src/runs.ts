@@ -96,18 +96,16 @@ export class RunSegmenter {
   }
 
   /** A page of the game opened, was hidden, or was destroyed. */
-  screen(name: string, state: 'run' | 'hide' | 'destory', at: number): Run | null {
-    if (PRISON_PAGES[name] !== true) return null
-    if (state === 'run') return this.board(at)
-    if (state === 'destory') return this.boardClosed()
-    return null
+  screen(name: string, state: 'run' | 'hide' | 'destory', at: number): void {
+    if (PRISON_PAGES[name] !== true) return
+    if (state === 'run') this.board(at)
+    if (state === 'destory') this.boardClosed()
   }
 
   /** The prison board opened: the visit begins. */
-  private board(at: number): Run | null {
-    if (this.current !== null) return null
+  private board(at: number): void {
+    if (this.current !== null) return
     this.current = this.newRun('prison', 0, at)
-    return null
   }
 
   /**
@@ -117,12 +115,11 @@ export class RunSegmenter {
    * level goes on. A visit that never had a level is not a run: the player closed the board
    * without a challenge, so there is nothing to show.
    */
-  private boardClosed(): Run | null {
+  private boardClosed(): void {
     const current = this.current
-    if (current === null || current.kind !== 'prison') return null
-    if (current.levelId !== 0) return null
+    if (current === null || current.kind !== 'prison') return
+    if (current.levelId !== 0) return
     this.dropCurrent()
-    return null
   }
 
   /** Throws the run that was going on away: it never became a run. */
