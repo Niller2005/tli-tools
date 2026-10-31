@@ -1,124 +1,108 @@
 #!/usr/bin/env bun
-// The TLI tools dashboard: pick the tools to run, press Enter. Plain ANSI, no dependencies.
+// The TLI tools dashboard: pick the tools to run, press Enter.
+//
+// The list is drawn with OpenTUI. Before a tool starts, the renderer is destroyed and the terminal
+// is put back; the tool then owns it. When the tool exits, a new renderer is made for the list.
+
+import type { KeyEvent } from '@opentui/core'
+import { watchMinigames, type Watcher } from '@tli/gamelog'
+import { startApp } from '@tli/tui'
+import { DashboardApp, freshState, viewSignature } from './app'
 import { launch } from './launch'
-import { missing, TOOLS } from './tools'
-import { logHint, watchMinigames, type GameName, type MinigameState, type MinigameView, type Watcher } from '@tli/gamelog'
+import { type Tool } from './tools'
 
-const C = { reset: '\x1b[0m', bold: '\x1b[1m', dim: '\x1b[2m', green: '\x1b[32m', amber: '\x1b[33m', red: '\x1b[31m', cyan: '\x1b[36m', inv: '\x1b[7m' }
-const picked = new Set<string>()
-let cursor = 0
-let message = ''
+/** The log to watch, when it is said on the command line. */
+const givenLog = process.argv.find((a) => a.startsWith('--log='))?.slice('--log='.length) ?? null
 
-/** The game's log, watched while the dashboard is up: it says which minigame is on screen. */
-let watcher: Watcher | null = null
-/** The badges' refresh, once a second. */
-let tick: ReturnType<typeof setInterval> | undefined
-/** The badges as they were last drawn, so the screen is only redrawn when they change. */
-let shown = ''
+/** What happened while the dashboard was on the screen. */
+type Outcome = { kind: 'quit' } | { kind: 'run'; tools: Tool[] }
 
-/** How a minigame's state is shown. */
-const BADGE: Record<MinigameState, [string, string]> = {
-  open: ['● open', C.green],
-  closed: ['○ closed', C.dim],
-  unknown: ['? unknown', C.dim],
-}
+/** Runs the dashboard, and runs the tools the player picks. */
+async function dashboard(): Promise<void> {
+  const state = freshState()
+  const ignoreSigint = (): void => {}
 
-/** The state of a minigame, as the badge shows it. */
-function badge(game: GameName, view: MinigameView): string {
-  const [text, colour] = BADGE[view[game]]
-  const hint = logHint(view.log)
-  return `  ${colour}${text}${C.reset}${hint === null ? '' : `  ${C.dim}${hint}${C.reset}`}`
-}
+  while (true) {
+    let watcher: Watcher | null = null
+    let tick: NodeJS.Timeout | undefined
+    const stopWatching = (): void => {
+      watcher?.close()
+      watcher = null
+    }
+    const { promise: outcome, resolve: settleOutcome } = Promise.withResolvers<Outcome>()
+    const terminal = await startApp({ argv: process.argv })
 
-/** The badges as they are now, so the screen is only redrawn when they change. */
-function signature(view: MinigameView | null): string {
-  if (view === null) return ''
-  return TOOLS.map(t => (t.game === undefined ? '' : badge(t.game, view))).join('|')
-}
+    try {
+      const app = new DashboardApp(terminal.renderer, state, {
+        onQuit: () => {
+          stopWatching()
+          settleOutcome({ kind: 'quit' })
+          void terminal.stop()
+        },
+        onRun: (tools) => {
+          stopWatching()
+          process.on('SIGINT', ignoreSigint)
+          settleOutcome({ kind: 'run', tools })
+          void terminal.stop()
+        },
+      })
+      terminal.renderer.root.add(app.screen.root)
 
-function draw() {
-  const view = watcher === null ? null : watcher.state()
-  shown = signature(view)
-  const out = ['\x1b[H\x1b[2J', `${C.bold}Torchlight: Infinite tools${C.reset}\n\n`]
-  TOOLS.forEach((t, i) => {
-    const gone = missing(t)
-    const box = picked.has(t.id) ? `${C.green}[x]${C.reset}` : '[ ]'
-    const mark = t.game === undefined || view === null ? '' : badge(t.game, view)
-    const line = `${box} ${C.bold}${t.name}${C.reset}${gone.length ? `  ${C.red}needs ${gone.join(', ')}${C.reset}` : ''}${mark}`
-    out.push(`${i === cursor ? `${C.cyan}>${C.reset}` : ' '} ${line}\n`)
-    if (i === cursor) out.push(`      ${C.dim}${t.description}${C.reset}\n`)
-  })
-  out.push(`\n${C.dim}↑/↓ move   space select   a all   enter run   q quit${C.reset}\n`)
-  if (message) out.push(`\n${C.amber}${message}${C.reset}\n`)
-  process.stdout.write(out.join(''))
-}
+      watcher = watchMinigames(givenLog === null ? {} : { log: givenLog })
+      state.view = watcher.state()
+      let shown = viewSignature(state.view)
+      app.draw()
 
-const setRaw = (on: boolean) => {
-  process.stdin.setRawMode(on)
-  if (on) process.stdin.resume()
-  else process.stdin.pause()
-}
+      tick = setInterval(() => {
+        const view = watcher?.state()
+        if (view === null || view === undefined) return
+        const next = viewSignature(view)
+        if (next === shown) return
+        shown = next
+        state.view = view
+        app.draw()
+      }, 1000)
 
-/** Watches the game's log while the dashboard is up. */
-function watch(): void {
-  watcher = watchMinigames()
-  tick = setInterval(() => {
-    const view = watcher === null ? null : watcher.state()
-    if (signature(view) !== shown) draw()
-  }, 1000)
-}
+      const onKey = (key: KeyEvent): void => app.key(key)
+      terminal.renderer.keyInput.on('keypress', onKey)
+      terminal.renderer.on('destroy', () => {
+        terminal.renderer.keyInput.off('keypress', onKey)
+        settleOutcome({ kind: 'quit' })
+      })
 
-/** Stops watching the log: a tool has the terminal now. */
-function unwatch(): void {
-  watcher?.close()
-  watcher = null
-  clearInterval(tick)
-  tick = undefined
-}
+      await terminal.done
+    } catch (error) {
+      await terminal.stop()
+      throw error
+    } finally {
+      clearInterval(tick)
+      stopWatching()
+    }
 
-function quit(code = 0): never {
-  unwatch()
-  setRaw(false)
-  process.stdout.write('\x1b[?25h\x1b[?1049l')
-  process.exit(code)
-}
+    const result = await outcome
+    if (result.kind === 'quit') return
 
-async function run() {
-  const chosen = TOOLS.filter(t => picked.has(t.id))
-  if (chosen.length === 0) chosen.push(TOOLS[cursor])
-  const gone = chosen.flatMap(t => missing(t).map(n => `${t.name} needs ${n}`))
-  if (gone.length) { message = gone.join('; '); return draw() }
-  setRaw(false)
-  unwatch()
-  process.stdout.write('\x1b[?25h\x1b[?1049l')
-  try {
-    await launch(chosen)
-    message = ''
-  } catch (e) {
-    message = (e as Error).message
+    // The child shares the terminal with us. A Ctrl+C in the child's terminal is a signal to the
+    // whole process group, so keep this process alive until the child has gone.
+    try {
+      await launch(result.tools)
+      state.message = ''
+    } catch (error) {
+      state.message = (error as Error).message
+    } finally {
+      process.off('SIGINT', ignoreSigint)
+    }
   }
-  process.stdout.write('\x1b[?1049h\x1b[?25l')
-  setRaw(true)
-  watch()
-  draw()
 }
 
 if (!process.stdin.isTTY) {
   console.error('The dashboard needs a terminal.')
   process.exit(1)
 }
-process.stdout.write('\x1b[?1049h\x1b[?25l')
-setRaw(true)
-process.stdin.on('data', d => {
-  const k = d.toString()
-  if (k === 'q' || k === '\x03') quit()
-  else if (k === '\x1b[A' || k === 'k') cursor = (cursor + TOOLS.length - 1) % TOOLS.length
-  else if (k === '\x1b[B' || k === 'j') cursor = (cursor + 1) % TOOLS.length
-  else if (k === ' ') { const id = TOOLS[cursor].id; picked.has(id) ? picked.delete(id) : picked.add(id) }
-  else if (k === 'a') TOOLS.forEach(t => picked.add(t.id))
-  else if (k === '\r') return void run()
-  message = ''
-  draw()
-})
-watch()
-draw()
+
+try {
+  await dashboard()
+} catch (error) {
+  console.error(error)
+  process.exit(1)
+}

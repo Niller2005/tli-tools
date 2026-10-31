@@ -44,6 +44,15 @@ export const TOOLS: Tool[] = [
     cwd: join(ROOT, 'apps/tracker'),
     needs: ['bun'],
   },
+  {
+    id: 'arcana',
+    name: 'Arcana (Tarot Path)',
+    description: "Reads the game's log and tracks the Tarot Path visits, the Fateful Contests and what their chests gave.",
+    command: ['bun', 'src/tui.ts'],
+    cwd: join(ROOT, 'apps/arcana'),
+    needs: ['bun'],
+    game: 'arcana',
+  },
 ]
 
 /** The programs a tool needs that are not installed. */
