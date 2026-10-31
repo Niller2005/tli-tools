@@ -8,6 +8,9 @@ import type { Run, Tracker } from '@tli/tracker'
 /** The panels the player can move in. */
 export type Panel = 'runs' | 'inventory' | 'prices'
 
+/** The panels that can be searched. */
+export type SearchPanel = 'inventory' | 'prices'
+
 /** The panels, in the order the tab key goes through them. */
 export const PANELS: Panel[] = ['runs', 'inventory', 'prices']
 
@@ -25,6 +28,12 @@ export interface ViewState {
   inventorySort: 'value' | 'qty' | 'name'
   /** how the prices are sorted */
   pricesSort: 'value' | 'name'
+  /** the words the rows of the bag have to match */
+  inventoryFilter: string
+  /** the words the rows of the prices have to match */
+  pricesFilter: string
+  /** the panel whose search box is open, or null */
+  searching: SearchPanel | null
   /** the run whose detail is open, or null */
   detail: number | null
   /** whether the help is open */
@@ -52,6 +61,9 @@ export function freshView(logFile: string, now: number): ViewState {
     pricesAt: 0,
     inventorySort: 'value',
     pricesSort: 'value',
+    inventoryFilter: '',
+    pricesFilter: '',
+    searching: null,
     detail: null,
     help: false,
     editing: null,
@@ -103,8 +115,20 @@ export interface LootRow {
   worth: number
 }
 
+/** The rows of a list, and how many rows it has without a filter. */
+export interface Rows<T> {
+  /** the rows that match the filter */
+  rows: T[]
+  /** how many rows the list has in all */
+  total: number
+}
+
 /** The bag, as rows, in the order the screen shows them. */
-export function bagRows(tracker: Tracker, sort: ViewState['inventorySort']): BagRow[] {
+export function bagRows(
+  tracker: Tracker,
+  sort: ViewState['inventorySort'],
+  filter = '',
+): Rows<BagRow> {
   const rows: BagRow[] = []
   for (const [item, qty] of tracker.inventory.totals()) {
     const price = tracker.prices.price(item)
@@ -115,18 +139,23 @@ export function bagRows(tracker: Tracker, sort: ViewState['inventorySort']): Bag
     if (sort === 'name') return a.name.localeCompare(b.name)
     return b.worth - a.worth || b.qty - a.qty
   })
-  return rows
+  return { rows: filterRows(rows, filter), total: rows.length }
 }
 
 /** The prices the tracker knows, as rows. */
-export function priceRows(tracker: Tracker, sort: ViewState['pricesSort']): PriceRow[] {
+export function priceRows(
+  tracker: Tracker,
+  sort: ViewState['pricesSort'],
+  filter = '',
+): Rows<PriceRow> {
+  const snapshot = tracker.prices.snapshot()
   const rows: PriceRow[] = []
   const seen = new Set<number>()
-  for (const [item, price] of tracker.prices.snapshot().overrides) {
+  for (const [item, price] of snapshot.overrides) {
     rows.push({ item, name: tracker.names.name(item), price, source: 'set', samples: 0 })
     seen.add(item)
   }
-  for (const [item, info] of tracker.prices.snapshot().learned) {
+  for (const [item, info] of snapshot.learned) {
     if (seen.has(item)) continue
     rows.push({
       item,
@@ -140,7 +169,37 @@ export function priceRows(tracker: Tracker, sort: ViewState['pricesSort']): Pric
     if (sort === 'name') return a.name.localeCompare(b.name)
     return b.price - a.price
   })
-  return rows
+  return { rows: filterRows(rows, filter), total: rows.length }
+}
+
+/** The words of a filter, in lower case. */
+function filterTerms(filter: string): string[] {
+  return filter
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((term) => term !== '')
+}
+
+/** Whether a row matches the words of a filter: all of them have to match. */
+export function matchesFilter(name: string, item: number, filter: string): boolean {
+  const terms = filterTerms(filter)
+  if (terms.length === 0) return true
+  const lower = name.toLowerCase()
+  const words = lower.split(/\s+/)
+  return terms.every((term) => matchesTerm(lower, words, item, term))
+}
+
+/** Whether one word of a filter matches a row: the name, the id of the item, or the start of a word of the name. */
+function matchesTerm(lower: string, words: string[], item: number, term: string): boolean {
+  if (lower.includes(term)) return true
+  if (String(item) === term) return true
+  return words.some((word) => word.startsWith(term))
+}
+
+/** The rows of a list that match the words of a filter. */
+function filterRows<T extends { item: number; name: string }>(rows: T[], filter: string): T[] {
+  if (filter.trim() === '') return rows
+  return rows.filter((row) => matchesFilter(row.name, row.item, filter))
 }
 
 /** The runs, newest first. */
