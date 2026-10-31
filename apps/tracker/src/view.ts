@@ -3,7 +3,7 @@
 // The rows are plain data: the screen in `screen.ts` turns them into something that can be drawn.
 // That way the numbers can be looked at without a terminal.
 
-import type { Run, Tracker } from '@tli/tracker'
+import type { Run, RunKind, Tracker } from '@tli/tracker'
 
 /** The panels the player can move in. */
 export type Panel = 'runs' | 'inventory' | 'prices'
@@ -96,6 +96,8 @@ export interface PriceRow {
 /** A row of the recent runs list. */
 export interface RunRow {
   id: number
+  /** what kind of run it is: a trip into a map, or a visit to the prison */
+  kind: RunKind
   name: string
   /** when the run started */
   started: number
@@ -208,6 +210,7 @@ export function runRows(tracker: Tracker, now: number): RunRow[] {
     .reverse()
     .map((run) => ({
       id: run.id,
+      kind: run.kind,
       name: run.name,
       started: run.start,
       ended: run.end,

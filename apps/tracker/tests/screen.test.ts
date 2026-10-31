@@ -24,6 +24,7 @@ function trackerWithItems(): Tracker {
   tracker.prices.setOverride(300, 25)
   tracker.runs.push({
     id: 1,
+    kind: 'map',
     zone: 'test',
     name: 'Glacial Abyss',
     levelId: 4708,
@@ -38,12 +39,34 @@ function trackerWithItems(): Tracker {
   })
   tracker.runs.push({
     id: 2,
+    kind: 'map',
     zone: 'test',
     name: 'Shadow Outpost',
     levelId: 4709,
     start: NOW - 100_000,
     end: NOW - 40_000,
     loot: new Map([[200, 3]]),
+    cost: new Map(),
+    fe: 0,
+  })
+  return tracker
+}
+
+/** A tracker with a visit to the Tartarus prison in it. */
+function trackerWithPrison(): Tracker {
+  const tracker = trackerWithItems()
+  tracker.runs.push({
+    id: 3,
+    kind: 'prison',
+    zone: 'ZhongZuiDiYu',
+    name: 'Tartarus Prison',
+    levelId: 235501,
+    start: NOW - 900_000,
+    end: NOW - 500_000,
+    loot: new Map([
+      [300, 2],
+      [100, 9],
+    ]),
     cost: new Map(),
     fe: 0,
   })
@@ -121,6 +144,25 @@ describe('the tracker screen', () => {
     expect(frame).toContain('Bag')
     expect(frame).toContain('Prices (* set)')
     expect(frame).toContain('Glacial Abyss')
+    test.renderer.destroy()
+  })
+
+  test('the list of the runs says what kind of run each one is', async () => {
+    const { test } = await setup(160, 45, trackerWithPrison())
+    const frame = test.captureCharFrame()
+    expect(frame).toContain('prison')
+    expect(frame).toContain('Tartarus Prison')
+    test.renderer.destroy()
+  })
+
+  test('the detail of a run says what kind of run it is', async () => {
+    const { test, app } = await setup(160, 45, trackerWithPrison())
+    app.state.detail = 3
+    app.draw()
+    await test.renderOnce()
+    const frame = test.captureCharFrame()
+    expect(frame).toContain('kind')
+    expect(frame).toContain('prison')
     test.renderer.destroy()
   })
 
