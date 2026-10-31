@@ -22,15 +22,26 @@ Check the command first: run it by hand and open the PNG. The picture must show 
 
 ## Warden
 
-Warden's terminal version has no `--capture-cmd` option yet. It captures through Niri only, and `--title TEXT`
-only changes which Niri window it looks for. On another compositor you can still read single screenshots:
+Warden's TypeScript version takes `--capture-cmd` as well (the Rust build does not):
+
+```
+cd apps/warden
+bun run tui --capture-cmd 'grim -g "0,0 1920x1080" {out}'
+```
+
+Its command line takes it too, for the `capture` command:
+
+```
+bun run cli capture --capture-cmd 'grim -g "0,0 1920x1080" {out}' Torchlight frame.png
+```
+
+Without it, Warden captures through Niri only, and `--title TEXT` only changes
+which Niri window it looks for. On another compositor you can still read single
+screenshots:
 
 ```
 bun run warden -- --image /full/path/to/screenshot.png
 ```
-
-Adding `--capture-cmd` to Warden means passing `command` to `createCapture` in
-`apps/warden/ts/src/bin/warden-tui.ts`; the shared [`@tli/capture`](../packages/capture) package already supports it.
 
 ## Turning every picture off
 

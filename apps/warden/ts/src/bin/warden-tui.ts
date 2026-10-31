@@ -4,6 +4,7 @@
 //! move it recommends. Never clicks or types in the game.
 //!
 //!   warden-tui [--title TEXT] [--rollouts N] [--no-log] [--no-color]
+//!   warden-tui [--capture-cmd <command writing a PNG of the game to {out}>]
 //!   warden-tui --image <frame.png> [--rollouts N]    read one screenshot, print, exit
 //!
 //! Keys: r read now, q quit.
@@ -34,10 +35,11 @@ interface Args {
   rollouts: number
   image: string | null
   noLog: boolean
+  captureCmd: string | null
 }
 
 function args(): Args {
-  const a: Args = { title: 'Torchlight', rollouts: 1600, image: null, noLog: false }
+  const a: Args = { title: 'Torchlight', rollouts: 1600, image: null, noLog: false, captureCmd: null }
   const argv = process.argv.slice(2)
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i]
@@ -46,6 +48,12 @@ function args(): Args {
         const value = argv[++i]
         if (value === undefined) throw new Error('--title needs a text')
         a.title = value
+        break
+      }
+      case '--capture-cmd': {
+        const value = argv[++i]
+        if (value === undefined) throw new Error('--capture-cmd needs a command')
+        a.captureCmd = value
         break
       }
       case '--rollouts': {
@@ -68,7 +76,7 @@ function args(): Args {
         break
       default:
         throw new Error(
-          `unexpected argument ${arg}; usage: warden-tui [--title TEXT] [--rollouts N] [--no-log] [--no-color] | warden-tui --image <frame.png>`,
+          `unexpected argument ${arg}; usage: warden-tui [--title TEXT] [--rollouts N] [--capture-cmd COMMAND] [--no-log] [--no-color] | warden-tui --image <frame.png>`,
         )
     }
   }
@@ -131,7 +139,7 @@ async function run(): Promise<void> {
   })
 
   const watch = new Watch()
-  const capture = createCapture({ title: new RegExp(escapeRegExp(a.title), 'i') })
+  const capture = createCapture({ title: new RegExp(escapeRegExp(a.title), 'i'), command: a.captureCmd ?? undefined })
   // The game's log says whether the board is on screen; without it (the log is
   // missing, or it has no detail) the window is watched as before.
   const log = a.noLog ? null : watchMinigames()

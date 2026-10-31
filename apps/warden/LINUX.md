@@ -16,6 +16,7 @@ bun run tui                                      # follow the running game
 bun run tui --image frame.png                    # read one screenshot, print, exit
 bun run tui --no-log                             # follow the running game, without the game's log
 bun run tui --no-color                           # draw without colours
+bun run tui --capture-cmd 'grim -g "0,0 1920x1080" {out}'   # another compositor: the picture comes from that command
 bun run cli solve frame.png --seed 1 --rollouts 400
 ```
 
