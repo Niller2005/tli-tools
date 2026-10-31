@@ -5,10 +5,14 @@
   "bin": { "tli": "src/main.ts" },
   "scripts": {
     "start": "bun src/main.ts",
+    "smoke": "python3 tests/tui-smoke.py",
+    "test": "bun test",
     "typecheck": "tsc -p ."
   },
   "dependencies": {
-    "@tli/gamelog": "workspace:*"
+    "@opentui/core": "0.8.0",
+    "@tli/gamelog": "workspace:*",
+    "@tli/tui": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",
