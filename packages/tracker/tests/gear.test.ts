@@ -1,7 +1,15 @@
 import { describe, expect, test } from 'bun:test'
 import { Tracker } from '../src/engine'
 import { parseLine } from '../src/parse'
-import { PUT_ON_LEGENDARY, PUT_ON_PLAIN, PICK_LEGENDARY, WORN_GEAR } from './fixtures'
+import { parseDumpItem, parseDumpLegendary } from '../src/parse'
+import {
+  BAG_DUMP,
+  BAG_DUMP_PLAIN,
+  PUT_ON_LEGENDARY,
+  PUT_ON_PLAIN,
+  PICK_LEGENDARY,
+  WORN_GEAR,
+} from './fixtures'
 
 describe('the line the game writes when something is put on', () => {
   test('is read', () => {
@@ -76,5 +84,28 @@ describe('the price of a legendary', () => {
     tracker.feed(PICK_LEGENDARY)
     tracker.prices.setBaseline([[112151, 7]])
     expect(tracker.prices.price(tracker.itemOf(3010))).toBe(0)
+  })
+})
+
+describe('the dump of the bag', () => {
+  test('names the item and the legendary it is', () => {
+    const item = parseDumpItem(BAG_DUMP[6] ?? '')
+    expect(item?.base).toBe(4533)
+    expect(item?.uuid).toBe('dcdff642-ca92-11f1-b19f-00000000007a')
+    const legendary = parseDumpLegendary(BAG_DUMP[8] ?? '')
+    expect(legendary?.legendary).toBe(113286)
+  })
+
+  test('the tracker learns the legendary of the item in it', () => {
+    const tracker = new Tracker()
+    // the dump is written out, then the game's own lines carry on
+    tracker.feed([...BAG_DUMP, ''])
+    expect(tracker.legendaryOf(4533)).toBe(113286)
+  })
+
+  test('an item that is not a legendary is left alone', () => {
+    const tracker = new Tracker()
+    tracker.feed([...BAG_DUMP_PLAIN, ''])
+    expect(tracker.legendaryOf(382239)).toBeNull()
   })
 })

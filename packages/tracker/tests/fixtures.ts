@@ -230,3 +230,26 @@ export const WORN_GEAR = [
 export const PUT_ON_PLAIN = [
   '[2026.10.31-02.24.12:536][  6]TLLua: Display: [Game] AttributeMgr:SetPlayerEquipment(BaseId=4642, GoldId=0, 6)',
 ]
+
+/** The game dumps the bag: the fields of one item, with the legendary it is. */
+export const BAG_DUMP = [
+  '|     | +Index [32]',
+  '|     | +Item+Evalued [true]',
+  '|     | |    +DreamAffixExclusive',
+  '|     | |    +DropSource [4]',
+  '|     | |    +BaseId [4533]',
+  '|     | |    +Num [1]',
+  '|     | |    +Id [4533_dcdff642-ca92-11f1-b19f-00000000007a]',
+  '|     | |    +Level [78]',
+  '|     | |    +UniqueItmId [113286]',
+]
+
+/** The same dump for an item that is not a legendary. */
+export const BAG_DUMP_PLAIN = [
+  '|   |    | |        | +Index [26]',
+  '|   |    | |        | +Item+UniqueItmId [0]',
+  '|   |    | |        | |    +Evalued [true]',
+  '|   |    | |        | |    +BaseId [382239]',
+  '|   |    | |        | |    +RareValue [1]',
+  '|   |    | |        | |    +Id [382239_adbf38a9-ce75-11f1-bfac-000000000020]',
+]

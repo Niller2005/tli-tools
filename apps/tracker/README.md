@@ -185,12 +185,15 @@ When a legendary drops, the log only says the base of the gear: `ItemChange@ Add
 *Old King's Armor (Str)*, and nothing more. The log never says which legendary the piece is at the
 moment it is picked up.
 
-It does say later, when the player puts the gear on:
-`AttributeMgr:SetPlayerEquipment(BaseId=3010, GoldId=112151, 4)` names the legendary (*Furious
-Man's Body*) and the slot it is in. The block that goes with it names the item itself, so the
-tracker can tell which piece of gear became which legendary.
+It does say later, in two places:
 
-The tracker uses that: a gear base the log has named is shown by the name of the legendary and is
+- when the player puts the gear on: `AttributeMgr:SetPlayerEquipment(BaseId=3010, GoldId=112151, 4)`
+  names the legendary (*Furious Man's Body*) and the slot it is in, and the block that goes with it
+  names the item itself;
+- when the game dumps the bag (at login, and when things move to the warehouse): the fields of the
+  item carry `+Id [3010_<uuid>]` and `+UniqueItmId [112151]`, the legendary's own id.
+
+The tracker uses both: a gear base the log has named is shown by the name of the legendary and is
 worth what the legendary is worth (a price you set, then a price learned from the exchange, then
 the community price). A base the log has not named keeps its own name and its own price.
 

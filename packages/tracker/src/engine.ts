@@ -13,7 +13,7 @@
 import { ExchangeParser, FE_ITEM, type Quote } from './exchange'
 import { Inventory, type Delta } from './inventory'
 import { ItemNames } from './items'
-import { parseLine, zoneOf, type Fact } from './parse'
+import { parseDumpItem, parseDumpLegendary, parseLine, zoneOf, type Fact } from './parse'
 import { PriceStore } from './prices'
 import { RunSegmenter, type Run, type RunKind } from './runs'
 import { durationOf, perHour, valueOf, type Value } from './valuation'
@@ -161,6 +161,10 @@ export class Tracker {
   private blockItems: NamedItem[] = []
   /** the blocks that could hold the item that was put on */
   private readonly equipBlocks: { at: number; items: NamedItem[] }[] = []
+  /** the item the dump is reading */
+  private dumpItem: { uuid: string; base: number } | null = null
+  /** the legendary the dump named for that item */
+  private dumpUnique = 0
 
   constructor(opts: TrackerOptions = {}) {
     this.names = opts.names ?? new ItemNames({})
@@ -197,9 +201,50 @@ export class Tracker {
     }
 
     const fact = parseLine(line)
-    if (fact === null) return
+    if (fact === null) {
+      this.readDump(line)
+      return
+    }
     this.lastAt = fact.at
     this.apply(fact)
+  }
+
+  /**
+   * The game dumps the bag as the raw lines of its protocol.
+   *
+   * In a dump the fields of one item follow one another, and two of them name it: the id with the
+   * instance the game gave it, and the id of the legendary it is. The dump is written when the
+   * player logs in and when things move to the warehouse, so the legendary of a piece of gear is
+   * known from then on.
+   */
+  private readDump(line: string): void {
+    if (!line.startsWith('|')) {
+      this.flushDump()
+      return
+    }
+    if (line.includes('+Item+')) {
+      this.flushDump()
+      const legendary = parseDumpLegendary(line)
+      if (legendary !== null) this.dumpUnique = legendary.legendary
+      return
+    }
+    const item = parseDumpItem(line)
+    if (item !== null) {
+      this.dumpItem = { uuid: item.uuid, base: item.base }
+      return
+    }
+    const legendary = parseDumpLegendary(line)
+    if (legendary !== null) this.dumpUnique = legendary.legendary
+  }
+
+  /** The item the dump was reading is done: keep the legendary it named. */
+  private flushDump(): void {
+    const item = this.dumpItem
+    const legendary = this.dumpUnique
+    this.dumpItem = null
+    this.dumpUnique = 0
+    if (item === null || legendary === 0) return
+    this.rememberGear(item.base, legendary)
   }
 
   /** Acts on what a line said. */
@@ -268,9 +313,14 @@ export class Tracker {
     if (fact.legendary === 0) return
     const item = this.equippedItem(fact)
     if (item === null) return
-    const old = this.gear.get(item.item)
-    if (old !== undefined && old !== fact.legendary) this.gear.delete(item.item)
-    else this.gear.set(item.item, fact.legendary)
+    this.rememberGear(item.item, fact.legendary)
+  }
+
+  /** Keeps the legendary of a gear base, unless the log says another one. */
+  private rememberGear(base: number, legendary: number): void {
+    const old = this.gear.get(base)
+    if (old !== undefined && old !== legendary) this.gear.delete(base)
+    else this.gear.set(base, legendary)
   }
 
   /** The item that was put on, when the log names it. */
