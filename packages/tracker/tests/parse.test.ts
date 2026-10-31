@@ -9,6 +9,8 @@ import {
   IN_HIDEOUT,
   PICK_GEAR,
   PICK_MATERIAL,
+  PRISON_BOARD,
+  PRISON_BOARD_CLOSED,
   SELL,
   SORT_BAG,
 } from './fixtures'
@@ -123,6 +125,26 @@ describe('the blocks of the log', () => {
       name: 'PickItems',
       start: false,
       at: Date.UTC(2026, 9, 29, 22, 40, 5, 80),
+    })
+  })
+})
+
+describe('the pages of the game', () => {
+  test('a page that opens is read', () => {
+    expect(parseLine(PRISON_BOARD[0] as string)).toEqual({
+      t: 'screen',
+      name: 'S16BoardMain',
+      state: 'run',
+      at: Date.UTC(2026, 9, 31, 2, 57, 37, 312),
+    })
+  })
+
+  test('a page that is destroyed is read', () => {
+    expect(parseLine(PRISON_BOARD_CLOSED[0] as string)).toEqual({
+      t: 'screen',
+      name: 'S16BoardMain',
+      state: 'destory',
+      at: Date.UTC(2026, 9, 31, 3, 10, 6, 232),
     })
   })
 })
