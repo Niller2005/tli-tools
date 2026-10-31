@@ -34,11 +34,13 @@ files under `apps/warden` are GPL-3.0-only, files under `apps/vorax` are MIT.
 | `apps/vorax` | Vorax / Surgical Preparation helper: reads the board, shows the best move |
 | `apps/warden` | Tartarus prison board advisor: reads the board, recommends the next move |
 | `apps/tracker` | Loot tracker: reads the game's log, shows what each map run gave and what it is worth |
+| `apps/arcana` | Arcana tracker: the Tarot Path visits, the Fateful Contests and what their chests gave |
 | `packages/png` | PNG decode and encode |
 | `packages/capture` | Game window capture on Linux (Niri, `grim`, or a custom command) |
 | `packages/gamelog` | The game's log file: where it is and which minigame it says is open |
 | `packages/ocr` | `tesseract` runner and TSV parser |
 | `packages/tracker` | The log parsing behind the loot tracker: the bag, the runs, the prices |
+| `packages/arcana` | The log parsing behind the Arcana tracker: the Tarot Path sessions, the Fateful Contests, the trials |
 
 The game's log (`UE_game.log`) says which minigame is on screen: the dashboard shows that as a badge next to each tool,
 and Warden waits for the Tartarus board instead of looking at the game window while it is closed. The log only has
@@ -69,6 +71,7 @@ Or run a tool directly:
 | `bun run warden:cli -- read\|solve\|capture\|bench …` | Warden command line |
 | `bun run tracker` | Loot tracker TUI |
 | `bun run tracker:report` | Loot report as a csv file |
+| `bun run arcana` | Arcana tracker TUI (the Tarot Path and the Fateful Contest) |
 | `bun run test` | Warden test suite |
 | `bun run typecheck` | Typecheck all apps |
 
@@ -79,6 +82,7 @@ Or run a tool directly:
 | [Getting started](docs/tutorial-getting-started.md) | A first run of each tool, step by step |
 | [Other compositors](docs/how-to-other-compositors.md) | Running without Niri |
 | [Tracking your loot](docs/how-to-track-your-loot.md) | The loot tracker: the log, the prices, the report |
+| [Tracking your Tarot Path](docs/how-to-track-your-arcana.md) | The Arcana tracker: the visits, the chests, the Fateful Contests |
 | [Adding a tool to the dashboard](apps/dashboard/README.md#adding-a-tool) | One entry in `src/tools.ts` |
 | [How the tools work](docs/explanation-how-it-works.md) | Capture, reader, solver, the Rust port, the Windows apps |
 
