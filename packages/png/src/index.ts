@@ -377,9 +377,9 @@ function deinterlace(raw: Buffer, h: Header, channels: number): Samples {
 
 /** The sample at index `i` of a line, in 16-bit space; a palette image keeps
  * its index instead. */
-function sample(line: Buffer, i: number, bps: number, indexed: boolean): number {
-  if (bps === 16) return line.readUInt16BE(i * 2)
-  if (bps === 8) return indexed ? line[i] : line[i] * 257
+function sample(line: Uint8Array, i: number, bps: number, indexed: boolean): number {
+  if (bps === 16) return be16(line, i * 2)
+  if (bps === 8) return indexed ? (line[i] as number) : (line[i] as number) * 257
   const perByte = 8 / bps
   const byte = line[Math.floor(i / perByte)]
   const shift = 8 - bps * ((i % perByte) + 1)

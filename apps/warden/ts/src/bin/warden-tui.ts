@@ -24,6 +24,7 @@ import { asBytes } from '@tli/png'
 import { startApp } from '@tli/tui'
 import type { KeyEvent } from '@opentui/core'
 import { Session, Watch, fingerprint } from '@/app/session'
+import { timed } from '@/app/profile'
 import { Rgba, loadPng } from '@/reader/mod'
 import { WardenApp } from '@/tui/app'
 import { plainScreen, stateFromSession } from '@/tui/view'
@@ -187,13 +188,17 @@ async function run(): Promise<void> {
         captureNote = lastCaptureError
       } else {
         try {
+          const started = performance.now()
           const attempt = await captureMinigame(capture, view, 'warden', readNow)
+          timed('capture', performance.now() - started)
           if (attempt.image === null) {
             captureNote = attempt.status
           } else {
             const frame = asRgba(attempt.image)
             captureNote = attempt.status === '' ? `${frame.w} x ${frame.h}` : `${attempt.status} · ${frame.w} x ${frame.h}`
+            const marked = performance.now()
             const print = fingerprint(frame)
+            timed('fingerprint', performance.now() - marked)
             if (readNow) {
               watch.markRead(print)
               session.readLive(frame)
@@ -215,7 +220,9 @@ async function run(): Promise<void> {
       if (hint !== null) captureNote += `  ${hint}`
       session.poll()
       if (session.wantsReread()) watch.readNext()
+      const drawn = performance.now()
       app.draw(captureNote)
+      timed('draw', performance.now() - drawn)
 
       next += SAMPLE
       const wait = next - performance.now()

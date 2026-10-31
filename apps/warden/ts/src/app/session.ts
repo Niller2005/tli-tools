@@ -42,15 +42,20 @@ import { offBoard, readPanelsTitled, type Panels, type Screen } from '@/reader/p
 import { CELLS, readScene, type Scene } from '@/reader/scene'
 import { REF_H, REF_W, type Rgba } from '@/reader/mod'
 import { advise, alsoGood, preferChange, whyShown, type Advice, type Pick } from '@/solver/advise'
-import { instant, instantBite, Rollouts, type SolveOption } from '@/solver/solve'
-import { TUNED } from '@/solver/mod'
+import { instant, instantBite, type SolveOption } from '@/solver/solve'
 import { RunLog, timestamp } from './runlog'
+import { timed } from './profile'
+import type { SolveProgress } from './solve-worker'
 
 /** Rounds the worker plays between two partial rankings. */
 export const ROUND = 50
 /** The seed of the board's hidden parts and of the playouts, as in
  * `warden-cli solve`. */
 const SEED = 1
+
+/** The solver's worker: the playouts run in it, so the window keeps
+ * painting and the capture keeps its pace while they do. */
+const SOLVER = new URL('./solve-worker.ts', import.meta.url)
 
 /** A correction to a cell the reader got wrong. */
 export type CellEdit =
@@ -401,20 +406,39 @@ const CHANGED_BLOCKS = 4
  * resize, which samples a few pixels per block, can miss. */
 export function fingerprint(frame: Rgba): Uint8Array {
   const [gw, gh] = PRINT
-  const sum = new Float64Array(gw * gh)
-  const count = new Float64Array(gw * gh)
+  const sum = new Int32Array(gw * gh)
+  // The block each column and each row belongs to, and how many pixels of
+  // it there are: the same for every row of a block row.
+  const cols = new Int32Array(frame.w)
+  const colCount = new Int32Array(gw)
+  for (let x = 0; x < frame.w; x++) {
+    const b = Math.floor((x * gw) / frame.w)
+    cols[x] = b
+    colCount[b] += 1
+  }
+  const rows = new Int32Array(frame.h)
+  const rowCount = new Int32Array(gh)
   for (let y = 0; y < frame.h; y++) {
-    const row = Math.floor((y * gh) / Math.max(frame.h, 1)) * gw
+    const b = Math.floor((y * gh) / Math.max(frame.h, 1))
+    rows[y] = b
+    rowCount[b] += 1
+  }
+  const count = new Int32Array(gw * gh)
+  for (let by = 0; by < gh; by++) {
+    for (let bx = 0; bx < gw; bx++) count[by * gw + bx] = rowCount[by] * colCount[bx]
+  }
+  const data = frame.data
+  for (let y = 0; y < frame.h; y++) {
+    const row = rows[y] as number * gw
+    const from = y * frame.w * 4
     for (let x = 0; x < frame.w; x++) {
-      const i = (y * frame.w + x) * 4
-      const gray = Math.floor((frame.data[i] * 299 + frame.data[i + 1] * 587 + frame.data[i + 2] * 114) / 1000)
-      const b = row + Math.floor((x * gw) / frame.w)
-      sum[b] += gray
-      count[b] += 1
+      const i = from + x * 4
+      const gray = ((data[i] as number) * 299 + (data[i + 1] as number) * 587 + (data[i + 2] as number) * 114) / 1000
+      sum[row + (cols[x] as number)] += gray | 0
     }
   }
   const out = new Uint8Array(gw * gh)
-  for (let k = 0; k < out.length; k++) out[k] = count[k] === 0 ? 0 : Math.floor(sum[k] / count[k])
+  for (let k = 0; k < out.length; k++) out[k] = count[k] === 0 ? 0 : Math.floor((sum[k] as number) / count[k])
   return out
 }
 
@@ -664,6 +688,10 @@ export class Session {
   /** The number of the running solve; a solve that is not the current one
    * stops at its next round. */
   private solveGen = 0
+  /** The worker that plays the rounds of the running solve. */
+  private solver: Worker | null = null
+  /** The wait for the worker's next ranking. */
+  private solverWait: ((progress: SolveProgress | null) => void) | null = null
   /** The worker's latest ranking. */
   private progress: Progress | null = null
   /** The time of the last reading, so the readings' times never stand
@@ -728,6 +756,7 @@ export class Session {
     this.scanReady = false
     this.scanned = null
     this.scanTask = (async () => {
+      const started = performance.now()
       try {
         const scanned = await scan(frame, keep, hint)
         this.scanned = scanned
@@ -736,6 +765,7 @@ export class Session {
         this.scanned = null
         console.error(error)
       }
+      timed('read', performance.now() - started)
       this.scanReady = true
       this.notify?.()
     })()
@@ -1487,23 +1517,47 @@ export class Session {
     this.startSolve(st, firstBite ? bites : null)
   }
 
-  /** Plays the rounds of a solve, one chunk at a time, so the window keeps
-   * painting between them. */
+  /** Plays the rounds of a solve in the solver's worker, one chunk at a
+   * time, so the window keeps painting between them. */
   private startSolve(st: State, bites: number[] | null): void {
     const gen = ++this.solveGen
     this.solving = true
+    const worker = new Worker(SOLVER)
+    this.solver = worker
+    worker.onmessage = (e: MessageEvent) => {
+      const wait = this.solverWait
+      this.solverWait = null
+      wait?.(e.data as SolveProgress)
+    }
+    worker.onerror = () => {
+      const wait = this.solverWait
+      this.solverWait = null
+      wait?.(null)
+    }
     this.solveTask = (async () => {
-      const r = bites !== null ? Rollouts.with(st, SEED, TUNED, bites) : new Rollouts(st, SEED, TUNED)
-      for (;;) {
-        const { promise, resolve } = Promise.withResolvers<void>()
-        setTimeout(resolve, 0)
-        await promise
-        if (gen !== this.solveGen) return
-        const ran = r.runOn(Math.min(ROUND, this.rollouts - r.rounds()), 1)
-        const done = ran === 0 || r.rounds() >= this.rollouts
-        this.progress = { rounds: r.rounds(), done, options: r.ranking() }
-        this.notify?.()
-        if (done) return
+      const started = performance.now()
+      let first = true
+      try {
+        worker.postMessage({ state: st, seed: SEED, rollouts: this.rollouts, round: ROUND, bite: bites })
+        for (;;) {
+          const { promise, resolve } = Promise.withResolvers<SolveProgress | null>()
+          this.solverWait = resolve
+          const progress = await promise
+          if (progress === null || gen !== this.solveGen) return
+          this.progress = progress
+          this.notify?.()
+          if (first) {
+            first = false
+            timed('solve-first', performance.now() - started)
+          }
+          if (progress.done) {
+            timed('solve', performance.now() - started)
+            return
+          }
+        }
+      } finally {
+        if (this.solver === worker) this.solver = null
+        worker.terminate()
       }
     })()
   }
@@ -1511,6 +1565,15 @@ export class Session {
   /** Drops the solve, its ranking and pick; the worker stops at its next
    * round. */
   private stop(): void {
+    const worker = this.solver
+    this.solver = null
+    if (worker !== null) {
+      // The wait for the next ranking is released, so the solve's task ends.
+      const wait = this.solverWait
+      this.solverWait = null
+      wait?.(null)
+      worker.terminate()
+    }
     this.ranking = []
     this.rounds = 0
     this.pick = null

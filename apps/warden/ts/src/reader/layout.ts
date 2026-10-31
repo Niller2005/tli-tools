@@ -330,9 +330,26 @@ interface Found {
   y: number
 }
 
-/** The correlation of every `step`th template pixel with the strip
- * sampled there, the template scaled by `s` with its top-left at (x, y). */
-function ncc(strip: Strip, m: Mark, s: number, x: number, y: number, step: number): number {
+/** The source columns a template samples at `x`, and the weight of the
+ * second pixel of each: the same for every row of the template. */
+function xTaps(strip: Strip, m: Mark, s: number, x: number, step: number): { xi: Int32Array; tx: Float32Array } {
+  const tw = m.at.w
+  const n = Math.ceil(tw / step)
+  const xi = new Int32Array(n)
+  const tx = new Float32Array(n)
+  for (let k = 0; k < n; k++) {
+    const i = k * step
+    const clamped = f(Math.min(Math.max(f(f(x + f(f(i + 0.5) * s)) - 0.5), 0), strip.w - 1.001))
+    xi[k] = Math.trunc(clamped)
+    tx[k] = f(clamped - Math.floor(clamped))
+  }
+  return { xi, tx }
+}
+
+/** The correlation of every `step`th template pixel with the strip sampled
+ * there, the template scaled by `s` with its top-left at the row `y` and the
+ * columns `taps` gives. */
+function nccAt(strip: Strip, m: Mark, s: number, y: number, step: number, taps: { xi: Int32Array; tx: Float32Array }): number {
   const tw = m.at.w
   const th = m.at.h
   // A coordinate's pixel and the weight of the next one, clamped to `len`.
@@ -348,12 +365,13 @@ function ncc(strip: Strip, m: Mark, s: number, x: number, y: number, step: numbe
   let spt = 0
   for (let j = 0; j < th; j += step) {
     const [yi, ty] = axis(f(f(y + f(f(j + 0.5) * s)) - 0.5), strip.h)
-    for (let i = 0; i < tw; i += step) {
-      const [xi, tx] = axis(f(f(x + f(f(i + 0.5) * s)) - 0.5), strip.w)
+    for (let k = 0; k < taps.xi.length; k++) {
+      const xi = taps.xi[k] as number
+      const tx = taps.tx[k] as number
       const top = f(strip.grey[yi * strip.w + xi] + f(f(strip.grey[yi * strip.w + xi + 1] - strip.grey[yi * strip.w + xi]) * tx))
-      const bot = f(strip.grey[(yi + 1) * strip.w + xi] + f(f(strip.grey[(yi + 1) * strip.w + xi + 1] - strip.grey[(yi + 1) * strip.w + xi]) * tx))
+      const bot = f(strip.grey[(yi + 1) * strip.w + xi] + f(f(strip.grey[(yi + 1) * strip.w + xi + 1] - strip.grey[(yi + 1) * strip.w + xi]) * ty))
       const p = f(top + f(f(bot - top) * ty))
-      const t = m.t[j * tw + i]
+      const t = m.t[j * tw + k * step]
       n += 1
       sp += p
       spp += p * p
@@ -380,11 +398,15 @@ function locate(strip: Strip, m: Mark, s: number, x0: number, y0: number, rx: nu
   let best: Found = { score: -Infinity, x: x0, y: y0 }
   const nx = Math.round(rx / d)
   const ny = Math.round(ry / d)
+  // The columns the template samples are the same for every row it is
+  // tried at, so they are worked out once.
+  const taps: { xi: Int32Array; tx: Float32Array }[] = []
+  for (let ix = -nx; ix <= nx; ix++) taps.push(xTaps(strip, m, s, f(x0 + f(ix * d)), step))
   for (let iy = -ny; iy <= ny; iy++) {
+    const y = f(y0 + f(iy * d))
     for (let ix = -nx; ix <= nx; ix++) {
       const x = f(x0 + f(ix * d))
-      const y = f(y0 + f(iy * d))
-      const score = ncc(strip, m, s, x, y, step)
+      const score = nccAt(strip, m, s, y, step, taps[ix + nx] as { xi: Int32Array; tx: Float32Array })
       if (score > best.score) best = { score, x, y }
     }
   }
