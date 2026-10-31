@@ -8,7 +8,7 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { findLog } from '@tli/gamelog'
-import { ItemNames, LogReader, Tracker } from '@tli/tracker'
+import { ItemNames, LogReader, Tracker, readBaseline } from '@tli/tracker'
 
 /** A field in the csv file: quoted when it has a comma or a quote in it. */
 function field(text: string): string {
@@ -88,6 +88,9 @@ async function main(): Promise<void> {
 
   const names = await ItemNames.load()
   const tracker = new Tracker({ names })
+  // the community prices that were fetched last, so the report says the same as the screen
+  const cached = await readBaseline()
+  if (cached !== null) tracker.prices.setBaseline(cached.prices)
   const reader = new LogReader(found.file, 0)
   reader.readAll((batch) => tracker.feed(batch.lines))
 

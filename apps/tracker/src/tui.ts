@@ -9,14 +9,27 @@
 //   bun src/tui.ts --reset             forget what was saved and read the log from its start
 //   bun src/tui.ts --no-backfill       do not read the log's old lines, only the new ones
 //   bun src/tui.ts --no-color          draw without colours
+//   bun src/tui.ts --no-baseline       do not use the community prices
 //
 // Keys: up/down move, tab changes panel, enter detail, esc back, t tax, c map cost, e price,
-// x csv report, p pause, a/v/w open Arcana, Vorax or Warden in a window of their own,
-// / searches the list that has the focus, ? help, q quits.
+// b community prices, x csv report, p pause, a/v/w open Arcana, Vorax or Warden in a window of
+// their own, / searches the list that has the focus, ? help, q quits.
 
 import { findLog } from '@tli/gamelog'
 import { Launcher, openTool } from '@tli/launch'
-import { ITEM_TABLE_PATH, ItemNames, LogReader, Tracker, loadTracker, saveTracker, userItemsPath } from '@tli/tracker'
+import {
+  ITEM_TABLE_PATH,
+  ItemNames,
+  LogReader,
+  Tracker,
+  baselineIsStale,
+  fetchBaseline,
+  loadTracker,
+  readBaseline,
+  saveTracker,
+  userItemsPath,
+  writeBaseline,
+} from '@tli/tracker'
 import { startApp } from '@tli/tui'
 import type { KeyEvent } from '@opentui/core'
 import { TrackerApp } from './app'
@@ -27,7 +40,9 @@ const arg = (name: string): string | null =>
 const flag = (name: string): boolean => process.argv.includes(`--${name}`)
 
 if (flag('help')) {
-  process.stdout.write('bun src/tui.ts [--log=<UE_game.log>] [--reset] [--no-backfill] [--no-color]\n')
+  process.stdout.write(
+    'bun src/tui.ts [--log=<UE_game.log>] [--reset] [--no-backfill] [--no-color] [--no-baseline]\n',
+  )
   process.exit(0)
 }
 
@@ -51,6 +66,15 @@ const usable = saved !== null && saved.log.file === logFile ? saved : null
 if (usable !== null) tracker.restore(usable.tracker)
 
 const reader = new LogReader(logFile, usable?.log.offset ?? (flag('no-backfill') ? 'end' : 0))
+
+/* ---------- the community prices ---------- */
+
+// The prices of the community (TITrack). They are the floor under everything the tracker knows:
+// a price set by hand and a price learned from the exchange both win over them. The prices that
+// were fetched last are on disk, so the tracker starts with them even without a network.
+const baselineOn = !flag('no-baseline')
+const cached = baselineOn ? await readBaseline() : null
+if (cached !== null) tracker.prices.setBaseline(cached.prices)
 
 /* ---------- reading the log ---------- */
 
@@ -109,7 +133,17 @@ const app = new TrackerApp(renderer, tracker, names, logFile, {
   onRead: () => {
     readLog()
   },
+  onBaseline: () => {
+    if (!baselineOn) return 'the community prices are turned off'
+    void refreshBaseline()
+    return 'the community prices are being fetched'
+  },
 })
+
+if (cached !== null) {
+  app.state.baselineAt = cached.fetchedAt
+  app.state.baselineCount = cached.prices.length
+}
 
 /* ---------- the keys ---------- */
 
@@ -122,6 +156,22 @@ renderer.on('destroy', () => {
 })
 
 /* ---------- going round ---------- */
+
+/** Fetches the community prices and puts them under everything else. */
+async function refreshBaseline(): Promise<void> {
+  try {
+    const data = await fetchBaseline()
+    tracker.prices.setBaseline(data.prices)
+    app.state.baselineAt = data.fetchedAt
+    app.state.baselineCount = data.prices.length
+    await writeBaseline(data)
+    app.state.message = `the community prices are here: ${data.prices.length} items`
+  } catch (error) {
+    const why = error instanceof Error ? error.message : String(error)
+    app.state.message = `the community prices could not be fetched: ${why}`
+  }
+  app.draw()
+}
 
 /** Saves what the tracker knows. */
 async function save(): Promise<void> {
@@ -141,6 +191,9 @@ async function quit(): Promise<void> {
 // the first read: the whole log, so the tracker knows about the runs that were already farmed
 readLog()
 app.draw()
+
+// the community prices: the ones on disk are used until they are old, then they are fetched again
+if (baselineOn && baselineIsStale(cached)) void refreshBaseline()
 
 setInterval(() => {
   readLog()
