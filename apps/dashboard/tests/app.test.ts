@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 import { createTestRenderer } from '@opentui/core/testing'
 import type { MinigameView } from '@tli/gamelog'
+import type { Tool } from '@tli/launch'
 import { DashboardApp, freshState } from '../src/app'
-import type { Tool } from '../src/tools'
 
 const VIEW: MinigameView = {
   warden: 'closed',
@@ -16,13 +16,18 @@ async function setup(width = 120, height = 24, state = freshState()) {
   // Kitty mode sends each key on its own, so the parser never has to wait for the rest of an
   // escape sequence.
   const test = await createTestRenderer({ width, height, kittyKeyboard: true })
-  const calls = { quit: 0, run: [] as Tool[] }
+  const calls = { quit: 0, run: [] as Tool[], opened: [] as Tool[] }
   const app = new DashboardApp(test.renderer, state, {
     onQuit: () => {
       calls.quit += 1
     },
     onRun: (tools) => {
       calls.run.push(...tools)
+    },
+    onOpenWindow: (tool) => {
+      // the tests never open a window: they only remember what was asked for
+      calls.opened.push(tool)
+      return `${tool.name} is open in a new window`
     },
   })
   test.renderer.root.add(app.screen.root)
@@ -102,6 +107,19 @@ describe('the dashboard screen', () => {
     test.mockInput.pressKey('j')
     test.mockInput.pressEnter()
     expect(calls.run.map((tool) => tool.id)).toEqual(['tracker'])
+    test.renderer.destroy()
+  })
+
+  test('w opens the tool under the cursor in a window of its own', async () => {
+    const { test, app, calls } = await setup()
+    test.mockInput.pressKey('w')
+    expect(calls.opened.map((tool) => tool.id)).toEqual(['vorax'])
+    expect(app.state.message).toContain('is open in a new window')
+    await test.renderOnce()
+    expect(test.captureCharFrame()).toContain('is open in a new window')
+    test.mockInput.pressKey('j')
+    test.mockInput.pressKey('w')
+    expect(calls.opened.map((tool) => tool.id)).toEqual(['vorax', 'warden'])
     test.renderer.destroy()
   })
 

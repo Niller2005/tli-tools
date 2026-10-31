@@ -6,10 +6,10 @@
 
 import type { KeyEvent } from '@opentui/core'
 import { watchMinigames, type Watcher } from '@tli/gamelog'
+import { Launcher, openTool, type Tool } from '@tli/launch'
 import { startApp } from '@tli/tui'
 import { DashboardApp, freshState, viewSignature } from './app'
 import { launch } from './launch'
-import { type Tool } from './tools'
 
 /** The log to watch, when it is said on the command line. */
 const givenLog = process.argv.find((a) => a.startsWith('--log='))?.slice('--log='.length) ?? null
@@ -21,6 +21,7 @@ type Outcome = { kind: 'quit' } | { kind: 'run'; tools: Tool[] }
 async function dashboard(): Promise<void> {
   const state = freshState()
   const ignoreSigint = (): void => {}
+  const launcher = new Launcher()
 
   while (true) {
     let watcher: Watcher | null = null
@@ -44,6 +45,10 @@ async function dashboard(): Promise<void> {
           process.on('SIGINT', ignoreSigint)
           settleOutcome({ kind: 'run', tools })
           void terminal.stop()
+        },
+        onOpenWindow: (tool) => {
+          // the tool goes into a window of its own, so the dashboard keeps the terminal
+          return openTool(launcher, tool, { parentArgv: process.argv }).message
         },
       })
       terminal.renderer.root.add(app.screen.root)
