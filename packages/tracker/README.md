@@ -22,6 +22,7 @@ console.log(tracker.stats())
 | `src/inventory.ts` | the bag: which items are in which slot, and how many of each the player has |
 | `src/runs.ts` | the runs: the time in each map, what was picked up in it, what it cost, and the visits to the Tartarus prison |
 | `src/prices.ts` | the prices the exchange told it about, and the ones the player set |
+| `src/baseline.ts` | the community prices of TITrack, and the file they are kept in |
 | `src/exchange.ts` | the exchange's blocks of lines: what a search found |
 | `src/valuation.ts` | what a pile of loot is worth, with and without the trade tax |
 | `src/items.ts` | the names of the items |
@@ -40,6 +41,33 @@ The Tartarus prison is a run of its own. The board the warden reads opens in the
 visit begins with the board and ends when the player leaves the prison level. The runs have a kind
 (`map` or `prison`) that is kept in the state that is saved: the state of the first version had no
 kind, and its runs are all trips into a map.
+
+## The prices
+
+The tracker knows three kinds of price, and the first one that is there wins: the price the player
+set by hand, the price the exchange told the tracker when the player looked an item up, and the
+community price. `PriceStore.price()` gives the one that counts, and `PriceStore.source()` says
+where it came from.
+
+The community prices come from [TLI Companion](https://tlicompanion.com), the site that collects the
+prices players saw on the auction house. `src/baseline.ts` reads them from its public API (see
+[the docs](https://tlicompanion.com/api)), keeps them in `~/.local/share/tli-tracker/baseline.json`,
+and says how old they are. They are never mixed into what was learned: they have a file of their
+own, and the state that is saved does not carry them.
+
+```ts
+import { baselineIsStale, fetchBaseline, readBaseline, writeBaseline } from '@tli/tracker'
+
+const cached = await readBaseline()
+if (baselineIsStale(cached)) {
+  const data = await fetchBaseline()
+  tracker.prices.setBaseline(data.prices)
+  await writeBaseline(data)
+}
+```
+
+The prices are in FE, the same currency the exchange prices things in. A failure is only a
+failure: the tracker carries on with what it has.
 
 ## The data of the items
 

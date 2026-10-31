@@ -2,7 +2,8 @@
 
 A Torchlight: Infinite loot tracker for the terminal. It reads the game's log file and works out what
 you picked up on each trip into a map, what it is worth, and what you have. It only reads the log:
-it never touches the game, and it never sends anything over the network.
+it never touches the game. The only thing it asks for over the network is the community prices, and
+only when they are older than six hours (see *The community prices*).
 
 ```
 bun run tracker                     # from the repo root
@@ -11,6 +12,7 @@ bun src/tui.ts --log=<UE_game.log>  # read another log
 bun src/tui.ts --reset              # forget what was saved and read the log from its start
 bun src/tui.ts --no-backfill        # do not read the log's old lines, only the new lines
 bun src/tui.ts --no-color           # draw without colours
+bun src/tui.ts --no-baseline        # do not use the community prices
 ```
 
 ## What it shows
@@ -21,7 +23,7 @@ bun src/tui.ts --no-color           # draw without colours
 | Current run | the map you are in, how long you have been in it, and what you have picked up, the most valuable first |
 | Recent runs | the last runs, with how long each took and what it was worth; the runs that are visits to the Tartarus prison say so; `enter` opens the detail of one |
 | Bag | what you have, sorted by value (or by how many, or by name); the value of each thing |
-| Prices | what the tracker knows the price of each item to be |
+| Prices | what the tracker knows the price of each item to be; `*` a price you set, `·` one learned from the exchange, `~` a community price |
 
 The panels use the whole width of the terminal on a normal screen: the current run is above the
 bag on the left, recent runs are above the prices on the right, and the two columns line up. The
@@ -65,6 +67,7 @@ The keys:
 | `e` | Set the price of the item that is picked out (empty enter resets it) |
 | `u` | Reset a hand-set price back to the learned one |
 | `d` | Remove the item from the prices (a new exchange search brings it back) |
+| `b` | Fetch the community prices again |
 | `s` | Change how the list is sorted |
 | `/` | Search the list that has the focus |
 | `x` | Write the loot report to a csv file |
@@ -154,11 +157,18 @@ A visit that never had a challenge is not a run: looking at the board for a mome
 
 ## The prices
 
-The tracker only knows what it has seen: the prices the exchange told it, and the prices you set
-yourself. An item nobody looked up is worth nothing until you look it up (in the game) or set a price
-(in the tracker, with `e`).
+The tracker knows three kinds of price, and the first one that is there wins:
 
-The prices you set are kept in the tracker's own file. The names of the items are in
+| Mark | Where the price comes from |
+|------|----------------------------|
+| `*` | the price you set yourself (`e`) |
+| `·` | the price the exchange told the tracker, when you looked the item up in the game |
+| `~` | the community price, from [TLI Companion](https://tlicompanion.com) |
+
+A price you set always wins. A price learned from the exchange wins over the community price. The
+community price is the floor under everything else: it is what an item nobody looked up is worth.
+
+The names of the items are in
 [`packages/tracker/data/items.json`](../../packages/tracker/data/items.json), which is built by
 [`packages/tracker/scripts/generate-items.ts`](../../packages/tracker/scripts/generate-items.ts) from
 the item data of the [Torchlight: Infinite wiki](https://tlidb.com) (through the
@@ -168,6 +178,44 @@ the item data of the [Torchlight: Infinite wiki](https://tlidb.com) (through the
 ```json
 { "3210": "Iron Sword", "3510": "Oak Staff" }
 ```
+
+## The legendaries
+
+When a legendary drops, the log only says the base of the gear: `ItemChange@ Add Id=3010_<uuid>` says
+*Old King's Armor (Str)*, and nothing more. The log never says which legendary the piece is at the
+moment it is picked up.
+
+It does say later, when the player puts the gear on:
+`AttributeMgr:SetPlayerEquipment(BaseId=3010, GoldId=112151, 4)` names the legendary (*Furious
+Man's Body*) and the slot it is in. The block that goes with it names the item itself, so the
+tracker can tell which piece of gear became which legendary.
+
+The tracker uses that: a gear base the log has named is shown by the name of the legendary and is
+worth what the legendary is worth (a price you set, then a price learned from the exchange, then
+the community price). A base the log has not named keeps its own name and its own price.
+
+## The community prices
+
+The tracker can fill in the prices nobody looked up with the prices the community reports.
+[TLI Companion](https://tlicompanion.com) collects the prices players saw on the auction house
+and has a documented public API ([the docs](https://tlicompanion.com/api)); the tracker reads the
+prices from there.
+
+- The prices are fetched at most once an hour (the data changes at most every ten minutes), and are
+  kept in `~/.local/share/tli-tracker/baseline.json`, so the tracker works the same without a
+  network.
+- `b` fetches them again. The footer says where they are from and how old they are.
+- `--no-baseline` turns them off: the tracker then only knows what it has seen.
+- A fetch that fails is only a message; the tracker carries on with what it has.
+
+The site asks to be credited where its prices are shown, so the footer says
+*Prices: tlicompanion.com* with the link to it.
+
+The community price is the middle of the prices players saw, and the tracker's own price is the
+tenth of the listings of the exchange, so the two can differ. Where they do, the tracker's own
+price wins.
+
+The site is by other people; see [`docs/third-party-data.md`](../../docs/third-party-data.md).
 
 ## The tests
 
@@ -185,6 +233,7 @@ that it leaves the terminal as it was.
 | File | What is in it |
 |------|---------------|
 | `~/.local/share/tli-tracker/state.json` | the runs, the bag, the prices and where the tracker was in the log |
+| `~/.local/share/tli-tracker/baseline.json` | the community prices, and when they were fetched |
 | `~/.config/tli-tracker/items.json` | the names of the items you named yourself |
 
 The tracker saves now and then, and when it is left. When it starts again it carries on where it

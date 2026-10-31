@@ -23,6 +23,10 @@ here (imported with `git subtree`).
   the Rust output for the engine, solver and reader.
 - The shared packages (`png`, `capture`, `ocr`, `gamelog`) were factored out of code written for those two projects.
 
+The tracker reads data other people made: the community prices of [TLI Companion](https://tlicompanion.com) and the
+item names of the [Torchlight: Infinite wiki](https://tlidb.com). What comes from where, and under which licence, is
+in [`docs/third-party-data.md`](docs/third-party-data.md).
+
 Each app keeps its own licence (see the `LICENSE` file in its folder). The repository root has no licence of its own:
 files under `apps/warden` are GPL-3.0-only, files under `apps/vorax` are MIT.
 
