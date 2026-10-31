@@ -124,6 +124,15 @@ Two full-screen programs can't share one terminal, so the dashboard uses `tmux`.
 Both tools open in tiled `tmux` panes. If a tool exits, its pane stays open so you can read any error. Without `tmux`,
 the dashboard tells you to select one tool instead.
 
+A tool can also have a window of its own, without `tmux`: press `w` on it in the dashboard. It opens in a new
+terminal window (`ghostty`, `kitty`, `foot`, `alacritty`, `wezterm` or `xterm`, whichever is installed;
+`TLI_TERMINAL` says which one to use) and the dashboard keeps the terminal. The loot tracker does the same with
+`a`, `v` and `w`, for Arcana, Vorax and Warden, while it keeps following the log.
+
+When the tracker or the dashboard runs inside `tmux`, the tool opens as a pane of that session instead, so the
+focus stays where it is. `TLI_TMUX_MODE=split-v` puts the pane below, `TLI_TMUX_MODE=window` gives it a window
+of its own; the default is a pane beside.
+
 ## Where to go next
 
 - [`apps/warden/LINUX.md`](../apps/warden/LINUX.md): Warden options, including `--title` and `--rollouts`.

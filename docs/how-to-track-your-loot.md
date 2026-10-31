@@ -75,6 +75,43 @@ It only knows about the items you have looked up. For the rest, set the price yo
 *Bag* or the *Prices* panel and press `e`, then type the price in FE and press `enter`. A price you set wins over
 one that was learned, and it is kept when the tracker is closed.
 
+## Open a minigame in a window of its own
+
+The tracker follows the log while the game is being played, so it cannot show another full-screen
+tool at the same time. The keys `a`, `v` and `w` open Arcana, Vorax and Warden in a window of their
+own, and the tracker carries on: the log is still read and the numbers still change.
+
+```
+a   Arcana
+v   Vorax
+w   Warden
+```
+
+The window is opened in the terminal you use: `ghostty`, `kitty`, `foot`, `alacritty`, `wezterm` or
+`xterm`, whichever is installed. To say which one:
+
+```
+TLI_TERMINAL=ghostty bun run tracker
+```
+
+When the tracker runs inside tmux, the tool opens as a pane of that session instead, and the
+tracker keeps the focus. `TLI_TMUX_MODE` says how the pane is made:
+
+| `TLI_TMUX_MODE` | What is made |
+|-----------------|--------------|
+| `split-h` (the default) | a pane beside the tracker |
+| `split-v` | a pane below the tracker |
+| `window` | a window of its own, named after the tool |
+
+Without a terminal to open a window in, the tracker says so. The tool that is opened gets the log
+the tracker reads and the colours the tracker has, so it shows the same things.
+
+Opening the same tool twice does nothing: the second key says that it is already open. Where the
+window ends up on the screen is up to your compositor.
+
+The dashboard has the same key: `w` opens the tool under the cursor in a window of its own, and the
+dashboard keeps the terminal.
+
 ## Write a report
 
 Press `x` to write a csv file of every run, what was picked up in it and what it was worth. The file is in your

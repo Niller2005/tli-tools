@@ -38,6 +38,7 @@ files under `apps/warden` are GPL-3.0-only, files under `apps/vorax` are MIT.
 | `packages/png` | PNG decode and encode |
 | `packages/capture` | Game window capture on Linux (Niri, `grim`, or a custom command) |
 | `packages/gamelog` | The game's log file: where it is and which minigame it says is open |
+| `packages/launch` | The tools that can be started, and the terminal windows they can be started in |
 | `packages/ocr` | `tesseract` runner and TSV parser |
 | `packages/tracker` | The log parsing behind the loot tracker: the bag, the runs, the prices |
 | `packages/arcana` | The log parsing behind the Arcana tracker: the Tarot Path sessions, the Fateful Contests, the trials |
@@ -59,7 +60,7 @@ as before.
 
 ```
 bun install
-bun run start          # the dashboard: ↑/↓ move, space select, enter run, q quit
+bun run start          # the dashboard: ↑/↓ move, space select, enter run, w window, q quit
 ```
 
 Or run a tool directly:
@@ -83,7 +84,7 @@ Or run a tool directly:
 | [Other compositors](docs/how-to-other-compositors.md) | Running without Niri |
 | [Tracking your loot](docs/how-to-track-your-loot.md) | The loot tracker: the log, the prices, the report |
 | [Tracking your Tarot Path](docs/how-to-track-your-arcana.md) | The Arcana tracker: the visits, the chests, the Fateful Contests |
-| [Adding a tool to the dashboard](apps/dashboard/README.md#adding-a-tool) | One entry in `src/tools.ts` |
+| [Adding a tool to the dashboard](apps/dashboard/README.md#adding-a-tool) | One entry in `packages/launch/src/tools.ts` |
 | [How the tools work](docs/explanation-how-it-works.md) | Capture, reader, solver, the Rust port, the Windows apps |
 
 See [`apps/vorax/README.md`](apps/vorax/README.md), [`apps/warden/LINUX.md`](apps/warden/LINUX.md) and
