@@ -1,4 +1,8 @@
-// The tools the dashboard can start. Add a tool here and it shows up in the list.
+// The tools that can be started, and what they need.
+//
+// The table lives here so that every app that starts a tool reads the same one: the dashboard
+// lists them, and the tracker opens them in a window of their own.
+
 import { join } from 'node:path'
 import type { GameName } from '@tli/gamelog'
 
@@ -15,6 +19,8 @@ export interface Tool {
   needs: string[]
   /** the minigame the tool reads, when the game log says whether it is open */
   game?: GameName
+  /** the tool reads the game's log, so it can be given the log its parent reads */
+  readsLog?: boolean
 }
 
 export const TOOLS: Tool[] = [
@@ -26,6 +32,7 @@ export const TOOLS: Tool[] = [
     cwd: join(ROOT, 'apps/vorax'),
     needs: ['bun', 'tesseract'],
     game: 'vorax',
+    readsLog: true,
   },
   {
     id: 'warden',
@@ -43,6 +50,7 @@ export const TOOLS: Tool[] = [
     command: ['bun', 'src/tui.ts'],
     cwd: join(ROOT, 'apps/tracker'),
     needs: ['bun'],
+    readsLog: true,
   },
   {
     id: 'arcana',
@@ -52,8 +60,15 @@ export const TOOLS: Tool[] = [
     cwd: join(ROOT, 'apps/arcana'),
     needs: ['bun'],
     game: 'arcana',
+    readsLog: true,
   },
 ]
 
 /** The programs a tool needs that are not installed. */
-export const missing = (t: Tool): string[] => t.needs.filter(n => Bun.which(n) === null)
+export const missing = (
+  t: Tool,
+  which: (program: string) => string | null = (program: string) => Bun.which(program),
+): string[] => t.needs.filter(n => which(n) === null)
+
+/** The tool with this id. */
+export const toolById = (id: string): Tool | undefined => TOOLS.find(tool => tool.id === id)
