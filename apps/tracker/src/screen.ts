@@ -587,14 +587,14 @@ export class TrackerScreen {
         })
       }
     }
-    this.drawList(this.current, rows, `current:${state.now}`)
+    this.drawList(this.current, rows)
   }
 
   /** The panel of the runs that are done. */
   private drawRuns(state: ViewState): void {
     const runs = runRows(this.tracker, state.now)
     if (runs.length === 0) {
-      this.drawList(this.runs, [{ cells: [{ text: 'no runs yet', tone: 'dim' }] }], 'runs:empty')
+      this.drawList(this.runs, [{ cells: [{ text: 'no runs yet', tone: 'dim' }] }])
       return
     }
     const durationWidth = Math.max(8, ...runs.map((run) => visibleLength(duration(run.took))))
@@ -614,8 +614,7 @@ export class TrackerScreen {
         ],
       }
     })
-    const key = `runs:${runs.length}:${state.runsAt}:${maxWorth}:${valueWidth}:${durationWidth}`
-    this.drawList(this.runs, rows, key)
+    this.drawList(this.runs, rows)
     this.keepVisible(this.runs, state.focus === 'runs' ? state.runsAt : -1)
   }
 
@@ -623,7 +622,7 @@ export class TrackerScreen {
   private drawBag(state: ViewState): void {
     const bag = bagRows(this.tracker, state.inventorySort)
     if (bag.length === 0) {
-      this.drawList(this.bag, [{ cells: [{ text: 'the bag is empty', tone: 'dim' }] }], 'bag:empty')
+      this.drawList(this.bag, [{ cells: [{ text: 'the bag is empty', tone: 'dim' }] }])
       return
     }
     const qtyWidth = Math.max(3, ...bag.map((row) => visibleLength(num(row.qty))))
@@ -636,8 +635,7 @@ export class TrackerScreen {
         { text: fe(row.worth), tone: row.worth > 0 ? 'gold' : 'dim', width: valueWidth, align: 'right' },
       ],
     }))
-    const key = `bag:${bag.length}:${state.inventoryAt}:${state.inventorySort}:${valueWidth}:${qtyWidth}`
-    this.drawList(this.bag, rows, key)
+    this.drawList(this.bag, rows)
     this.keepVisible(this.bag, state.focus === 'inventory' ? state.inventoryAt : -1)
   }
 
@@ -648,7 +646,6 @@ export class TrackerScreen {
       this.drawList(
         this.prices,
         [{ cells: [{ text: 'no prices yet: look an item up on the exchange', tone: 'dim' }] }],
-        'prices:empty',
       )
       return
     }
@@ -666,14 +663,14 @@ export class TrackerScreen {
         },
       ],
     }))
-    const key = `prices:${prices.length}:${state.pricesAt}:${state.pricesSort}:${valueWidth}`
-    this.drawList(this.prices, rows, key)
+    this.drawList(this.prices, rows)
     this.keepVisible(this.prices, state.focus === 'prices' ? state.pricesAt : -1)
   }
 
-  /** Puts the rows of a panel on the screen. */
-  private drawList(panel: ListPanel, rows: Row[], key: string): void {
+  /** Puts the rows of a panel on the screen, when what they say or the width changed. */
+  private drawList(panel: ListPanel, rows: Row[]): void {
     const width = this.panelWidth(panel)
+    const key = JSON.stringify(rows)
     if (panel.key === key && panel.text.width === width) return
     panel.key = key
     panel.text.width = width

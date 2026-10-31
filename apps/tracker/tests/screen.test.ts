@@ -232,6 +232,27 @@ describe('the tracker screen', () => {
     test.renderer.destroy()
   })
 
+  test('the bag, runs and prices follow a changed price or quantity', async () => {
+    const tracker = trackerWithItems()
+    const { test, app } = await setup(160, 40, tracker)
+    await test.renderOnce()
+    const before = test.captureCharFrame()
+    tracker.prices.setOverride(300, 26)
+    tracker.prices.setOverride(100, 6)
+    app.draw()
+    await test.renderOnce()
+    const after = test.captureCharFrame()
+    expect(after).not.toBe(before)
+    expect(after).toContain('52 FE')
+    expect(after).toContain('72 FE')
+    expect(after).toContain('26 FE')
+    tracker.inventory.set(102, 3, 300, 3, null, 'init')
+    app.draw()
+    await test.renderOnce()
+    expect(test.captureCharFrame()).toContain('78 FE')
+    test.renderer.destroy()
+  })
+
   test('d removes an item from the prices', async () => {
     const tracker = trackerWithItems()
     tracker.prices.learn(300, [8, 8, 8], 0)
