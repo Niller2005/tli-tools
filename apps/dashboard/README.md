@@ -1,6 +1,8 @@
 # Dashboard
 
-A terminal launcher for the tools in this repo. Pick one or more tools and start them from one place.
+A terminal home for the tools in this repo: a list of the tools with what each is doing, the keys
+to start them, and the panels that say how the game's log, the capture and the data behind the
+tools are doing.
 
 ```
 bun run start          # from the repo root
@@ -13,9 +15,16 @@ bun src/main.ts --no-color
 |-----|--------|
 | `↑` / `↓` (or `k` / `j`) | Move |
 | `space` | Select or unselect the tool under the cursor |
-| `a` | Select all |
+| `A` | Select all |
 | `enter` | Run the selected tools (the one under the cursor if none is selected) |
 | `w` | Open the tool under the cursor in a window of its own |
+| `o` | The options of the tool under the cursor |
+| `a` | Turn auto-launch of the tool under the cursor on or off |
+| `x` | Ask the running tool under the cursor to stop |
+| `f` | Bring the tool's window to the front (tmux panes only) |
+| `b` | Fetch the community prices again |
+| `tab` | The next detail pane, on a narrow screen |
+| `?` | Help |
 | `q` | Quit |
 
 ## How tools start
@@ -38,7 +47,8 @@ helpers from `@tli/tui`.
 `w` opens the tool under the cursor in a window of its own, and the dashboard keeps the terminal.
 The window is opened in the terminal the player uses: `ghostty`, `kitty`, `foot`, `alacritty`,
 `wezterm` or `xterm`, whichever is installed; `TLI_TERMINAL` says which one to use. The tool gets
-the log the dashboard watches (`--log=`) and the colours the dashboard has (`--no-color`).
+the log the dashboard watches (`--log=`), the colours the dashboard has (`--no-color`) and the
+options the player has set for it (below).
 
 In tmux the tool opens as a pane of the session the dashboard is in, so the dashboard keeps the
 focus. `TLI_TMUX_MODE` says how: `split-h` (the default) puts the pane beside the dashboard,
@@ -48,7 +58,7 @@ The window is opened in a session of its own, so it keeps running when the dashb
 Opening the same tool twice does nothing: the second key says that it is already open. Where the
 window ends up on the screen is the compositor's business.
 
-## The status badges
+## The status badges and lines
 
 A tool that reads a minigame shows what the game's log says about it:
 
@@ -58,11 +68,54 @@ A tool that reads a minigame shows what the game's log says about it:
 | `○ closed` (dim) | it is not |
 | `? unknown` (dim) | the log says nothing about it |
 
+Beside the badge, each tool has a line about what it is doing: the tracker says what today's
+farming did, Arcana says whether the Tarot Path is open and what its visits gave, and the Vorax and
+Warden lines are the minigame's own state (which the badge says already, so their line is left out
+when it would only repeat it). The lines come from the packages as plain objects, read once a
+second on the dashboard's tick — never per frame, so a slow read delays the next tick and not the
+drawing.
+
 The log itself can also be missing (`log: missing`) or have none of the game's own lines (`log: enable
-log`: turn on Esc → Account Related → Enable Log in the game). The badges are refreshed about once a
-second while the dashboard is up; a running tool has the terminal, so the log is not watched then.
+log`: turn on Esc → Account Related → Enable Log in the game) — the log panel (below) says the
+same about the log once, for every tool. The badges and lines are refreshed about once a second
+while the dashboard is up; a running tool has the terminal, so the log is not watched then.
 
 `--log=<file>` chooses the log to watch. Colours follow `NO_COLOR` and `--no-color`.
+
+## The panels
+
+On the right of the list (or under it, one at a time, on a narrow screen):
+
+- **Session** — what the tracker's saved state says about today: the runs, the FE per hour, the
+  best run, the last one and the FE total.
+- **Log and capture** — the log's health (where it is, how big, how fresh, whether the game writes
+  its own lines) and what a capture would do right now, without taking any picture: the way it
+  would go (`grim`, `niri`, a given command, or nothing) and whether `TLI_NO_CAPTURE` has turned
+  every picture off. A capture command set for a tool (below) is that tool's business; the panel
+  shows the machine's own way.
+- **Running tools and data** — the tools the dashboard has opened in windows or panes (`via`, how
+  long, running or the exit code), and how old the community prices and the item-name table are.
+
+Everything in the panels is read on the same 1 s tick as the badges, from the packages that know
+it; the dashboard only draws it.
+
+## The options of a tool
+
+`o` opens the options of the tool under the cursor: only the ones the tool's own command takes, so
+the Vorax Helper and the Warden have the colours, the log reading, Niri's window screenshot and a
+capture command, while the tracker and Arcana have the colours alone. `space` toggles an option,
+`enter` on the capture command types it in, and every change is kept at once in the settings file
+`$XDG_CONFIG_HOME/tli-dashboard/settings.json` — see
+[the launch package](../../packages/launch/README.md) for how the settings become the tool's flags
+when it is opened.
+
+## Auto-launch
+
+`a` turns auto-launch of the tool under the cursor on or off (the tracker has no minigame of its
+own, so it says no). With it on, the tool opens in a window of its own when its minigame turns
+`open` and it is not already running — once per closed-to-open transition, not once per second, and
+nothing is ever closed by it. A board that is already open when the dashboard comes up does not
+open anything: the dashboard has to see the board close and open again first.
 
 ## Adding a tool
 
@@ -79,6 +132,7 @@ bun run smoke
 ```
 
 The renderer tests use OpenTUI's test renderer. The smoke test runs the dashboard in a pty (python): it checks
-that the tools are listed, that the status badges are shown and refreshed, that the tracker can take the
-terminal and give it back, and that the terminal is put back when the dashboard is left. `--log=<file>` says
-which log to watch.
+that the tools are listed, that the status badges and panels are shown and refreshed, that the panes of a small
+terminal tab-switch, that the options dialog keeps a setting, that auto-launch opens a tool when its minigame
+opens, that the tracker can take the terminal and give it back, and that the terminal is put back when the
+dashboard is left. `--log=<file>` says which log to watch.

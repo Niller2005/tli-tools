@@ -20,7 +20,7 @@ for the loot tracker (`--no-baseline` turns it off).
 
 ```
 bun install
-bun run start          # the dashboard: ↑/↓ move, space select, enter run, w window, q quit
+bun run start          # the dashboard: the tools, their status, and the keys that start them
 ```
 
 Turn on the game's log once (Esc → Account Related → Enable Log). The trackers need it, and the minigame helpers use
@@ -62,7 +62,7 @@ the helpers fall back to watching the screen.
 
 | Path | What it is |
 |------|------------|
-| `apps/dashboard` | Terminal launcher: pick the tools to run |
+| `apps/dashboard` | Terminal home: the tools, their status, and the keys that start them |
 | `apps/vorax` | Vorax / Surgical Preparation helper |
 | `apps/warden` | Tartarus prison board advisor |
 | `apps/tracker` | Loot tracker |

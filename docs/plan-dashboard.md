@@ -1,7 +1,10 @@
 # Dashboard plan
 
-The dashboard (`apps/dashboard`) is a list of tools with open/closed/unknown badges. This plan makes it a status
-screen and a launcher with options. Nothing here is built yet; each item says where it lives and how it is checked.
+The dashboard (`apps/dashboard`) is a list of tools with open/closed/unknown badges. This plan made
+it a status screen and a launcher with options. Waves 1 and 2 are built: the packages say what
+they know as plain objects, the dashboard draws them, launches with per-tool options, auto-launches
+on a board opening, and manages what it has running. Item 8 (embedded tool panes) was answered by
+the spike below: build later, not as part of this plan.
 
 ## Rules for every item
 
@@ -76,7 +79,9 @@ each task appends to.
 
 Off by default and per tool, stored in the settings file. A tool opens in a window when its minigame turns `open`
 and it is not already running; it is never closed automatically. The watcher is the one the dashboard already runs
-for badges. A launch happens once per open transition, not once per second.
+for badges. A launch happens once per open transition, not once per second. The first sample after the dashboard
+starts is not a transition, however open a board already is: the dashboard has to see the minigame close and open
+again before anything is opened by itself.
 
 ## Spike result
 
