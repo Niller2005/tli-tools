@@ -239,3 +239,49 @@ export function createCapture(o: { title: RegExp; command?: string; niriScreensh
     close: () => rmSync(dir, { recursive: true, force: true }),
   }
 }
+
+/* ---------- what a capture would do, without capturing ---------- */
+
+/** What the dashboard asks about the capture: which tools are there, and what a capture would do. */
+export interface CaptureStatus {
+  /** the tools a capture needs, and whether each is on the PATH */
+  tools: { name: string; found: boolean }[]
+  /** whether `TLI_NO_CAPTURE` has turned every picture off */
+  noCapture: boolean
+  /** the way a capture would take its next picture: a `command` beats `grim`, `grim` beats Niri's announced one, `none` when there is no way */
+  path: 'grim' | 'niri' | 'command' | 'none'
+}
+
+/** The options of `captureStatus`, the ones `createCapture` plans with. */
+export interface CaptureStatusOptions {
+  /** a shell command that writes a PNG of the game to `{out}` */
+  command?: string
+  /** Niri's announced window screenshot needs an explicit opt-in */
+  niriScreenshot?: boolean
+  /** the environment to read `TLI_NO_CAPTURE`, `TLI_NIRI_SCREENSHOT` and `PATH` from; defaults to the process's */
+  env?: Record<string, string | undefined>
+}
+
+/**
+ * What a capture would do right now, without taking any picture: whether the
+ * tools are on the PATH, whether `TLI_NO_CAPTURE` has turned them all off, and
+ * which way the planner would go. Nothing is run: neither Niri nor `grim` is
+ * asked anything.
+ */
+export function captureStatus(o: CaptureStatusOptions = {}): CaptureStatus {
+  const env = o.env ?? process.env
+  const onPath = (name: string) => Bun.which(name, { PATH: env.PATH ?? process.env.PATH }) !== null
+  const tools = [
+    { name: 'grim', found: onPath('grim') },
+    { name: 'niri', found: onPath('niri') },
+    { name: 'tesseract', found: onPath('tesseract') },
+  ]
+  const noCapture = Boolean(env.TLI_NO_CAPTURE)
+  let path: CaptureStatus['path'] = 'none'
+  if (!noCapture) {
+    if (o.command) path = 'command'
+    else if (tools[0].found) path = 'grim'
+    else if (tools[1].found && niriScreenshotEnabled(o.niriScreenshot, env)) path = 'niri'
+  }
+  return { tools, noCapture, path }
+}
