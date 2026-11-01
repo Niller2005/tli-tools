@@ -33,8 +33,10 @@ bun install
 bun run start
 ```
 
-A list of tools appears: Vorax Helper and Tartarus Warden. Press `↓` and `↑` to move the cursor; a one-line
-description of the tool under the cursor is shown. Press `q` to quit.
+A list of tools appears: Vorax Helper and Tartarus Warden, each with a badge saying whether its
+minigame is open, and panels on the right saying how the log, the capture and the data behind the
+tools are doing. Press `↓` and `↑` to move the cursor; a one-line description of the tool under
+the cursor is shown. Press `?` for the keys, `q` to quit.
 
 ## Step 3: Read a screenshot with Warden
 
@@ -118,7 +120,7 @@ picture of the window after each move, and updates the advice. Keys:
 
 Two full-screen programs can't share one terminal, so the dashboard uses `tmux`.
 
-1. In the dashboard, press `space` on each tool, or press `a` to select all.
+1. In the dashboard, press `space` on each tool, or press `A` to select all.
 2. Press `enter`.
 
 Both tools open in tiled `tmux` panes. If a tool exits, its pane stays open so you can read any error. Without `tmux`,
