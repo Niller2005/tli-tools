@@ -13,6 +13,7 @@ a minigame's tool in a window of its own and carries on following the log.
 | `tmux.ts` | the pane of a tmux session, and how tmux is asked for it |
 | `launcher.ts` | the launcher: it opens the window and remembers what it has open |
 | `open.ts` | opening one of the tools in a window of its own |
+| `settings.ts` | the settings file of the dashboard: read tolerantly, written in one piece |
 
 ## The tools
 
@@ -41,6 +42,48 @@ the terminal would not start.
 
 The launcher remembers the tools it has opened, so a second window for the same tool is not opened
 while the first one is still there.
+
+## The per-tool settings
+
+The player's settings live in one file, `$XDG_CONFIG_HOME/tli-dashboard/settings.json` (in
+`~/.config` when `XDG_CONFIG_HOME` is not set), and are set per tool:
+
+```json
+{
+  "version": 1,
+  "tools": {
+    "vorax": { "noColor": false, "noLog": false, "niriScreenshot": false, "captureCmd": null, "autoLaunch": false }
+  }
+}
+```
+
+```typescript
+import { readSettings, setToolSettings, settingsPath, toolSettings, writeSettings } from '@tli/launch'
+
+const path = settingsPath()
+const settings = setToolSettings(readSettings(path), 'vorax', { noLog: true })
+writeSettings(path, settings)
+const options = toolSettings(readSettings(path), 'vorax') // the settings, with the unset ones filled in
+```
+
+The file is written in one piece (a neighbour file that is renamed over it), so a reader never
+sees half of it. Reading is tolerant: a file that is missing, not JSON, or of another version gives
+the default settings, and a tool entry keeps only what it says plainly. `autoLaunch` is stored
+here and nothing else: the dashboard acts on it.
+
+`openTool` takes the settings and turns them into the flags of the tool that is opened — only for
+the tools whose command takes them, each spelled the way that tool reads it:
+
+| Setting | vorax | warden | tracker, arcana |
+|---------|-------|--------|-----------------|
+| `noColor` | `--no-color` | `--no-color` | `--no-color` |
+| `noLog` | `--no-log` | `--no-log` | not taken |
+| `niriScreenshot` | `--niri-screenshot` | `--niri-screenshot` | not taken |
+| `captureCmd` | `--capture-cmd=<command>` | `--capture-cmd <command>` | not taken |
+
+```typescript
+openTool(launcher, tool, { parentArgv: process.argv, settings: options })
+```
 
 ## In tmux
 

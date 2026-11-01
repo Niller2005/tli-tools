@@ -21,6 +21,20 @@ export interface Tool {
   game?: GameName
   /** the tool reads the game's log, so it can be given the log its parent reads */
   readsLog?: boolean
+  /** the per-tool settings the command takes, and the flag each is spelled as */
+  accepts?: ToolAccepts
+}
+
+/** The settings a tool's command takes, and how each is spelled in its argv. */
+export interface ToolAccepts {
+  /** the flag that turns the colours off */
+  noColor?: string
+  /** the flag that keeps the tool from reading the game's log */
+  noLog?: string
+  /** the flag that allows Niri's own window screenshot */
+  niriScreenshot?: string
+  /** the flag the capture command follows; it ends with `=` when the command is glued onto it */
+  captureCmd?: string
 }
 
 export const TOOLS: Tool[] = [
@@ -33,6 +47,12 @@ export const TOOLS: Tool[] = [
     needs: ['bun', 'tesseract'],
     game: 'vorax',
     readsLog: true,
+    accepts: {
+      noColor: '--no-color',
+      noLog: '--no-log',
+      niriScreenshot: '--niri-screenshot',
+      captureCmd: '--capture-cmd=',
+    },
   },
   {
     id: 'warden',
@@ -42,6 +62,12 @@ export const TOOLS: Tool[] = [
     cwd: join(ROOT, 'apps/warden'),
     needs: ['bun', 'tesseract'],
     game: 'warden',
+    accepts: {
+      noColor: '--no-color',
+      noLog: '--no-log',
+      niriScreenshot: '--niri-screenshot',
+      captureCmd: '--capture-cmd',
+    },
   },
   {
     id: 'tracker',
@@ -51,6 +77,7 @@ export const TOOLS: Tool[] = [
     cwd: join(ROOT, 'apps/tracker'),
     needs: ['bun'],
     readsLog: true,
+    accepts: { noColor: '--no-color' },
   },
   {
     id: 'arcana',
@@ -61,6 +88,7 @@ export const TOOLS: Tool[] = [
     needs: ['bun'],
     game: 'arcana',
     readsLog: true,
+    accepts: { noColor: '--no-color' },
   },
 ]
 
