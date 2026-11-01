@@ -146,6 +146,7 @@ export class TrackerScreen {
 
   private readonly current: ListPanel
   private readonly runs: ListPanel
+  private readonly best: ListPanel
   private readonly bag: ListPanel
   private readonly prices: ListPanel
 
@@ -271,9 +272,15 @@ export class TrackerScreen {
     this.current = this.makePanel('current', 'Current run', null)
     this.bag = this.makePanel('bag', 'Bag', 'inventory')
     this.runs = this.makePanel('runs', 'Recent runs', 'runs')
+    this.best = this.makePanel('best', 'Best run', null)
+    this.best.box.flexGrow = 0
+    this.best.box.flexShrink = 0
+    this.best.box.height = 3
+    this.best.box.flexBasis = 3
     this.prices = this.makePanel('prices', 'Prices (* set)', 'prices')
     this.leftColumn.add(this.current.box)
     this.leftColumn.add(this.bag.box)
+    this.rightColumn.add(this.best.box)
     this.rightColumn.add(this.runs.box)
     this.rightColumn.add(this.prices.box)
     this.body.add(this.leftColumn)
@@ -499,6 +506,7 @@ export class TrackerScreen {
     this.drawHeader(state, width)
     this.drawCurrent(state)
     this.drawRuns(state)
+    this.drawBest()
     const bag = bagRows(this.tracker, state.inventorySort, state.inventoryFilter)
     const prices = priceRows(this.tracker, state.pricesSort, state.pricesFilter)
     this.drawBag(state, bag)
@@ -703,6 +711,26 @@ export class TrackerScreen {
     })
     this.drawList(this.runs, rows)
     this.keepVisible(this.runs, state.focus === 'runs' ? state.runsAt : -1)
+  }
+
+  /** The run worth the most, in one line above the recent runs. */
+  private drawBest(): void {
+    const runs = runRows(this.tracker, 0)
+    let best: (typeof runs)[number] | null = null
+    for (const run of runs) if (best === null || run.worth > best.worth) best = run
+    this.best.box.visible = best !== null && best.worth > 0 && this.runs.box.visible
+    if (best === null) return
+    this.drawList(this.best, [
+      {
+        cells: [
+          { text: `#${best.id}`, tone: 'dim', width: 5, align: 'right' },
+          { text: best.kind === 'prison' ? 'prison' : '', tone: 'cyan', width: KIND_WIDTH },
+          { text: best.name },
+          { text: duration(best.took), tone: 'dim', width: 8, align: 'right' },
+          { text: fe(best.worth), tone: 'green', width: 13, align: 'right' },
+        ],
+      },
+    ])
   }
 
   /** The panel of what the player has. */
