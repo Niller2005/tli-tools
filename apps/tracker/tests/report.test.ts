@@ -25,6 +25,9 @@ function tracker(): Tracker {
     loot: new Map([[300, 1]]),
     cost: new Map(),
     fe: 0,
+    xp: 0,
+    affixes: [],
+    session: 0,
   })
   tracker.runs.push({
     id: 2,
@@ -40,6 +43,9 @@ function tracker(): Tracker {
     ]),
     cost: new Map(),
     fe: 0,
+    xp: 0,
+    affixes: [],
+    session: 0,
   })
   return tracker
 }

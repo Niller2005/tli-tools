@@ -3,7 +3,13 @@
 // The rows are plain data: the screen in `screen.ts` turns them into something that can be drawn.
 // That way the numbers can be looked at without a terminal.
 
-import type { Run, RunKind, Tracker } from '@tli/tracker'
+import type { AffixRow, ExchangeKind, RunKind, RunTotals, Run, Session, Tracker } from '@tli/tracker'
+
+/** The pages that cover the screen: what the modifiers of the maps paid, the exchange, the sessions. */
+export type Page = 'affixes' | 'exchange' | 'sessions'
+
+/** The key that opens each page. */
+export const PAGE_KEYS: Record<string, Page> = { f: 'affixes', h: 'exchange', g: 'sessions' }
 
 /** The panels the player can move in. */
 export type Panel = 'runs' | 'inventory' | 'prices'
@@ -32,6 +38,11 @@ export const MENU: MenuItem[] = [
   { section: 'Run', key: 'c', label: 'Map cost counts against the profit or not' },
   { section: 'Run', key: 'p', label: 'Stop or start the clock' },
   { section: 'Run', key: 'x', label: 'Write the CSV report' },
+  { section: 'Sessions', key: 'n', label: 'Start a session of your own (it asks for a name)' },
+  { section: 'Sessions', key: 'N', label: 'End the session that is going on' },
+  { section: 'Pages', key: 'f', label: 'Which map modifiers paid' },
+  { section: 'Pages', key: 'h', label: 'What you did at the exchange' },
+  { section: 'Pages', key: 'g', label: 'The sessions, added up' },
   { section: 'Windows', key: 'a', label: 'Open Arcana in a window' },
   { section: 'Windows', key: 'v', label: 'Open Vorax in a window' },
   { section: 'Windows', key: 'w', label: 'Open Warden in a window' },
@@ -63,6 +74,10 @@ export interface ViewState {
   searching: SearchPanel | null
   /** the run whose detail is open, or null */
   detail: number | null
+  /** the page that covers the screen, or null */
+  page: Page | null
+  /** whether the name of a session is being typed in */
+  naming: boolean
   /** the entry that is picked out in the menu, or null when it is closed */
   menu: number | null
   /** whether the help is open */
@@ -98,6 +113,8 @@ export function freshView(logFile: string, now: number): ViewState {
     pricesFilter: '',
     searching: null,
     detail: null,
+    page: null,
+    naming: false,
     help: false,
     menu: null,
     editing: null,
@@ -292,4 +309,65 @@ export function lootRows(tracker: Tracker, loot: Map<number, number>): LootRow[]
 export function findRun(tracker: Tracker, id: number | null): Run | null {
   if (id === null) return null
   return tracker.runs.find((candidate) => candidate.id === id) ?? null
+}
+
+/** A modifier of the maps and what the maps that had it were worth, for the page of them. */
+export function affixRows(tracker: Tracker): AffixRow[] {
+  return tracker.affixReport(3)
+}
+
+/** One thing the player did at the exchange, as a row. */
+export interface TradeRow {
+  id: number
+  at: number
+  kind: ExchangeKind
+  /** what changed in the bag, the FE left out, the most valuable first */
+  items: { item: number; name: string; delta: number }[]
+  /** what the FE in the bag changed by; 0 when it did not */
+  fe: number
+}
+
+/** The exchange entries, newest first. */
+export function tradeRows(tracker: Tracker): TradeRow[] {
+  const fe = 100300
+  return [...tracker.trades].reverse().map((entry) => ({
+    id: entry.id,
+    at: entry.at,
+    kind: entry.kind,
+    items: entry.items
+      .filter(([item]) => item !== fe)
+      .map(([item, delta]) => ({ item, name: tracker.names.name(tracker.itemOf(item)), delta }))
+      .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta)),
+    fe: entry.items.find(([item]) => item === fe)?.[1] ?? 0,
+  }))
+}
+
+/** What the exchange cost and what it paid, over the entries that are kept. */
+export function tradeTotals(tracker: Tracker): { spent: number; received: number } {
+  let spent = 0
+  let received = 0
+  for (const row of tradeRows(tracker)) {
+    if (row.fe < 0) spent -= row.fe
+    else received += row.fe
+  }
+  return { spent, received }
+}
+
+/** A session and what its runs came to. */
+export interface SessionRow {
+  session: Session
+  totals: RunTotals
+  /** whether it is the one that is going on */
+  active: boolean
+}
+
+/** The sessions, newest first. */
+export function sessionRows(tracker: Tracker, now: number): SessionRow[] {
+  const rows: SessionRow[] = []
+  for (const session of [...tracker.sessions].reverse()) {
+    const totals = tracker.sessionTotals(session.id, now)
+    if (totals === null) continue
+    rows.push({ session, totals, active: session.end === null })
+  }
+  return rows
 }

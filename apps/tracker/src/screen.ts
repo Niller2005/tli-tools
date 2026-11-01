@@ -48,11 +48,15 @@ import {
   type PriceRow,
   type Rows,
   type ViewState,
+  affixRows,
   bagRows,
   findRun,
   lootRows,
   priceRows,
   runRows,
+  sessionRows,
+  tradeRows,
+  tradeTotals,
 } from './view'
 
 /** Below this width the panels are stacked instead of side by side. */
@@ -76,6 +80,23 @@ function panelTitle(name: string, count: number, total: number, filter: string):
   return `${name} /${fit(filter, TITLE_FILTER)} (${count}/${total})`
 }
 
+/** A big number in few columns: 292224385 -> "292.2M", 61000 -> "61.0k", 840 -> "840". */
+function compact(value: number): string {
+  const sign = value < 0 ? '-' : ''
+  const n = Math.abs(value)
+  if (n >= 1e9) return `${sign}${(n / 1e9).toFixed(1)}B`
+  if (n >= 1e6) return `${sign}${(n / 1e6).toFixed(1)}M`
+  if (n >= 1e4) return `${sign}${(n / 1e3).toFixed(1)}k`
+  return `${sign}${num(n)}`
+}
+
+/** A day and a time of the player's own clock: "11-01 14:05". */
+function stamp(ms: number): string {
+  const d = new Date(ms)
+  const p = (n: number): string => String(n).padStart(2, '0')
+  return `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
+}
+
 /** What the screen tells the app when the player uses the mouse. */
 export interface ScreenHooks {
   /** the player clicked a panel */
@@ -84,6 +105,8 @@ export interface ScreenHooks {
   onPick?: (panel: Panel, index: number) => void
   /** the player confirmed a price */
   onPrice?: (item: number, price: string) => void
+  /** the player confirmed the name of a session */
+  onName?: (text: string) => void
   /** the player typed a word in the search box */
   onSearch?: (text: string) => void
 }
@@ -114,6 +137,11 @@ const HELP: [string, string][] = [
   ['s', 'change how the list is sorted'],
   ['/', 'search the list that has the focus (enter keeps it, esc clears it)'],
   ['x', 'write the loot report to a csv file'],
+  ['f', 'which modifiers of the maps paid (a page; esc or the same key closes it)'],
+  ['h', 'what you did at the exchange: listings, payments, what you collected'],
+  ['g', 'the sessions, each with its runs, FE and experience added up'],
+  ['n', 'start a session of your own: it asks for a name, the runs after it are its'],
+  ['N', 'end the session that is going on'],
   ['r', 'read the log again from where it was'],
   ['a', 'open Arcana in a window of its own'],
   ['v', 'open Vorax in a window of its own'],
@@ -172,6 +200,8 @@ export class TrackerScreen {
   private rightWidth = 0
   /** the item whose price is being typed in */
   private editingItem: number | null = null
+  /** whether the box that is open asks for the name of a session, not for a price */
+  private naming = false
 
   constructor(renderer: CliRenderer, tracker: Tracker, hooks: ScreenHooks = {}) {
     this.renderer = renderer
@@ -399,6 +429,10 @@ export class TrackerScreen {
     this.root.add(this.overlay)
 
     this.priceInput.on(InputRenderableEvents.ENTER, (value: string) => {
+      if (this.naming) {
+        this.hooks.onName?.(value)
+        return
+      }
       const item = this.editingItem
       if (item === null) return
       this.hooks.onPrice?.(item, value)
@@ -459,6 +493,8 @@ export class TrackerScreen {
   /** Starts typing in a price. */
   beginPrice(item: number, name: string, value: string): void {
     this.editingItem = item
+    this.naming = false
+    this.priceInput.width = 12
     this.priceInput.value = value
     this.priceLabel.content = new StyledText([
       tone('accent', 'price '),
@@ -471,13 +507,34 @@ export class TrackerScreen {
     this.priceInput.focus()
   }
 
-  /** Stops typing in a price. */
+  /** Starts typing in the name of a session. */
+  beginName(value: string): void {
+    this.naming = true
+    this.editingItem = null
+    this.priceInput.value = value
+    this.priceInput.width = 28
+    this.priceLabel.content = new StyledText([tone('accent', 'session '), tone('dim', 'name  ')])
+    this.priceInput.visible = true
+    this.priceLabel.visible = true
+    this.priceHint.visible = true
+    this.priceInput.focus()
+  }
+
+  /** Stops typing in a price or in the name of a session. */
   endPrice(): void {
     this.editingItem = null
+    this.naming = false
+    this.priceInput.width = 12
     this.priceInput.blur()
     this.priceInput.visible = false
     this.priceLabel.visible = false
     this.priceHint.visible = false
+  }
+
+  /** Scrolls the page or the detail that covers the screen by some rows, or back to its top. */
+  scrollOverlay(by: number, top = false): void {
+    if (top) this.overlayScroll.scrollTo(0)
+    else this.overlayScroll.scrollBy(by)
   }
 
   /** Starts typing in the search box. */
@@ -590,13 +647,26 @@ export class TrackerScreen {
       [tone('dim', 'time '), tone('accent', duration(stats.totalTime))],
       [tone('dim', 'avg '), tone('accent', duration(stats.avgRunTime))],
     ]
+    if (stats.level !== null) {
+      const progress = stats.levelProgress === null ? '' : ` ${(stats.levelProgress * 100).toFixed(1)}%`
+      segments.push([tone('dim', 'level '), tone('accent', `${stats.level}${progress}`)])
+      segments.push([tone('dim', 'XP/h '), tone(amount(stats.xpPerHour), compact(stats.xpPerHour))])
+      if (stats.levelEta !== null) segments.push([tone('dim', 'next level in '), tone('accent', duration(stats.levelEta))])
+    }
     this.statsText.content = new StyledText(this.pack(segments, width))
     this.statsText.width = width
 
     const tax = this.tracker.taxed ? tone('green', '[tax on]') : tone('dim', '[tax off]')
     const map = this.tracker.mapCosts ? tone('green', '[map cost on]') : tone('dim', '[map cost off]')
     const paused = state.paused ? [tone('default', '  '), tone('paused', '[PAUSED]')] : []
-    this.flagsText.content = new StyledText([tax, tone('default', '  '), map, ...paused])
+    const chips: TextChunk[] = [tax, tone('default', '  '), map, ...paused]
+    const session = this.tracker.session
+    if (session !== null) chips.push(tone('default', '  '), tone('green', `[session ${fit(session.name, 24)}]`))
+    const character = this.tracker.character
+    if (character !== '') {
+      chips.push(tone('default', '  '), tone('dim', `[character …${character.slice(-6)}${this.tracker.characterIds.length > 1 ? ` of ${this.tracker.characterIds.length}` : ''}]`))
+    }
+    this.flagsText.content = new StyledText(chips)
     this.flagsText.width = width
 
     const message = state.logNote !== '' ? state.logNote : state.message
@@ -837,8 +907,10 @@ export class TrackerScreen {
     segments.push(...this.baselineChip(state))
     this.hintText.content = new StyledText(this.pack(segments, width))
     this.hintText.width = width
-    this.hintText.visible = state.editing === null && state.searching === null
-    this.priceHint.content = new StyledText([tone('dim', 'enter keeps it · empty enter resets · esc leaves it')])
+    this.hintText.visible = state.editing === null && state.searching === null && !state.naming
+    this.priceHint.content = new StyledText([
+      tone('dim', state.naming ? 'enter starts it · esc leaves it' : 'enter keeps it · empty enter resets · esc leaves it'),
+    ])
     this.searchHint.content = new StyledText([tone('dim', 'enter keeps it · esc takes it away')])
   }
 
@@ -880,7 +952,7 @@ export class TrackerScreen {
       return
     }
     const run = findRun(this.tracker, state.detail)
-    if (run === null && !state.help) {
+    if (run === null && !state.help && state.page === null) {
       this.overlay.visible = false
       return
     }
@@ -891,7 +963,10 @@ export class TrackerScreen {
     this.overlayBox.height = boxHeight
     const textWidth = Math.max(10, boxWidth - BORDER - SCROLLBAR)
 
-    if (run !== null) {
+    if (state.page !== null) {
+      const page = this.pageChunks(state.page, textWidth, state.now)
+      this.overlayText.content = new StyledText(page)
+    } else if (run !== null) {
       const title = `Run #${run.id}: ${run.name}`
       this.overlayText.content = new StyledText([
         tone('accent', title),
@@ -954,6 +1029,7 @@ export class TrackerScreen {
     line([tone('dim', 'duration   '), tone('accent', duration(end - run.start))])
     line([tone('dim', 'kind       '), tone('accent', run.kind)])
     line([tone('dim', 'loot value '), tone(worth.gross > 0 ? 'gold' : 'dim', fe(worth.gross))])
+    if (run.xp > 0) line([tone('dim', 'experience '), tone('accent', num(run.xp))])
     line([])
     line([tone('accent', 'Loot')])
 
@@ -975,6 +1051,15 @@ export class TrackerScreen {
           ...this.valueChunks(fe(item.worth), width, item.worth > 0 ? 'gold' : 'dim'),
         ])
       }
+    }
+
+    const named = run.affixes.filter((id) => this.tracker.affixNames.has(id))
+    if (run.affixes.length > 0) {
+      line([])
+      line([tone('accent', 'Map modifiers')])
+      for (const id of named) line([tone('default', fit(this.tracker.affixNames.get(id) ?? '', width))])
+      const plain = run.affixes.length - named.length
+      if (plain > 0) line([tone('dim', `${plain} more the game does not say in words`)])
     }
 
     line([])
@@ -1001,6 +1086,97 @@ export class TrackerScreen {
     }
     line([])
     line([tone('dim', 'The tracker only reads the log. It never touches the game.')])
+    return chunks
+  }
+
+  /** A page that covers the screen: the modifiers that paid, the exchange, or the sessions. */
+  private pageChunks(page: 'affixes' | 'exchange' | 'sessions', width: number, now: number): TextChunk[] {
+    const chunks: TextChunk[] = []
+    const line = (parts: TextChunk[]): void => {
+      chunks.push(...parts, tone('default', '\n'))
+    }
+    const close = (): void => {
+      line([])
+      line([tone('accent', 'esc'), tone('dim', ' or the key of the page closes it · ↑↓ scroll · f h g switch page')])
+    }
+    const signed = (value: number): string => `${value > 0 ? '+' : ''}${num(value)}`
+
+    if (page === 'affixes') {
+      line([tone('accent', 'Which map modifiers paid')])
+      const rows = affixRows(this.tracker)
+      if (rows.length === 0) {
+        line([tone('dim', 'Nothing to compare yet: a modifier needs three finished maps that had it.')])
+      } else {
+        const average = (rows[0]?.avgWorth ?? 0) - (rows[0]?.versus ?? 0)
+        line([tone('dim', `Maps with the modifier, against the average map (${fe(average)}). A comparison, not a cause.`)])
+        line([])
+        for (const row of rows) {
+          const stat = `${signed(row.versus).padStart(10)} FE ${String(row.runs).padStart(4)} maps ${num(row.avgWorth).padStart(10)} FE avg  `
+          line([
+            tone(row.versus > 0 ? 'green' : row.versus < 0 ? 'red' : 'dim', stat),
+            tone('default', fit(row.text, Math.max(8, width - stat.length))),
+          ])
+        }
+      }
+      close()
+      return chunks
+    }
+
+    if (page === 'exchange') {
+      const totals = tradeTotals(this.tracker)
+      line([tone('accent', 'The exchange')])
+      line([
+        tone('dim', 'FE paid '),
+        tone('gold', num(totals.spent)),
+        tone('dim', '   FE collected '),
+        tone('gold', num(totals.received)),
+        tone('dim', '   the log says what changed in the bag, not the price of a listing'),
+      ])
+      line([])
+      const rows = tradeRows(this.tracker)
+      if (rows.length === 0) line([tone('dim', 'Nothing yet: listings, purchases and what you collect show up here.')])
+      const label = { list: 'listed', buy: 'paid', receive: 'collected', recall: 'took back' } as const
+      for (const row of rows) {
+        const what = row.items.map((item) => `${num(Math.abs(item.delta))} × ${item.name}`).join(', ')
+        const money = row.fe === 0 ? '' : `${signed(row.fe)} FE`
+        const head = `${stamp(row.at)}  ${label[row.kind].padEnd(11)}`
+        const shown = fit(what, Math.max(8, width - head.length - money.length - 2))
+        line([
+          tone('dim', head),
+          tone('default', shown),
+          ...(money === '' ? [] : this.valueChunks(money, width - head.length - visibleLength(shown), row.fe < 0 ? 'dim' : 'gold')),
+        ])
+      }
+      close()
+      return chunks
+    }
+
+    line([tone('accent', 'Sessions')])
+    const rows = sessionRows(this.tracker, now)
+    if (rows.length === 0) line([tone('dim', 'None yet. n starts one: the runs that begin after it are its, N ends it.')])
+    for (const row of rows) {
+      const { session, totals } = row
+      line([])
+      line([
+        tone(row.active ? 'green' : 'accent', `${row.active ? '▸ ' : '  '}${session.name}`),
+        tone('dim', `  ${stamp(session.start)}${session.end === null ? ' · going on' : ` → ${stamp(session.end)}`}`),
+      ])
+      line([
+        tone('dim', '    runs '),
+        tone('accent', String(totals.runs)),
+        tone('dim', '  time '),
+        tone('accent', duration(totals.totalTime)),
+        tone('dim', '  FE '),
+        tone(totals.fe > 0 ? 'gold' : 'dim', num(totals.fe)),
+        tone('dim', '  FE/h '),
+        tone(totals.fePerHour > 0 ? 'gold' : 'dim', num(totals.fePerHour)),
+        tone('dim', '  loot '),
+        tone(totals.lootValue > 0 ? 'gold' : 'dim', fe(totals.lootValue)),
+        tone('dim', '  XP/h '),
+        tone(totals.xpPerHour > 0 ? 'gold' : 'dim', compact(totals.xpPerHour)),
+      ])
+    }
+    close()
     return chunks
   }
 }

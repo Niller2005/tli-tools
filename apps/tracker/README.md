@@ -19,7 +19,7 @@ bun src/tui.ts --no-baseline        # do not use the community prices
 
 | Panel | What is in it |
 |-------|---------------|
-| The header | the app name and log path, then net worth, FE per hour, FE per run, how many runs, how long in maps, the average run, and the tax, map-cost and pause switches |
+| The header | the app name and log path, then net worth, FE per hour, FE per run, how many runs, how long in maps, the average run, your level with how far through it you are, the experience per hour and the time to the next level, and the tax, map-cost, pause, session and character switches |
 | Current run | the map you are in, how long you have been in it, and what you have picked up, the most valuable first |
 | Best run | the run worth the most, in one line above the recent runs (hidden until a run has value) |
 | Recent runs | the last runs, with how long each took and what it was worth; the runs that are visits to the Tartarus prison say so; `enter` opens the detail of one |
@@ -74,6 +74,11 @@ The keys:
 | `s` | Change how the list is sorted |
 | `/` | Search the list that has the focus |
 | `x` | Write the loot report to a csv file |
+| `f` | The page of the map modifiers: which ones paid (`esc` or the key again closes a page, `↑` `↓` scroll it) |
+| `h` | The page of the exchange: what you listed, paid, collected and took back |
+| `g` | The page of the sessions: each one's runs, FE, FE per hour and XP per hour |
+| `n` | Start a session of your own: asks for a name, the runs that begin after it are its |
+| `N` | End the session that is going on |
 | `r` | Read the log again from where it was |
 | `a` | Open Arcana in a window of its own |
 | `v` | Open Vorax in a window of its own |
@@ -97,6 +102,26 @@ The bag and the prices have their own filter, and the title of the panel says wh
 `Bag (167)` when nothing is filtered, `Bag /iron (5/167)` when five of the hundred and sixty
 seven things in the bag have an iron in the name. The keys work on the rows that are left: `e`
 sets the price of the item that is picked out of the filtered list.
+
+## Experience, modifiers, the exchange, sessions and characters
+
+The game says where the experience bar is every time it moves, which modifiers it put on a map, what changed in
+the bag when you used the exchange and which character logged in. The tracker keeps all of it from the log:
+
+- **Experience.** What is gained in a map is that run's experience; the header shows the level, the percentage
+  through it, the experience per hour of maps and the time to the next level at that pace. What a level takes is
+  the game's own table (`packages/tracker/data/levels.json`, see
+  [`docs/third-party-data.md`](../../docs/third-party-data.md)), so a level-up is counted whole.
+- **Map modifiers.** Each run keeps the modifiers the game applied to its map; the detail of a run (`enter`) lists
+  the ones the game says in words. `f` compares the modifiers that were on three finished maps or more with the
+  average map. It is a comparison, not a cause.
+- **The exchange.** `h` lists listings, payments, what you collected and what you took back, newest first, with the
+  items and the FE that changed in the bag. The log does not carry the price of a listing.
+- **Sessions.** `n` names a stretch of play; `g` adds up its runs on their own. A run that was going on when the
+  session began stays outside it.
+- **Characters.** The log says which character logged in. Each character has its own bag, runs, experience,
+  exchange entries and sessions, kept under its id in the database; the prices are shared. The header shows the
+  last digits of the id.
 
 ## A minigame in a window of its own
 
@@ -145,6 +170,12 @@ The game writes `UE_game.log` while it runs. The tracker reads:
 - **the exchange**: `----Socket RecvMessage STT----XchgSearchPrice----SynId = 3720` and the prices
   that come back. The tracker keeps the tenth of the listings of each item the player looked up,
   which is close to what a quick sale gets.
+- **the experience**: `ExpMgr@UpdateExp Percent:6257480 94` is the experience gathered in the level and the level
+  (it starts again at zero at every level).
+- **the map's modifiers**: `UCLevelSingleton::AddMapModifier(5112006) success 2` for each one the game applied, and
+  the dump that follows `AffixInfos`, which says what the readable ones say (`+Description [...]` then `+Id [...]`).
+- **the exchange**: the item changes inside `ProtoName=XchgForSale`, `XchgBuy`, `XchgReceive` and `XchgRecall`.
+- **the character**: `PlayerIdTrace@LoginDataMgr:SetPlayerId old=... new=...`.
 
 Everything is priced in Flame Elementium (FE). The exchange takes 12.5% of everything but FE when
 you sell, so the tracker can show the value before the tax and after it.
@@ -254,10 +285,14 @@ sqlite3 ~/.local/share/tli-tracker/tracker.db 'select kind, count(*) from runs g
 sqlite3 ~/.local/share/tli-tracker/tracker.db 'select name, fe from runs order by start_ms desc limit 5'
 ```
 
-The runs are in `runs` (the one going on is the row with `is_current = 1`) with their loot and
-cost in `run_loot` and `run_cost`, the bag in `slots` and `instances`, the prices in `prices` and
-`price_overrides`, the legendaries of the gear bases in `gear`, the switches and the next run's
-number in `settings`, and where the tracker was in the log in `log_position`.
+The runs are in `runs` (the one going on is the row with `is_current = 1`) with their loot, cost
+and modifiers in `run_loot`, `run_cost` and `run_affix`, the bag in `slots` and `instances`, the
+exchange in `trades` and `trade_items`, the sessions in `sessions`, the prices in `prices` and
+`price_overrides`, the legendaries of the gear bases in `gear`, what the modifiers say in `affixes`,
+the switches in `settings`, where the experience bar was and the next run's number in `characters`,
+which character played last in `meta`, and where the tracker was in the log in `log_position`. Every
+table of what a character owns has a `character` column with the character's id (empty for what was
+read before the log said who was playing).
 
 The state the tracker kept before the database — a `state.json` in the same folder — is brought in
 by itself the first time the database is not there, and the old file is renamed to

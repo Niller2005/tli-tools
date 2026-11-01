@@ -11,6 +11,7 @@ import type { ItemNames, Tracker } from '@tli/tracker'
 import { TrackerScreen } from './screen'
 import {
   MENU,
+  PAGE_KEYS,
   PANELS,
   bagRows,
   freshView,
@@ -76,6 +77,9 @@ export class TrackerApp {
       onPrice: (item, price) => {
         this.setPrice(item, price)
       },
+      onName: (text) => {
+        this.setName(text)
+      },
       onSearch: (text) => {
         this.search(text)
       },
@@ -107,9 +111,10 @@ export class TrackerApp {
       return
     }
 
-    if (this.state.editing !== null) {
+    if (this.state.editing !== null || this.state.naming) {
       if (key.name === 'escape') {
         this.state.editing = null
+        this.state.naming = false
         this.screen.endPrice()
         key.preventDefault()
         this.draw()
@@ -119,6 +124,13 @@ export class TrackerApp {
 
     if (this.state.menu !== null) {
       this.menuKey(key)
+      key.preventDefault()
+      this.draw()
+      return
+    }
+
+    if (this.state.page !== null) {
+      this.pageKey(key)
       key.preventDefault()
       this.draw()
       return
@@ -309,6 +321,22 @@ export class TrackerApp {
       case 'm':
         this.state.menu = 0
         return
+      case 'f':
+      case 'h':
+      case 'g': {
+        this.state.page = PAGE_KEYS[char] ?? null
+        this.state.detail = null
+        this.screen.scrollOverlay(0, true)
+        return
+      }
+      case 'n':
+        this.beginNaming()
+        return
+      case 'N': {
+        const ended = this.tracker.endSession()
+        this.state.message = ended === null ? 'there is no session going on' : `the session ${ended.name} is over`
+        return
+      }
       case '?':
         this.state.help = true
         return
@@ -366,6 +394,41 @@ export class TrackerApp {
     const panel = this.state.searching
     if (panel === null) return
     this.setFilter(panel, text)
+    this.draw()
+  }
+
+  /** A key while a page is open: scroll it, or close it. */
+  private pageKey(key: KeyEvent): void {
+    const char = this.typed(key)
+    if (key.name === 'escape' || char === 'q' || PAGE_KEYS[char] === this.state.page) {
+      this.state.page = null
+      return
+    }
+    const open = PAGE_KEYS[char]
+    if (open !== undefined) {
+      this.state.page = open
+      this.screen.scrollOverlay(0, true)
+      return
+    }
+    if (key.name === 'up' || char === 'k') this.screen.scrollOverlay(-1)
+    else if (key.name === 'down' || char === 'j') this.screen.scrollOverlay(1)
+    else if (key.name === 'pageup') this.screen.scrollOverlay(-10)
+    else if (key.name === 'pagedown') this.screen.scrollOverlay(10)
+  }
+
+  /** Opens the box that asks for the name of a session. */
+  private beginNaming(): void {
+    this.state.naming = true
+    const last = this.tracker.sessions[this.tracker.sessions.length - 1]
+    this.screen.beginName(`Session ${(last?.id ?? 0) + 1}`)
+  }
+
+  /** Starts the session the player named. */
+  private setName(text: string): void {
+    const session = this.tracker.startSession(text, Date.now())
+    this.state.message = `the session ${session.name} began: the runs from now on are its`
+    this.state.naming = false
+    this.screen.endPrice()
     this.draw()
   }
 
