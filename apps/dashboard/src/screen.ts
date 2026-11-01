@@ -18,7 +18,7 @@ import {
 } from '@opentui/core'
 import type { CaptureStatus } from '@tli/capture'
 import { logHint, type LogHealth, type MinigameState, type ToolStatus } from '@tli/gamelog'
-import { missing, TOOLS, type RunningEntry, type Tool } from '@tli/launch'
+import { missing, toolSettings, TOOLS, type RunningEntry, type Tool } from '@tli/launch'
 import type { SessionSummary } from '@tli/tracker'
 import {
   backgroundColor,
@@ -62,6 +62,8 @@ export interface ToolRow {
   missing: string[]
   /** the minigame's state, when the tool has one */
   badge: [MinigameState, string | null] | null
+  /** whether the tool opens by itself when its minigame opens */
+  auto: boolean
   /** the tool's status line, when it says something the badge does not */
   line: { text: string; tone: Tone } | null
 }
@@ -94,6 +96,7 @@ export function toolRows(state: DashboardState): ToolRow[] {
       selected: state.picked.has(tool.id),
       missing: missing(tool),
       badge,
+      auto: tool.game !== undefined && toolSettings(state.settings, tool.id).autoLaunch,
       line: text === '' || status === undefined ? null : { text, tone: LINE_TONE[status.tone] },
     }
   })
@@ -659,6 +662,10 @@ export class DashboardScreen {
       const badge = BADGE[state]
       chunks.push(tone('default', '  '), tone(badge[1], badge[0]))
       if (hint !== null) chunks.push(tone('dim', `  ${hint}`))
+    }
+
+    if (row.auto) {
+      chunks.push(tone('default', '  '), tone('cyan', '⟳ auto'))
     }
 
     if (row.line !== null) {

@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 import { createTestRenderer } from '@opentui/core/testing'
 import type { MinigameView } from '@tli/gamelog'
-import { TOOLS, defaultSettings, type Settings, type Tool } from '@tli/launch'
-import { NARROW, optionRows } from '../src/screen'
+import { TOOLS, defaultSettings, setToolSettings, type Settings, type Tool } from '@tli/launch'
+import { NARROW, optionRows, toolRows } from '../src/screen'
 import { DashboardApp, freshState } from '../src/app'
 import type { StatusData } from '../src/status'
 import { emptyStatus } from '../src/status'
@@ -440,5 +440,13 @@ describe('the status before anything was read', () => {
     expect(status.running).toEqual([])
     expect(status.summary.runsToday).toBe(0)
     expect(status.baselineAge).toBeNull()
+  })
+})
+
+describe('auto-launch marker', () => {
+  test('a minigame tool that is on auto is marked, the others are not', () => {
+    const state = freshState(setToolSettings(defaultSettings(), 'warden', { autoLaunch: true }))
+    const marked = toolRows(state).filter((row) => row.auto).map((row) => row.tool.id)
+    expect(marked).toEqual(['warden'])
   })
 })
