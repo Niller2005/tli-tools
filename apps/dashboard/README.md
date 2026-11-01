@@ -27,6 +27,8 @@ bun src/main.ts --no-color
 | `?` | Help |
 | `q` | Quit |
 
+A tool that is on auto shows `⟳ auto` after its badge.
+
 ## How tools start
 
 The list is drawn with [OpenTUI](https://opentui.com/docs), using the shared colours and renderer
