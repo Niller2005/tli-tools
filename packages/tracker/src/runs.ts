@@ -44,6 +44,12 @@ export interface Run {
   cost: Map<number, number>
   /** the FE that was made in it, when the player sold something */
   fe: number
+  /** the experience that was gained in it */
+  xp: number
+  /** the modifiers the game put on the map, by id, in the order it said them */
+  affixes: number[]
+  /** the session it belongs to; 0 when it was played outside any */
+  session: number
 }
 
 function bump(map: Map<number, number>, item: number, by: number): void {
@@ -56,6 +62,8 @@ function bump(map: Map<number, number>, item: number, by: number): void {
 export class RunSegmenter {
   private current: Run | null = null
   private nextId = 1
+  /** the session new runs belong to; 0 is none */
+  private sessionId = 0
   /** the cost of entering a map is said before the map starts; it waits here for the run */
   private pendingCost = new Map<number, number>()
 
@@ -67,6 +75,11 @@ export class RunSegmenter {
   /** Sets the number the next run gets. */
   setNextId(id: number): void {
     this.nextId = id
+  }
+
+  /** Sets the session new runs belong to; 0 is none. The run that is going on stays where it is. */
+  setSession(id: number): void {
+    this.sessionId = id
   }
 
   /** The level the player is in changed. Ends the run that was going on, if any. */
@@ -175,6 +188,18 @@ export class RunSegmenter {
     this.current.fe += qty
   }
 
+  /** Experience was gained. */
+  xp(amount: number): void {
+    if (this.current === null) return
+    this.current.xp += amount
+  }
+
+  /** The game put a modifier on the map. */
+  affix(id: number): void {
+    if (this.current === null) return
+    if (!this.current.affixes.includes(id)) this.current.affixes.push(id)
+  }
+
   /** A run that begins now. */
   private newRun(kind: RunKind, lid: number, at: number): Run {
     const run: Run = {
@@ -188,6 +213,9 @@ export class RunSegmenter {
       loot: new Map(),
       cost: new Map(this.pendingCost),
       fe: 0,
+      xp: 0,
+      affixes: [],
+      session: this.sessionId,
     }
     this.pendingCost.clear()
     return run

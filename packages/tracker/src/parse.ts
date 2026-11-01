@@ -50,6 +50,12 @@ export type Fact =
   | { t: 'equip'; base: number; legendary: number; slot: number; at: number }
   /** a page of the game opened, was hidden, or was destroyed */
   | { t: 'screen'; name: string; state: 'run' | 'hide' | 'destory'; at: number }
+  /** the experience bar moved: the experience in the level, and the level (it starts again at every level) */
+  | { t: 'exp'; exp: number; level: number; at: number }
+  /** the character that is logged in; its id is too big for a number, so it is kept as text */
+  | { t: 'player'; id: string; at: number }
+  /** a modifier of the map was applied (`ok`), or the game turned it away */
+  | { t: 'modifier'; id: number; ok: boolean; at: number }
 
 const RE_LEVEL = /LevelMgr@ LevelUid, LevelType, LevelId = (\d+) (\d+) (\d+)/
 const RE_LEVEL_PATH = /LevelMgr@:LevelPath, Model = \S*?\/Maps\/(\S+?)\.umap/
@@ -63,6 +69,9 @@ const RE_ITEM_RESET = /ItemChange@ Reset PageId=(-?\d+)/
 const RE_PROTO = /ItemChange@ ProtoName=(\w+) (start|end)/
 const RE_EQUIP = /AttributeMgr:SetPlayerEquipment\(BaseId=(\d+), GoldId=(\d+), (\d+)\)/
 const RE_SCREEN = /\] (\w+) (Run|Hide|Destory)\b/
+const RE_EXP = /ExpMgr@UpdateExp Percent:(\d+) (\d+)/
+const RE_PLAYER = /PlayerIdTrace@LoginDataMgr:SetPlayerId old=\d+ new=(\d+)/
+const RE_MODIFIER = /UCLevelSingleton::AddMapModifier\((\d+)\) success (\d+)/
 
 /** What a log line says; null when the line is about none of the things we follow. */
 export function parseLine(line: string): Fact | null {
@@ -80,6 +89,15 @@ export function parseLine(line: string): Fact | null {
 
   m = RE_PROTO.exec(line)
   if (m) return { t: 'proto', name: m[1], start: m[2] === 'start', at }
+
+  m = RE_EXP.exec(line)
+  if (m) return { t: 'exp', exp: +m[1], level: +m[2], at }
+
+  m = RE_MODIFIER.exec(line)
+  if (m) return { t: 'modifier', id: +m[1], ok: +m[2] > 0, at }
+
+  m = RE_PLAYER.exec(line)
+  if (m && m[1] !== '0') return { t: 'player', id: m[1], at }
 
   m = RE_EQUIP.exec(line)
   if (m) return { t: 'equip', base: +m[1], legendary: +m[2], slot: +m[3], at }
