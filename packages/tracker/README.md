@@ -29,7 +29,7 @@ console.log(tracker.stats())
 | `src/zones.ts` | the English names of the maps |
 | `src/engine.ts` | the tracker: it ties the rest together |
 | `src/log.ts` | reading the log file in pieces, and where it was left |
-| `src/store.ts` | saving and loading the tracker |
+| `src/store.ts` | saving and loading the tracker, in a SQLite database (`bun:sqlite`) |
 | `src/status.ts` | the status line and the session summary the dashboard draws |
 
 ## The runs
@@ -69,6 +69,39 @@ if (baselineIsStale(cached)) {
 
 The prices are in FE, the same currency the exchange prices things in. A failure is only a
 failure: the tracker carries on with what it has.
+
+## The saved state
+
+The tracker keeps what it knows in a SQLite database, `~/.local/share/tli-tracker/tracker.db`
+(`$XDG_DATA_HOME` moves it), written with `bun:sqlite`. The tables are the parts of the state:
+`runs` with `run_loot` and `run_cost`, `slots` and `instances` for the bag, `prices` and
+`price_overrides`, `gear`, `settings`, and `log_position` for where the tracker was in the log.
+The database is in WAL mode, so the dashboard can read it while the tracker writes it. Its schema
+is versioned (the sqlite `user_version`) and brought up to date when it is opened.
+
+```ts
+import { loadTracker, saveTracker } from '@tli/tracker'
+
+const saved = await loadTracker() // SavedTracker | null: nothing saved, or nothing usable
+tracker.restore(saved.tracker)
+// … the log goes on …
+await saveTracker({ version: 1, log: { file: logFile, offset: reader.position }, tracker: tracker.snapshot() })
+```
+
+A save writes only what changed since the last one, in one transaction. The state the tracker kept
+before the database — a `state.json` in the same folder, of the versions the old loader read — is
+brought in by itself the first time the database is not there, and the file is renamed to
+`state.json.imported` and kept. A file that is not the tracker's database is moved aside as
+`tracker.db.corrupt` (kept, never deleted); a database of a newer schema is left alone and the
+write to it is refused. The dashboard can also ask the tables directly:
+
+```ts
+import { queryRuns, queryTotals } from '@tli/tracker'
+
+const midnight = startOfToday() // the local midnight, in ms since the epoch
+const todays = queryRuns(undefined, midnight) // the finished runs that started today
+const totals = queryTotals() // { runs, fe, firstAt, lastAt }
+```
 
 ## The status line and the session summary
 

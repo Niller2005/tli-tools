@@ -46,7 +46,16 @@ export { ExchangeParser, FE_ITEM, parseQuote, parseRequest, type Quote } from '.
 export { valueOf, durationOf, perHour, TRADE_TAX, type Value } from './valuation'
 export { ItemNames, ITEM_TABLE_PATH, userItemsPath, configDir, dataDir, dataPath, type ItemEntry } from './items'
 export { LogReader, readTail, TAIL_BYTES, type Batch } from './log'
-export { loadTracker, saveTracker, statePath, STATE_FILE, type SavedTracker } from './store'
+export {
+  loadTracker,
+  saveTracker,
+  queryRuns,
+  queryTotals,
+  dbPath,
+  DB_FILE,
+  SCHEMA_VERSION,
+  type SavedTracker,
+} from './store'
 export { zoneName, ZONE_NAMES, PRISON_NAME } from './zones'
 export { trackerStatus, sessionSummary, type SessionSummary, type SummaryRun } from './status'
 export { refreshBaseline } from './baseline'
