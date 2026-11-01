@@ -21,6 +21,7 @@ bun src/tui.ts --no-baseline        # do not use the community prices
 |-------|---------------|
 | The header | the app name and log path, then net worth, FE per hour, FE per run, how many runs, how long in maps, the average run, and the tax, map-cost and pause switches |
 | Current run | the map you are in, how long you have been in it, and what you have picked up, the most valuable first |
+| Best run | the run worth the most, in one line above the recent runs (hidden until a run has value) |
 | Recent runs | the last runs, with how long each took and what it was worth; the runs that are visits to the Tartarus prison say so; `enter` opens the detail of one |
 | Bag | what you have, sorted by value (or by how many, or by name); the value of each thing |
 | Prices | what the tracker knows the price of each item to be; `*` a price you set, `·` one learned from the exchange, `~` a community price |
