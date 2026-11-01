@@ -43,3 +43,5 @@ export {
 } from './session'
 
 export { load, save, statePath, dataDir, historyOf, STATE_FILE, STATE_VERSION, type Saved } from './store'
+
+export { arcanaStatus } from './status'

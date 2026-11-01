@@ -42,7 +42,16 @@ export async function load(path?: string): Promise<Saved | null>
 
 /** Writes what is saved, next to the old file and then over it. */
 export async function save(saved: Saved, path?: string): Promise<void>
-```
+
+/** The Arcana tool's status line, as the dashboard draws it (contract C1 of the dashboard plan). */
+export function arcanaStatus(history: History): ToolStatus
+ ```
+
+`arcanaStatus` (in [`src/status.ts`](src/status.ts)) works the history out into one line: whether
+the Tarot Path is open (a visit that never ended is one that is still going on), the life of the
+visit that is going on, the chests of destiny still waiting for a Fateful Contest, and how many
+trials were fought. It reads the history alone — `tracker.state` of a live tracker, or
+`historyOf(await load())` of what was saved — so it costs nothing to call.
 
 ## What the log says, and what it does not
 
