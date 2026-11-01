@@ -15,7 +15,7 @@
 // the help, q quits.
 
 import { statSync } from 'node:fs'
-import { Tracker, historyOf, load, save, type Saved, STATE_VERSION } from '@tli/arcana'
+import { Tracker, historyOf, load, save, type Saved, SCHEMA_VERSION } from '@tli/arcana'
 import { MinigameTracker, findLog, scanBack } from '@tli/gamelog'
 import { ITEM_TABLE_PATH, ItemNames, LogReader, loadTracker, userItemsPath } from '@tli/tracker'
 import { startApp } from '@tli/tui'
@@ -109,11 +109,21 @@ function readLog(onProgress?: (done: number, size: number) => void): void {
   else state.logNote = games.detail ? '' : 'the game is not writing its own lines: turn on Enable Log (Esc, Account Related, Enable Log)'
 }
 
-/** The first read, which may be the whole of a log hundreds of megabytes long: it says how far it is. */
+/** How much of the log is read before what it said is saved: the backfill of a log hundreds of
+ * megabytes long saves as it goes, so a crash halfway through loses only the last batch. */
+const SAVE_BATCH = 128 * 1024 * 1024
+
+/** The first read, which may be the whole of a log hundreds of megabytes long: it says how far it
+ * is, and what was read is saved every `SAVE_BATCH` bytes. */
 function firstRead(): void {
   const started = Date.now()
   let shown = 0
+  let savedAt = 0
   readLog((done, size) => {
+    if (done - savedAt >= SAVE_BATCH) {
+      savedAt = done
+      void saveState()
+    }
     if (!process.stderr.isTTY || size === 0 || Date.now() - started < 500 || Date.now() - shown < 200) return
     shown = Date.now()
     process.stderr.write(`\rreading the log ${Math.floor((done / size) * 100)}%`)
@@ -126,7 +136,7 @@ function firstRead(): void {
 /** Saves what the tracker knows. */
 async function saveState(): Promise<void> {
   const out: Saved = {
-    version: STATE_VERSION,
+    version: SCHEMA_VERSION,
     log: { file: logFile, offset: reader.position },
     history: tracker.state,
     snapshot: tracker.snapshot(),
