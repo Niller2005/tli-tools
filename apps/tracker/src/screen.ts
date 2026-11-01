@@ -31,6 +31,7 @@ import {
   fitEnd,
   num,
   price,
+  toneOn,
   rowChunks,
   theme,
   textColor,
@@ -41,6 +42,7 @@ import {
 import type { Run, Tracker } from '@tli/tracker'
 import { ATTRIBUTION, ATTRIBUTION_URL } from '@tli/tracker'
 import {
+  MENU,
   type BagRow,
   type Panel,
   type PriceRow,
@@ -116,6 +118,7 @@ const HELP: [string, string][] = [
   ['a', 'open Arcana in a window of its own'],
   ['v', 'open Vorax in a window of its own'],
   ['w', 'open Warden in a window of its own'],
+  ['m', 'a menu of what the keys do, to pick from'],
   ['?', 'this help'],
   ['q', 'quit'],
 ]
@@ -794,15 +797,7 @@ export class TrackerScreen {
       ['tab', 'panel'],
       ['⏎', 'detail'],
       ['/', 'search'],
-      ['t', 'tax'],
-      ['c', 'map cost'],
-      ['e', 'price'],
-      ['u', 'reset price'],
-      ['d', 'remove'],
-      ['b', 'community prices'],
-      ['x', 'csv'],
-      ['p', 'pause'],
-      ['a/v/w', 'window'],
+      ['m', 'menu'],
       ['?', 'help'],
       ['q', 'quit'],
     ]
@@ -852,6 +847,10 @@ export class TrackerScreen {
 
   /** The help, or the detail of a run, over the whole screen. */
   private drawOverlay(state: ViewState, width: number, height: number): void {
+    if (state.menu !== null) {
+      this.drawMenu(state.menu, width, height)
+      return
+    }
     const run = findRun(this.tracker, state.detail)
     if (run === null && !state.help) {
       this.overlay.visible = false
@@ -880,6 +879,37 @@ export class TrackerScreen {
     }
     this.overlayText.width = textWidth
     this.overlay.visible = true
+  }
+
+  /** The menu: a small dialog with the entries by section, the picked one on the selection. */
+  private drawMenu(at: number, width: number, height: number): void {
+    const chunks: TextChunk[] = [tone('accent', 'Menu'), tone('dim', '  ↑↓ pick · ⏎ do it · esc close'), tone('default', '\n')]
+    let section = ''
+    let line = 1
+    let pickedLine = 1
+    const longest = MENU.reduce((n, item) => Math.max(n, item.label.length), 0)
+    const inner = longest + 6
+    MENU.forEach((item, index) => {
+      if (item.section !== section) {
+        section = item.section
+        chunks.push(tone('default', '\n'), tone('yellow', section), tone('default', '\n'))
+        line += 2
+      }
+      if (index === at) pickedLine = line
+      const text = ` ${item.key.padEnd(2)}${item.label}`.padEnd(inner)
+      chunks.push(
+        index === at ? toneOn('accent', `▸${text}`, theme.selection) : tone('default', ` ${text}`),
+        tone('default', '\n'),
+      )
+      line += 1
+    })
+    const boxHeight = Math.min(Math.max(4, height - 2), line + 2)
+    this.overlayBox.width = Math.min(Math.max(20, width - 4), inner + 6 + BORDER + SCROLLBAR)
+    this.overlayBox.height = boxHeight
+    this.overlayText.content = new StyledText(chunks)
+    this.overlayText.width = Math.max(10, inner + 6)
+    this.overlay.visible = true
+    this.overlayScroll.scrollTo(Math.max(0, pickedLine - (boxHeight - BORDER) + 2))
   }
 
   /** The detail of one run. */

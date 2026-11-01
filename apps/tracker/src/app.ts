@@ -10,6 +10,7 @@ import { toolById, type Tool } from '@tli/launch'
 import type { ItemNames, Tracker } from '@tli/tracker'
 import { TrackerScreen } from './screen'
 import {
+  MENU,
   PANELS,
   bagRows,
   freshView,
@@ -116,6 +117,13 @@ export class TrackerApp {
       return
     }
 
+    if (this.state.menu !== null) {
+      this.menuKey(key)
+      key.preventDefault()
+      this.draw()
+      return
+    }
+
     if (this.state.help) {
       const char = this.typed(key)
       if (key.name === 'escape' || char === 'q' || char === '?') this.state.help = false
@@ -169,6 +177,30 @@ export class TrackerApp {
     if (key.sequence.length === 1) return key.sequence
     if (key.name.length === 1) return key.name
     return ''
+  }
+
+  /** A key while the menu is open: move, pick with enter, or press the key of an entry. */
+  private menuKey(key: KeyEvent): void {
+    const at = this.state.menu ?? 0
+    const char = this.typed(key)
+    if (key.name === 'escape' || char === 'm') {
+      this.state.menu = null
+    } else if (key.name === 'up' || char === 'k') {
+      this.state.menu = (at + MENU.length - 1) % MENU.length
+    } else if (key.name === 'down' || char === 'j') {
+      this.state.menu = (at + 1) % MENU.length
+    } else if (key.name === 'return') {
+      this.runMenu(MENU[at]?.key ?? '')
+    } else if (MENU.some((item) => item.key === char)) {
+      this.runMenu(char)
+    }
+  }
+
+  /** Closes the menu and does what the entry says. Choosing the clear entry is the confirmation. */
+  private runMenu(char: string): void {
+    this.state.menu = null
+    if (char === 'z') this.clearAskedAt = Date.now()
+    this.action(char)
   }
 
   /** Does a key that is a letter. */
@@ -273,6 +305,9 @@ export class TrackerApp {
       case 'v':
       case 'w':
         this.openWindow(char)
+        return
+      case 'm':
+        this.state.menu = 0
         return
       case '?':
         this.state.help = true
