@@ -46,11 +46,24 @@ export {
   type TmuxSocket,
 } from './tmux'
 
-export { TOOLS, missing, toolById, type Tool } from './tools'
+export { TOOLS, missing, toolById, type Tool, type ToolAccepts } from './tools'
+
+export {
+  SETTINGS_VERSION,
+  defaultSettings,
+  readSettings,
+  setToolSettings,
+  settingsPath,
+  toolSettings,
+  writeSettings,
+  type Settings,
+  type ToolSettings,
+} from './settings'
 
 export {
   childEnv,
   childFlags,
   openTool,
+  optionFlags,
   type OpenToolOptions,
 } from './open'

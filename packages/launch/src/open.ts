@@ -5,6 +5,7 @@
 
 import type { Launcher, OpenResult } from './launcher'
 import { missing, type Tool } from './tools'
+import type { ToolSettings } from './settings'
 
 /** The flags the child needs from the parent. */
 export function childFlags(tool: Tool, parentArgv: readonly string[]): string[] {
@@ -12,6 +13,31 @@ export function childFlags(tool: Tool, parentArgv: readonly string[]): string[] 
   const log = parentArgv.find(argument => argument.startsWith('--log='))
   if (tool.readsLog === true && log !== undefined) flags.push(log)
   if (parentArgv.includes('--no-color')) flags.push('--no-color')
+  return flags
+}
+
+/**
+ * The flags the per-tool settings turn into, for the tools that take them.
+ *
+ * Only the settings the tool's command takes become flags: the ones it does not take are left
+ * out, and each is spelled the way that tool reads it (vorax glues the capture command onto
+ * `--capture-cmd=`, warden takes it as the word after `--capture-cmd`). `autoLaunch` never
+ * becomes a flag: it is stored for the dashboard, not passed to the tool.
+ */
+export function optionFlags(tool: Tool, settings: ToolSettings = {}): string[] {
+  const takes = tool.accepts
+  if (takes === undefined) return []
+  const flags: string[] = []
+  if (settings.noColor === true && takes.noColor !== undefined) flags.push(takes.noColor)
+  if (settings.noLog === true && takes.noLog !== undefined) flags.push(takes.noLog)
+  if (settings.niriScreenshot === true && takes.niriScreenshot !== undefined) {
+    flags.push(takes.niriScreenshot)
+  }
+  const command = settings.captureCmd
+  if (command != null && command !== '' && takes.captureCmd !== undefined) {
+    if (takes.captureCmd.endsWith('=')) flags.push(`${takes.captureCmd}${command}`)
+    else flags.push(takes.captureCmd, command)
+  }
   return flags
 }
 
@@ -55,6 +81,8 @@ export interface OpenToolOptions {
   parentArgv?: readonly string[]
   /** the environment of the parent, whose environment the child gets */
   parentEnv?: Record<string, string | undefined>
+  /** the per-tool settings from the settings file, whose flags the child gets */
+  settings?: ToolSettings
   /** finds a program on PATH; the check for what the tool needs */
   which?: (program: string) => string | null
 }
@@ -76,11 +104,13 @@ export function openTool(
     }
   }
 
+  // the same flag twice says the same thing twice; it is kept once
+  const flags = [...childFlags(tool, parentArgv), ...optionFlags(tool, options.settings)]
   return launcher.open({
     key: tool.id,
     title: tool.name,
     cwd: tool.cwd,
-    command: [...tool.command, ...childFlags(tool, parentArgv)],
+    command: [...tool.command, ...new Set(flags)],
     env: childEnv(options.parentEnv),
   })
 }

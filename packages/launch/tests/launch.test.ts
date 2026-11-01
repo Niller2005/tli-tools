@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { childEnv, childFlags, openTool } from '../src/open'
+import { childEnv, childFlags, openTool, optionFlags } from '../src/open'
 import { Launcher, type Child, type LauncherHost } from '../src/launcher'
 import {
   alacrittyArgv,
@@ -563,5 +563,62 @@ describe('opening a tool', () => {
     expect(argv?.[1]).toBe('--title=Vorax Helper')
     expect(argv?.[2]).toBe(`--working-directory=${vorax!.cwd}`)
     expect(argv?.slice(4)).toEqual(['bun', 'scripts/tui.ts'])
+  })
+})
+
+describe('the flags of the per-tool settings', () => {
+  test('vorax takes every setting, and glues the capture command onto its flag', () => {
+    expect(
+      optionFlags(toolById('vorax')!, {
+        noColor: true,
+        noLog: true,
+        niriScreenshot: true,
+        captureCmd: 'shot {out}',
+      }),
+    ).toEqual(['--no-color', '--no-log', '--niri-screenshot', '--capture-cmd=shot {out}'])
+  })
+
+  test('warden takes the capture command as the word after its flag', () => {
+    expect(optionFlags(toolById('warden')!, { noLog: true, captureCmd: 'shot {out}' })).toEqual([
+      '--no-log',
+      '--capture-cmd',
+      'shot {out}',
+    ])
+  })
+
+  test('the tracker and arcana take none of the capture and log settings', () => {
+    for (const id of ['tracker', 'arcana']) {
+      expect(optionFlags(toolById(id)!, { noLog: true, niriScreenshot: true, captureCmd: 'x' })).toEqual([])
+      expect(optionFlags(toolById(id)!, { noColor: true })).toEqual(['--no-color'])
+    }
+  })
+
+  test('autoLaunch is stored for the dashboard, never passed to a tool', () => {
+    expect(optionFlags(toolById('vorax')!, { autoLaunch: true })).toEqual([])
+  })
+
+  test('an empty capture command is no command', () => {
+    expect(optionFlags(toolById('vorax')!, { captureCmd: '' })).toEqual([])
+    expect(optionFlags(toolById('vorax')!, { captureCmd: null })).toEqual([])
+  })
+
+  test('the settings of the parent reach the command of the child once', () => {
+    const started: string[][] = []
+    const launcher = new Launcher({
+      env: { TLI_TERMINAL: 'ghostty' },
+      host: {
+        which: (program: string) => `/usr/bin/${program}`,
+        spawn: (argv): Child => {
+          started.push(argv)
+          return { exited: Promise.resolve(0) }
+        },
+      },
+    })
+    openTool(launcher, toolById('vorax')!, {
+      parentArgv: ['--no-color'],
+      settings: { noColor: true, noLog: true, captureCmd: 'shot {out}' },
+      which: () => '/usr/bin/bun',
+    })
+    expect(started[0]?.slice(-3)).toEqual(['--no-color', '--no-log', '--capture-cmd=shot {out}'])
   })
 })
