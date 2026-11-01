@@ -85,6 +85,27 @@ the tools whose command takes them, each spelled the way that tool reads it:
 openTool(launcher, tool, { parentArgv: process.argv, settings: options })
 ```
 
+## The running tools
+
+The launcher remembers what it has opened, and answers for it:
+
+```typescript
+const entries = launcher.list()   // { id, pid, since, via, running, exitCode }
+const focused = launcher.focus('vorax')  // tmux: the pane's window is selected and the pane made
+                                       // the active one. A terminal emulator window: unsupported.
+const closed = launcher.close('vorax')   // SIGTERM to the process the launcher started
+```
+
+`list()` gives every entry, running or ended: the tool id, the pid of the process that runs it,
+when it was opened, and what it runs in (`tmux`, or the id of the terminal emulator). An entry is
+kept after its process has gone, with the exit code when the launcher has seen it (a window of a
+terminal emulator: always; a tmux pane: never, for tmux does not tell how a pane's process ended).
+It is replaced when the same tool is opened again.
+
+`close` sends SIGTERM to one process only: the one the launcher itself started, or the one tmux
+named for the pane the launcher opened. Nothing is looked up by name, and the game is never
+touched.
+
 ## In tmux
 
 When the player is in tmux, the window is a pane of their own session: the tracker keeps the

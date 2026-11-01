@@ -7,9 +7,13 @@
 import { findTerminal, type Terminal } from './terminal'
 import {
   parsePaneId,
+  parsePanePids,
   tmuxArgv,
   tmuxMode,
+  tmuxPanePidsArgv,
   tmuxPanesArgv,
+  tmuxSelectPaneArgv,
+  tmuxSelectWindowArgv,
   tmuxSocket,
   tmuxTakesEnv,
   tmuxWindowName,
@@ -18,6 +22,8 @@ import {
 
 /** A child process the launcher started. */
 export interface Child {
+  /** the pid of the process, when there is one to ask */
+  pid: number | null
   /** resolves when the child has gone */
   exited: Promise<number>
 }
@@ -30,6 +36,8 @@ export interface LauncherHost {
   spawn: (argv: string[], options: { cwd: string; env: Record<string, string | undefined> }) => Child
   /** runs a program and gives back what it wrote to its standard output */
   run: (argv: string[], options: { cwd: string; env: Record<string, string | undefined> }) => string
+  /** tells a process the launcher started to stop */
+  kill: (pid: number, signal: NodeJS.Signals) => void
 }
 
 /** The machine the launcher runs on. */
@@ -47,7 +55,7 @@ export const defaultHost: LauncherHost = {
     })
     // bun waits for its children when it shuts down; the window may outlive the tracker
     child.unref()
-    return { exited: child.exited }
+    return { pid: child.pid, exited: child.exited }
   },
   run: (argv, options) => {
     const result = Bun.spawnSync({
@@ -59,6 +67,9 @@ export const defaultHost: LauncherHost = {
       stderr: 'pipe',
     })
     return result.stdout.toString()
+  },
+  kill: (pid, signal) => {
+    process.kill(pid, signal)
   },
 }
 
@@ -91,10 +102,56 @@ export interface OpenResult {
   message: string
 }
 
+/** A tool the launcher has opened, as the dashboard lists it. */
+export interface RunningEntry {
+  /** the tool id */
+  id: string
+  /** the pid of the process that runs the tool, when the launcher knows it */
+  pid: number | null
+  /** when it was opened, in milliseconds since the epoch */
+  since: number
+  /** what it runs in: 'tmux', or the id of the terminal emulator */
+  via: string
+  /** whether it is still running */
+  running: boolean
+  /** the exit code, when the launcher has seen the process end */
+  exitCode: number | null
+}
+
+/** What happened when a tool was asked to be focused. */
+export type FocusReason = 'focused' | 'not-running' | 'unsupported' | 'failed'
+
+/** The answer of `focus`. */
+export interface FocusResult {
+  ok: boolean
+  reason: FocusReason
+  message: string
+}
+
+/** What happened when a tool was asked to stop. */
+export type CloseReason = 'closed' | 'not-running' | 'no-pid' | 'failed'
+
+/** The answer of `close`. */
+export interface CloseResult {
+  ok: boolean
+  reason: CloseReason
+  message: string
+}
+
 /** Something the launcher opened, and how to tell whether it is still there. */
 interface Running {
-  /** the terminal or the session it is in */
-  kind: string
+  /** what it runs in: 'tmux', or the id of the terminal emulator */
+  via: string
+  /** the pid of the process that was started in it, when it is known */
+  pid: number | null
+  /** when it was opened, in milliseconds since the epoch */
+  since: number
+  /** the pane it is in, when it runs in tmux */
+  pane: string | null
+  /** the tmux server the pane is in */
+  socket: TmuxSocket | null
+  /** the exit code, when the process has ended and the launcher has seen it */
+  exitCode: number | null
   /** whether it is still there */
   alive: () => boolean
 }
@@ -126,6 +183,82 @@ export class Launcher {
     return running !== undefined && running.alive()
   }
 
+  /**
+   * Everything the launcher has opened, running or ended.
+   *
+   * An entry is kept after its process has gone, with the exit code when the launcher has seen
+   * it; it is replaced when the same tool is opened again.
+   */
+  list(): RunningEntry[] {
+    return [...this.running.entries()].map(([id, running]) => ({
+      id,
+      pid: running.pid,
+      since: running.since,
+      via: running.via,
+      running: running.alive(),
+      exitCode: running.exitCode,
+    }))
+  }
+
+  /**
+   * Brings the window of a tool to the front, when the thing it runs in can be asked.
+   *
+   * tmux can: the pane is made the active pane of its window, and the window the one the player
+   * sees. A terminal emulator window cannot be focused from here, and the launcher says so
+   * rather than guessing at the compositor.
+   */
+  focus(id: string): FocusResult {
+    const running = this.running.get(id)
+    if (running === undefined || !running.alive()) {
+      return { ok: false, reason: 'not-running', message: `${id} is not running` }
+    }
+    if (running.via !== 'tmux' || running.pane === null) {
+      return {
+        ok: false,
+        reason: 'unsupported',
+        message: `focusing a ${running.via} window is not supported`,
+      }
+    }
+    try {
+      this.host.run(tmuxSelectWindowArgv(running.socket, running.pane), {
+        cwd: process.cwd(),
+        env: this.env,
+      })
+      this.host.run(tmuxSelectPaneArgv(running.socket, running.pane), {
+        cwd: process.cwd(),
+        env: this.env,
+      })
+    } catch (error) {
+      return { ok: false, reason: 'failed', message: `could not focus ${id}: ${(error as Error).message}` }
+    }
+    return { ok: true, reason: 'focused', message: `${id} is focused` }
+  }
+
+  /**
+   * Asks the process the launcher started for a tool to stop, with SIGTERM.
+   *
+   * Only that one process is told: the pid is the one the launcher itself started (the window of
+   * a terminal emulator) or the one tmux named for the pane the launcher opened — never a
+   * process looked up by name, and never the game.
+   */
+  close(id: string): CloseResult {
+    const running = this.running.get(id)
+    if (running === undefined || !running.alive()) {
+      return { ok: false, reason: 'not-running', message: `${id} is not running` }
+    }
+    const pid = running.pid
+    // a pid the launcher does not know, or one no process may be told to stop
+    if (pid === null || pid <= 1) {
+      return { ok: false, reason: 'no-pid', message: `the process of ${id} is not known` }
+    }
+    try {
+      this.host.kill(pid, 'SIGTERM')
+    } catch (error) {
+      return { ok: false, reason: 'failed', message: `could not stop ${id}: ${(error as Error).message}` }
+    }
+    return { ok: true, reason: 'closed', message: `${id} was asked to stop` }
+  }
+
   /** Opens a window that runs the command, and says what happened. */
   open(request: OpenRequest): OpenResult {
     const key = request.key
@@ -134,7 +267,7 @@ export class Launcher {
       if (running !== undefined && running.alive()) {
         return {
           ok: false,
-          terminal: running.kind,
+          terminal: running.via,
           reason: 'already-open',
           message: `${request.title} is already open`,
         }
@@ -192,7 +325,15 @@ export class Launcher {
 
     const key = request.key
     if (key !== undefined) {
-      this.running.set(key, { kind: 'tmux', alive: () => this.paneIsThere(pane, socket) })
+      this.running.set(key, {
+        via: 'tmux',
+        pid: this.panePid(pane, socket),
+        since: Date.now(),
+        pane,
+        socket,
+        exitCode: null,
+        alive: () => this.paneIsThere(pane, socket),
+      })
     }
 
     return {
@@ -215,6 +356,17 @@ export class Launcher {
       .split('\n')
       .map(line => line.trim())
       .includes(pane)
+  }
+
+  /** The pid of the process in the pane, as tmux named it when the pane was opened. */
+  private panePid(pane: string, socket: TmuxSocket | null): number | null {
+    let output: string
+    try {
+      output = this.host.run(tmuxPanePidsArgv(socket), { cwd: process.cwd(), env: this.env })
+    } catch {
+      return null
+    }
+    return parsePanePids(output)[pane] ?? null
   }
 
   /** Whether tmux takes the environment of the pane with `-e`. */
@@ -261,10 +413,21 @@ export class Launcher {
     const key = request.key
     if (key !== undefined) {
       let gone = false
-      void child.exited.then(() => {
+      const entry: Running = {
+        via: terminal.id,
+        pid: child.pid,
+        since: Date.now(),
+        pane: null,
+        socket: null,
+        exitCode: null,
+        alive: () => !gone,
+      }
+      // when the child has gone, how it ended is kept with the entry
+      void child.exited.then(code => {
         gone = true
+        entry.exitCode = code
       })
-      this.running.set(key, { kind: terminal.id, alive: () => !gone })
+      this.running.set(key, entry)
     }
 
     return {

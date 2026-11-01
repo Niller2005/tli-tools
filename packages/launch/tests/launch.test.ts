@@ -150,23 +150,29 @@ function fakeHost(): {
   host: Partial<LauncherHost>
   started: string[][]
   run: string[][]
+  killed: [number, string][]
 } {
   const started: string[][] = []
   const run: string[][] = []
+  const killed: [number, string][] = []
   return {
     host: {
       which: (program: string) => `/usr/bin/${program}`,
       spawn: (argv): Child => {
         started.push(argv)
-        return { exited: Promise.resolve(0) }
+        return { pid: 4242, exited: Promise.resolve(0) }
       },
       run: (argv): string => {
         run.push(argv)
         return ''
       },
+      kill: (pid, signal) => {
+        killed.push([pid, signal])
+      },
     },
     started,
     run,
+    killed,
   }
 }
 
@@ -199,7 +205,7 @@ describe('the launcher', () => {
       env: { TLI_TERMINAL: 'ghostty' },
       host: {
         which: (program: string) => `/usr/bin/${program}`,
-        spawn: (): Child => ({ exited: promise }),
+        spawn: (): Child => ({ pid: 4242, exited: promise }),
       },
     })
     launcher.open({ ...REQUEST, key: 'vorax' })
@@ -421,7 +427,7 @@ describe('the launcher in tmux', () => {
       env: { TMUX: '/tmp/tmux-1000/default,1,0', TLI_TERMINAL: 'ghostty' },
       host: {
         which: (program: string) => `/usr/bin/${program}`,
-        spawn: (): Child => ({ exited: Promise.resolve(0) }),
+        spawn: (): Child => ({ pid: 4242, exited: Promise.resolve(0) }),
         run: (): string => '%3\n',
       },
     })
@@ -434,7 +440,7 @@ describe('the launcher in tmux', () => {
       env: { TLI_TERMINAL: 'ghostty' },
       host: {
         which: (program: string) => `/usr/bin/${program}`,
-        spawn: (): Child => ({ exited: Promise.resolve(0) }),
+        spawn: (): Child => ({ pid: 4242, exited: Promise.resolve(0) }),
         run: (): string => '',
       },
     })
@@ -519,7 +525,7 @@ describe('opening a tool', () => {
         which: (program: string) => `/usr/bin/${program}`,
         spawn: (argv): Child => {
           started.push(argv)
-          return { exited: Promise.resolve(0) }
+          return { pid: 4242, exited: Promise.resolve(0) }
         },
       },
     })
@@ -550,7 +556,7 @@ describe('opening a tool', () => {
         which: (program: string) => `/usr/bin/${program}`,
         spawn: (argv): Child => {
           started.push(argv)
-          return { exited: Promise.resolve(0) }
+          return { pid: 4242, exited: Promise.resolve(0) }
         },
       },
     })
@@ -610,7 +616,7 @@ describe('the flags of the per-tool settings', () => {
         which: (program: string) => `/usr/bin/${program}`,
         spawn: (argv): Child => {
           started.push(argv)
-          return { exited: Promise.resolve(0) }
+          return { pid: 4242, exited: Promise.resolve(0) }
         },
       },
     })
@@ -620,5 +626,227 @@ describe('the flags of the per-tool settings', () => {
       which: () => '/usr/bin/bun',
     })
     expect(started[0]?.slice(-3)).toEqual(['--no-color', '--no-log', '--capture-cmd=shot {out}'])
+  })
+})
+
+describe('the running tools of the launcher', () => {
+  /** A machine whose child stays, until its exit code is resolved. */
+  function stayingHost(): { host: Partial<LauncherHost>; exit: (code: number) => Promise<void> } {
+    const { promise, resolve } = Promise.withResolvers<number>()
+    return {
+      host: {
+        which: (program: string) => `/usr/bin/${program}`,
+        spawn: (): Child => ({ pid: 4242, exited: promise }),
+        run: (): string => '',
+        kill: () => {},
+      },
+      exit: async (code: number) => {
+        resolve(code)
+        await promise
+      },
+    }
+  }
+
+  test('a window that was opened is listed with its pid and when it was opened', () => {
+    const { host } = stayingHost()
+    const launcher = new Launcher({ env: { TLI_TERMINAL: 'ghostty' }, host })
+    const before = Date.now()
+    launcher.open({ ...REQUEST, key: 'vorax' })
+    const entries = launcher.list()
+    expect(entries).toHaveLength(1)
+    expect(entries[0]).toMatchObject({
+      id: 'vorax',
+      pid: 4242,
+      via: 'ghostty',
+      running: true,
+      exitCode: null,
+    })
+    expect(entries[0]!.since).toBeGreaterThanOrEqual(before)
+  })
+
+  test('the exit code is recorded and kept after the child has gone', async () => {
+    const { host, exit } = stayingHost()
+    const launcher = new Launcher({ env: { TLI_TERMINAL: 'ghostty' }, host })
+    launcher.open({ ...REQUEST, key: 'vorax' })
+    await exit(3)
+    expect(launcher.list()[0]).toMatchObject({ id: 'vorax', running: false, exitCode: 3 })
+    // and it stays: the entry is kept, not dropped
+    expect(launcher.list()).toHaveLength(1)
+  })
+
+  test('a terminal window cannot be focused, and the launcher says so', () => {
+    const { host } = stayingHost()
+    const launcher = new Launcher({ env: { TLI_TERMINAL: 'ghostty' }, host })
+    launcher.open({ ...REQUEST, key: 'vorax' })
+    const result = launcher.focus('vorax')
+    expect(result.ok).toBe(false)
+    expect(result.reason).toBe('unsupported')
+    expect(result.message).toContain('ghostty')
+  })
+
+  test('the child that was started is asked to stop, and only that one', () => {
+    const killed: [number, string][] = []
+    const { promise } = Promise.withResolvers<number>()
+    const launcher = new Launcher({
+      env: { TLI_TERMINAL: 'ghostty' },
+      host: {
+        which: (program: string) => `/usr/bin/${program}`,
+        spawn: (): Child => ({ pid: 4242, exited: promise }),
+        run: (): string => '',
+        kill: (pid, signal) => {
+          killed.push([pid, signal])
+        },
+      },
+    })
+    launcher.open({ ...REQUEST, key: 'vorax' })
+    const result = launcher.close('vorax')
+    expect(result.ok).toBe(true)
+    expect(result.reason).toBe('closed')
+    expect(killed).toEqual([[4242, 'SIGTERM']])
+  })
+
+  test('a tool that is not running is not focused, closed or killed', () => {
+    const killed: [number, string][] = []
+    const launcher = new Launcher({
+      env: { TLI_TERMINAL: 'ghostty' },
+      host: {
+        which: (program: string) => `/usr/bin/${program}`,
+        run: (): string => '',
+        kill: (pid, signal) => {
+          killed.push([pid, signal])
+        },
+      },
+    })
+    expect(launcher.focus('vorax').reason).toBe('not-running')
+    expect(launcher.close('vorax').reason).toBe('not-running')
+    expect(killed).toEqual([])
+  })
+
+  test('a child whose pid is not known is not killed', () => {
+    const killed: [number, string][] = []
+    const { promise } = Promise.withResolvers<number>()
+    const launcher = new Launcher({
+      env: { TLI_TERMINAL: 'ghostty' },
+      host: {
+        which: (program: string) => `/usr/bin/${program}`,
+        spawn: (): Child => ({ pid: null, exited: promise }),
+        run: (): string => '',
+        kill: (pid, signal) => {
+          killed.push([pid, signal])
+        },
+      },
+    })
+    launcher.open({ ...REQUEST, key: 'vorax' })
+    const result = launcher.close('vorax')
+    expect(result.ok).toBe(false)
+    expect(result.reason).toBe('no-pid')
+    expect(killed).toEqual([])
+  })
+
+  test('a tool that has ended is not closed again', async () => {
+    const { host, exit } = stayingHost()
+    const launcher = new Launcher({ env: { TLI_TERMINAL: 'ghostty' }, host })
+    launcher.open({ ...REQUEST, key: 'vorax' })
+    await exit(0)
+    expect(launcher.close('vorax').reason).toBe('not-running')
+    expect(launcher.focus('vorax').reason).toBe('not-running')
+  })
+})
+
+describe('the running tools of the launcher in tmux', () => {
+  /**
+   * A tmux that made pane %3 with pid 555, and answers what is asked of it.
+   *
+   * `panes` is what `list-panes` says when the launcher asks whether its pane is still there.
+   */
+  function tmuxHost(panes: string[] = ['%3']): { host: Partial<LauncherHost>; run: string[][] } {
+    const seen: string[][] = []
+    return {
+      host: {
+        which: (program: string) => `/usr/bin/${program}`,
+        run: (argv): string => {
+          seen.push(argv)
+          if (argv.includes('list-commands')) return 'split-window [-h] [-e environment]\n'
+          if (argv.includes('#{pane_id} #{pane_pid}')) return '%3 555\n'
+          if (argv.includes('list-panes')) return panes.join('\n')
+          return '%3\n'
+        },
+        kill: () => {},
+      },
+      run: seen,
+    }
+  }
+
+  const IN_TMUX = { TMUX: '/tmp/tmux-1000/default,1,0' }
+
+  test('a pane is listed with the pid tmux named for it', () => {
+    const launcher = new Launcher({ env: IN_TMUX, host: tmuxHost().host })
+    launcher.open({ ...REQUEST, key: 'vorax' })
+    expect(launcher.list()[0]).toMatchObject({
+      id: 'vorax',
+      pid: 555,
+      via: 'tmux',
+      running: true,
+      exitCode: null,
+    })
+  })
+
+  test('a pane is focused by selecting its window and the pane in it', () => {
+    const { host, run } = tmuxHost()
+    const launcher = new Launcher({ env: IN_TMUX, host })
+    launcher.open({ ...REQUEST, key: 'vorax' })
+    const result = launcher.focus('vorax')
+    expect(result.ok).toBe(true)
+    expect(result.reason).toBe('focused')
+    const window = run.find(argv => argv.includes('select-window'))
+    const pane = run.find(argv => argv.includes('select-pane'))
+    expect(window).toContain('-t')
+    expect(window).toContain('%3')
+    expect(pane).toContain('%3')
+    expect(window?.slice(0, 4)).toEqual(['tmux', '-S', '/tmp/tmux-1000/default', 'select-window'])
+  })
+
+  test('the process tmux named for the pane is asked to stop, and only that one', () => {
+    const killed: [number, string][] = []
+    const { host } = tmuxHost()
+    const launcher = new Launcher({ env: IN_TMUX, host: { ...host, kill: (pid, signal) => { killed.push([pid, signal]) } } })
+    launcher.open({ ...REQUEST, key: 'vorax' })
+    const result = launcher.close('vorax')
+    expect(result.ok).toBe(true)
+    expect(killed).toEqual([[555, 'SIGTERM']])
+  })
+
+  test('a pane that has gone keeps its entry, and is not focused or closed again', () => {
+    const killed: [number, string][] = []
+    const { host } = tmuxHost([])
+    const launcher = new Launcher({ env: IN_TMUX, host: { ...host, kill: (pid, signal) => { killed.push([pid, signal]) } } })
+    launcher.open({ ...REQUEST, key: 'vorax' })
+    expect(launcher.list()[0]).toMatchObject({ id: 'vorax', running: false })
+    expect(launcher.focus('vorax').reason).toBe('not-running')
+    expect(launcher.close('vorax').reason).toBe('not-running')
+    expect(killed).toEqual([])
+  })
+
+  test('a pid that no process may be told to stop is not told to stop', () => {
+    const killed: [number, string][] = []
+    const { host } = tmuxHost()
+    const launcher = new Launcher({
+      env: IN_TMUX,
+      host: {
+        ...host,
+        run: (argv): string => {
+          if (argv.includes('#{pane_id} #{pane_pid}')) return '%3 1\n'
+          return host.run!(argv, { cwd: '', env: {} })
+        },
+        kill: (pid, signal) => {
+          killed.push([pid, signal])
+        },
+      },
+    })
+    launcher.open({ ...REQUEST, key: 'vorax' })
+    const result = launcher.close('vorax')
+    expect(result.ok).toBe(false)
+    expect(result.reason).toBe('no-pid')
+    expect(killed).toEqual([])
   })
 })

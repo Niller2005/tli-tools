@@ -132,6 +132,41 @@ export function parsePaneId(output: string): string | null {
   return null
 }
 
+/** The argv that asks tmux for the pid of the process of every pane. */
+export function tmuxPanePidsArgv(socket: TmuxSocket | null): string[] {
+  const server = socket === null ? [] : [socket.flag, socket.name]
+  return ['tmux', ...server, 'list-panes', '-a', '-F', '#{pane_id} #{pane_pid}']
+}
+
+/** The pid of each pane, from what tmux wrote. */
+export function parsePanePids(output: string): Record<string, number> {
+  const pids: Record<string, number> = {}
+  for (const line of output.split('\n')) {
+    const [pane, pid] = line.trim().split(/\s+/)
+    if (pane !== undefined && pane.startsWith('%') && pid !== undefined && /^\d+$/.test(pid)) {
+      pids[pane] = Number(pid)
+    }
+  }
+  return pids
+}
+
+/** The argv that makes a pane the active pane of its window. */
+export function tmuxSelectPaneArgv(socket: TmuxSocket | null, pane: string): string[] {
+  const server = socket === null ? [] : [socket.flag, socket.name]
+  return ['tmux', ...server, 'select-pane', '-t', pane]
+}
+
+/**
+ * The argv that makes the window a pane is in the one the player sees.
+ *
+ * `select-pane` alone does not bring a pane of another window to the front: the window has to be
+ * selected too. tmux takes a pane as the target and selects the window it is in.
+ */
+export function tmuxSelectWindowArgv(socket: TmuxSocket | null, pane: string): string[] {
+  const server = socket === null ? [] : [socket.flag, socket.name]
+  return ['tmux', ...server, 'select-window', '-t', pane]
+}
+
 /** Whether tmux takes the environment with `-e`. */
 export function tmuxTakesEnv(commands: string): boolean {
   for (const line of commands.split('\n')) {

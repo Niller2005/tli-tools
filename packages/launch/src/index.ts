@@ -7,11 +7,16 @@ export {
   Launcher,
   defaultHost,
   type Child,
+  type CloseReason,
+  type CloseResult,
+  type FocusReason,
+  type FocusResult,
   type LauncherHost,
   type LauncherOptions,
   type OpenReason,
   type OpenRequest,
   type OpenResult,
+  type RunningEntry,
 } from './launcher'
 
 export {
@@ -33,11 +38,15 @@ export {
 export {
   TMUX_MODES,
   parsePaneId,
+  parsePanePids,
   shellCommand,
   shellQuote,
   tmuxArgv,
   tmuxMode,
+  tmuxPanePidsArgv,
   tmuxPanesArgv,
+  tmuxSelectPaneArgv,
+  tmuxSelectWindowArgv,
   tmuxSocket,
   tmuxTakesEnv,
   tmuxWindowName,
