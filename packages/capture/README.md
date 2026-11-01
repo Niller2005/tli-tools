@@ -43,11 +43,26 @@ export function createCapture(o: {
   niriScreenshot?: boolean
 }): Capture
 export const STEAM_APP: string
+
+/** What a capture would do right now, without taking any picture. */
+export function captureStatus(o?: {
+  command?: string
+  niriScreenshot?: boolean
+  env?: Record<string, string | undefined>
+}): CaptureStatus
 ```
 
 The picture is the shared image type of `@tli/png`: RGBA, four bytes a pixel.
 For a reader that keeps its pixels in a plain byte array, `asBytes` of
 `@tli/png` gives the same memory as one, without a copy.
+
+`captureStatus` answers the questions a status pane asks, and it does so the
+way the planner decides in `createCapture` — but nothing is run: no `niri msg`,
+no screenshot, no notification. It says whether `grim`, `niri` and `tesseract`
+are on the `PATH`, whether `TLI_NO_CAPTURE` has turned every picture off, and
+which way the next picture would be taken: `command` when one is given, else
+`grim` when it is on the `PATH`, else Niri's announced window screenshot when
+niri is there and the opt-in is given, else `none`.
 
 ## Where the picture comes from
 
