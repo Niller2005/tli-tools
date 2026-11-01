@@ -36,6 +36,9 @@ function trackerWithItems(): Tracker {
     ]),
     cost: new Map(),
     fe: 0,
+    xp: 0,
+    affixes: [],
+    session: 0,
   })
   tracker.runs.push({
     id: 2,
@@ -48,6 +51,9 @@ function trackerWithItems(): Tracker {
     loot: new Map([[200, 3]]),
     cost: new Map(),
     fe: 0,
+    xp: 0,
+    affixes: [],
+    session: 0,
   })
   return tracker
 }
@@ -69,6 +75,9 @@ function trackerWithPrison(): Tracker {
     ]),
     cost: new Map(),
     fe: 0,
+    xp: 0,
+    affixes: [],
+    session: 0,
   })
   return tracker
 }
@@ -757,5 +766,146 @@ describe('the words of a filter', () => {
     expect(matchesFilter('Ember Core', 100, 'silver')).toBe(false)
     expect(matchesFilter('Ember Core', 100, '10')).toBe(false)
     expect(matchesFilter('Ember Core', 100, '')).toBe(true)
+  })
+})
+
+/** Three finished maps that had the same modifier, worth different amounts, so the page of them has something to say. */
+function trackerWithModifiers(): Tracker {
+  const tracker = trackerWithItems()
+  tracker.affixNames.set(77, '+10% additional Drop Quantity')
+  for (const run of tracker.runs) run.affixes.push(77)
+  tracker.runs.push({
+    id: 9,
+    kind: 'map',
+    zone: 'test',
+    name: 'Third Map',
+    levelId: 1,
+    start: NOW - 30_000,
+    end: NOW - 10_000,
+    loot: new Map([[300, 4]]),
+    cost: new Map(),
+    fe: 0,
+    xp: 0,
+    affixes: [77, 12345],
+    session: 0,
+  })
+  return tracker
+}
+
+describe('the pages', () => {
+  test('f, h and g open the page of the modifiers, of the exchange and of the sessions, and the same key or esc closes it', async () => {
+    const { test, app } = await setup(120, 30, trackerWithModifiers())
+    test.mockInput.pressKey('f')
+    expect(app.state.page).toBe('affixes')
+    await test.renderOnce()
+    expect(test.captureCharFrame()).toContain('Which map modifiers paid')
+    test.mockInput.pressKey('f')
+    expect(app.state.page).toBeNull()
+
+    test.mockInput.pressKey('h')
+    expect(app.state.page).toBe('exchange')
+    // another page's key switches to it
+    test.mockInput.pressKey('g')
+    expect(app.state.page).toBe('sessions')
+    test.mockInput.pressEscape()
+    expect(app.state.page).toBeNull()
+    test.renderer.destroy()
+  })
+
+  test('the keys of the panels do nothing while a page covers them', async () => {
+    const { test, app, tracker } = await setup(120, 30)
+    test.mockInput.pressKey('g')
+    test.mockInput.pressKey('t')
+    expect(tracker.taxed).toBe(true)
+    test.mockInput.pressKey('j')
+    expect(app.state.runsAt).toBe(0)
+    test.renderer.destroy()
+  })
+
+  test('a modifier on three maps is compared with the average map, one the game does not say in words is left out', async () => {
+    const { test } = await setup(140, 30, trackerWithModifiers())
+    test.mockInput.pressKey('f')
+    await test.renderOnce()
+    const frame = test.captureCharFrame()
+    expect(frame).toContain('+10% additional Drop Quantity')
+    expect(frame).toContain('3 maps')
+    expect(frame).not.toContain('12345')
+    test.renderer.destroy()
+  })
+
+  test('the exchange page says what changed in the bag, newest first, with the FE paid and collected', async () => {
+    const tracker = trackerWithItems()
+    tracker.trades.push(
+      { id: 1, at: NOW - 5000, kind: 'buy', items: [[100300, -206]] },
+      { id: 2, at: NOW - 4000, kind: 'receive', items: [[100, 3], [100300, 40]] },
+      { id: 3, at: NOW - 3000, kind: 'list', items: [[300, -1]] },
+    )
+    const { test } = await setup(140, 30, tracker)
+    test.mockInput.pressKey('h')
+    await test.renderOnce()
+    const frame = test.captureCharFrame()
+    expect(frame).toContain('FE paid 206')
+    expect(frame).toContain('FE collected 40')
+    expect(frame).toContain('1 × Ancient Relic')
+    expect(frame).toContain('3 × Ember Core')
+    expect(frame.indexOf('1 × Ancient Relic')).toBeLessThan(frame.indexOf('3 × Ember Core'))
+    test.renderer.destroy()
+  })
+})
+
+describe('the sessions', () => {
+  test('n asks for a name and starts the session with it, N ends it, and the page adds the runs up', async () => {
+    const { test, app, tracker } = await setup(140, 30)
+    test.mockInput.pressKey('n')
+    expect(app.state.naming).toBe(true)
+    await test.renderOnce()
+    expect(test.captureCharFrame()).toContain('session name')
+    for (let i = 0; i < 12; i += 1) test.mockInput.pressBackspace()
+    await test.mockInput.typeText('Fire farm')
+    test.mockInput.pressEnter()
+    expect(app.state.naming).toBe(false)
+    expect(tracker.session?.name).toBe('Fire farm')
+    await test.renderOnce()
+    expect(test.captureCharFrame()).toContain('[session Fire farm]')
+
+    test.mockInput.pressKey('g')
+    await test.renderOnce()
+    const frame = test.captureCharFrame()
+    expect(frame).toContain('Fire farm')
+    expect(frame).toContain('going on')
+    test.mockInput.pressEscape()
+
+    test.mockInput.pressKey('N')
+    expect(tracker.session).toBeNull()
+    expect(app.state.message).toContain('Fire farm')
+    test.renderer.destroy()
+  })
+
+  test('esc leaves the name box without starting anything', async () => {
+    const { test, app, tracker } = await setup(120, 24)
+    test.mockInput.pressKey('n')
+    await test.mockInput.typeText('x')
+    test.mockInput.pressEscape()
+    expect(app.state.naming).toBe(false)
+    expect(tracker.sessions).toHaveLength(0)
+    test.renderer.destroy()
+  })
+})
+
+describe('the experience in the header', () => {
+  test('the level and the experience per hour are there once the log has said the level, and not before', async () => {
+    const empty = await setup(160, 24, new Tracker({ names: names() }))
+    expect(empty.test.captureCharFrame()).not.toContain('XP/h')
+    empty.test.renderer.destroy()
+
+    const tracker = trackerWithItems()
+    tracker.feed([
+      '[2026.10.31-02.21.44:746][899]TLLua: Display: [Game] ExpMgr@UpdateExp Percent:6257480 94',
+    ])
+    const { test } = await setup(160, 24, tracker)
+    const frame = test.captureCharFrame()
+    expect(frame).toContain('level 94')
+    expect(frame).toContain('XP/h')
+    test.renderer.destroy()
   })
 })

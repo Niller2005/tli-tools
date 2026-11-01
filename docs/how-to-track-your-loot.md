@@ -59,6 +59,9 @@ has started: the tracker then knows exactly what you have, and what it is worth.
 | runs | how many runs there have been |
 | time | how long you have been in maps |
 | avg | how long a run takes, on average |
+| level | your level and how far through it you are; it shows once the log has said it |
+| XP/h | the experience you gained in an hour of maps |
+| next level in | how long that takes at this pace |
 
 Everything is in FE, the game's currency. The exchange prices things in FE, so a loot's value is what it would
 fetch when you sell it. Selling costs 12.5% of everything but FE, so `t` turns that tax on and off.
@@ -76,6 +79,50 @@ any other map. Looking at the board without a challenge is not a run, so it does
 When a legendary drops, the log only says the base of the gear, so the tracker shows the base at first. When you
 put the gear on, the log says which legendary it is (`AttributeMgr:SetPlayerEquipment(BaseId=3010, GoldId=112151,
 4)`), and the tracker then shows the piece by the name of the legendary and values it as the legendary.
+
+## Experience
+
+The game says where the experience bar is every time it moves (`ExpMgr@UpdateExp Percent:6257480 94`: the experience
+in the level, and the level). The tracker counts what is gained in a map as that run's experience, and the header
+shows the level, how far through it you are, the experience you gain in an hour of maps, and how long the next level
+takes at that pace. The detail of a run (`enter`) shows the experience it gave.
+
+What a level takes is the game's own table, in `packages/tracker/data/levels.json`, so a level-up in the middle of a
+map is counted whole. The first move after the tracker starts or after you log in only says where the bar is: nothing
+is counted for it, and dying (the bar going back) is not a gain.
+
+## Which map modifiers paid
+
+When a map opens, the game puts its modifiers on one by one and lists the ones you can read. The tracker keeps the
+modifiers of each run (the detail of a run lists the ones the game says in words), and `f` opens a page that
+compares them: for each modifier that was on at least three finished maps, what those maps were worth on average
+against all the maps. It is a comparison, not a cause: a modifier that is on the better maps may be there because
+those maps were better prepared. A modifier the game never says in words is not listed.
+
+## The exchange
+
+`h` opens what you did at the exchange: what you listed, what you paid, what you collected and what you took back, with
+the items and the FE that changed in your bag. The log says what changed in the bag, not the price of a listing, so
+a listing shows the item that left and a purchase shows the FE that left (the item arrives when you collect it).
+`FE paid` and `FE collected` at the top add the FE up.
+
+## Sessions
+
+A session is a stretch of play you name: press `n`, type a name and press `enter`. The runs that begin from then on
+are the session's, until you press `N` (or start another one). `g` opens the sessions page with the runs, the time,
+the FE, the FE/h, the value of the loot and the XP/h of each one, so a farm can be compared with another. The header
+says which session is going on. A run that was already going on when the session began stays outside it.
+
+## More than one character
+
+The log says which character logged in (`PlayerIdTrace@LoginDataMgr:SetPlayerId`), and the tracker keeps a bag, runs,
+experience, exchange entries and sessions for each. When another character logs in, the one that was playing leaves:
+its run ends where the log says, and everything stays as it was until that character logs in again. The prices are
+the same for everyone. The header shows the last digits of the character that is playing, and how many characters
+the tracker knows when there are more than one.
+
+What was saved before the log said who was playing belongs to the first character that logs in. The log does not say
+which league or season a character is in, so a character is told apart by its id alone.
 
 ## The prices
 
@@ -173,10 +220,10 @@ visit to the Tartarus prison.
 
 ## Start again later
 
-The tracker keeps the runs, the bag, the prices and its place in the log in a SQLite database,
-`~/.local/share/tli-tracker/tracker.db`, so when it starts again it carries on where it left off.
-`--reset` makes it forget and read the log from its beginning. A log that was truncated (the game
-was restarted) or rotated is read from its beginning again.
+The tracker keeps the runs, the bag, the prices, what the exchange did, the sessions and its place in the log in a
+SQLite database, `~/.local/share/tli-tracker/tracker.db`, so when it starts again it carries on where it left off.
+What a character owns is kept under the character's id. `--reset` makes it forget and read the log from its
+beginning. A log that was truncated (the game was restarted) or rotated is read from its beginning again.
 
 The database can be looked at while the tracker runs (it is in WAL mode, so a look never gets in
 the tracker's way):
