@@ -167,7 +167,15 @@ def run(keys, log=None, wait=None, no_color=False):
     pid, fd = pty.fork()
     if pid == 0:
         os.chdir(APP)
-        env = dict(os.environ, TERM="xterm-256color", COLUMNS=str(COLS), LINES=str(ROWS))
+        # --reset forgets the saved state and the tracker writes its own on the way out: that must not be the
+        # player's database, so the data directory is a temporary one
+        env = dict(
+            os.environ,
+            TERM="xterm-256color",
+            COLUMNS=str(COLS),
+            LINES=str(ROWS),
+            XDG_DATA_HOME=tempfile.mkdtemp(prefix="tli-tracker-data-"),
+        )
         env.pop("NO_COLOR", None)
         # The test runs where the player is: no picture of the game, no niri, no grim.
         env["TLI_NO_CAPTURE"] = "1"
