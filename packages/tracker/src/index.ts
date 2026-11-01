@@ -13,8 +13,28 @@
 // runs, `prices` keeps what the exchange said, `baseline` brings the community prices, `valuation`
 // turns loot into FE, `engine` ties them together and `store` saves the result.
 
-export { Tracker, LOOT_PROTOS, COST_PROTOS, MONEY_PROTOS, MAX_RUNS, STATE_VERSION, migrateState } from './engine'
-export type { Stats, TrackerOptions, SavedRun, SavedState } from './engine'
+export {
+  Tracker,
+  LOOT_PROTOS,
+  COST_PROTOS,
+  MONEY_PROTOS,
+  MAX_RUNS,
+  STATE_VERSION,
+  migrateState,
+} from './engine'
+export type {
+  AffixRow,
+  RunTotals,
+  SavedExchange,
+  SavedRun,
+  SavedSession,
+  SavedState,
+  Stats,
+  TrackerOptions,
+} from './engine'
+export { UNKNOWN_CHARACTER, MAX_TRADES, EXCHANGE_PROTOS, type ExchangeEntry, type ExchangeKind, type Session } from './character'
+export { XpMeter, expToNext, LEVEL_EXP, type XpState } from './xp'
+export { AffixDumpReader, cleanDescription, type AffixText } from './affixes'
 export { parseLine, logTime, zoneOf, type Fact } from './parse'
 export { Inventory, BAG_PAGES, type Delta } from './inventory'
 export {

@@ -34,6 +34,14 @@ game, in two parts:
 
 Both are named in the table itself: every entry says which sources it came from.
 
+## What a level takes
+
+The loot tracker shows the level, how far through it you are and the time to the next one. For that it ships the
+game's own table of the experience each level takes, in
+[`packages/tracker/data/levels.json`](../packages/tracker/data/levels.json), a hundred numbers. The table is the
+game's `Experience` data as [Oracle](https://github.com/GeorgeTG/Oracle) (MIT) published it in
+`server/Experience.json`; the file names its source. The tracker reads only the experience of each level.
+
 ## The game itself
 
 *Torchlight: Infinite* is by XD. This repo is unofficial, and is not affiliated with or endorsed by the developers

@@ -18,9 +18,9 @@ console.log(tracker.stats())
 
 | File | What it does |
 |------|--------------|
-| `src/parse.ts` | reads the log's lines: the level, the map's path, the bag, the pages the game opens, the blocks the game writes its item changes in |
+| `src/parse.ts` | reads the log's lines: the level, the map's path, the bag, the pages the game opens, the blocks the game writes its item changes in, the experience bar, the modifiers of a map and the character that logged in |
 | `src/inventory.ts` | the bag: which items are in which slot, and how many of each the player has |
-| `src/runs.ts` | the runs: the time in each map, what was picked up in it, what it cost, and the visits to the Tartarus prison |
+| `src/runs.ts` | the runs: the time in each map, what was picked up in it, what it cost, the experience and the modifiers, and the visits to the Tartarus prison |
 | `src/prices.ts` | the prices the exchange told it about, and the ones the player set |
 | `src/baseline.ts` | the community prices of TITrack, and the file they are kept in |
 | `src/exchange.ts` | the exchange's blocks of lines: what a search found |
@@ -28,6 +28,9 @@ console.log(tracker.stats())
 | `src/items.ts` | the names of the items |
 | `src/zones.ts` | the English names of the maps |
 | `src/engine.ts` | the tracker: it ties the rest together |
+| `src/character.ts` | what is kept for one character (bag, runs, experience, exchange entries, sessions) and the exchange's protocol blocks |
+| `src/xp.ts` | the experience bar: the gain each move makes, and the table of what a level takes (`data/levels.json`) |
+| `src/affixes.ts` | the dump of the modifiers of a map: the words of each |
 | `src/log.ts` | reading the log file in pieces, and where it was left |
 | `src/store.ts` | saving and loading the tracker, in a SQLite database (`bun:sqlite`) |
 | `src/status.ts` | the status line and the session summary the dashboard draws |
@@ -74,10 +77,14 @@ failure: the tracker carries on with what it has.
 
 The tracker keeps what it knows in a SQLite database, `~/.local/share/tli-tracker/tracker.db`
 (`$XDG_DATA_HOME` moves it), written with `bun:sqlite`. The tables are the parts of the state:
-`runs` with `run_loot` and `run_cost`, `slots` and `instances` for the bag, `prices` and
-`price_overrides`, `gear`, `settings`, and `log_position` for where the tracker was in the log.
-The database is in WAL mode, so the dashboard can read it while the tracker writes it. Its schema
-is versioned (the sqlite `user_version`) and brought up to date when it is opened.
+`runs` with `run_loot`, `run_cost` and `run_affix`, `slots` and `instances` for the bag, `trades` with
+`trade_items` for what the player did at the exchange, `sessions`, `characters` (the next run number and where the
+experience bar was), `prices` and `price_overrides`, `gear`, `affixes` (what the modifiers of maps say), `settings`,
+`meta` (which character was playing last) and `log_position` for where the tracker was in the log. What a character
+owns is keyed by the character's id; the prices, the gear and the names of the modifiers are the same for everyone.
+The database is in WAL mode, so the dashboard can read it while the tracker writes it. Its schema is versioned (the
+sqlite `user_version`) and brought up to date when it is opened; the database of the first version is carried over
+as the character the log had not named yet, which takes the id of the first character that logs in.
 
 ```ts
 import { loadTracker, saveTracker } from '@tli/tracker'
@@ -87,6 +94,9 @@ tracker.restore(saved.tracker)
 // … the log goes on …
 await saveTracker({ version: 1, log: { file: logFile, offset: reader.position }, tracker: tracker.snapshot() })
 ```
+
+`loadTracker()` gives back the state of the character that played last, with the others in its `parked`; the queries
+below are about that character too. A tracker restored from it carries on with every character.
 
 A save writes only what changed since the last one, in one transaction. The state the tracker kept
 before the database — a `state.json` in the same folder, of the versions the old loader read — is

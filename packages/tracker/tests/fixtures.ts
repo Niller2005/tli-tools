@@ -253,3 +253,105 @@ export const BAG_DUMP_PLAIN = [
   '|   |    | |        | |    +RareValue [1]',
   '|   |    | |        | |    +Id [382239_adbf38a9-ce75-11f1-bfac-000000000020]',
 ]
+
+/** The experience bar moving inside a level. */
+export const EXP_MOVES = [
+  '[2026.10.31-02.21.44:746][899]TLLua: Display: [Game] ExpMgr@UpdateExp Percent:6257480 94',
+  '[2026.10.31-02.21.46:547][260]TLLua: Display: [Game] ExpMgr@UpdateExp Percent:6308774 94',
+  '[2026.10.31-02.21.48:347][601]TLLua: Display: [Game] ExpMgr@UpdateExp Percent:6432736 94',
+]
+
+/** The experience bar crossing from level 94 into level 95: the number starts again. */
+export const EXP_LEVEL_UP = [
+  '[2026.10.31-07.57.43:195][588]TLLua: Display: [Game] ExpMgr@UpdateExp Percent:175072587 94',
+  '[2026.10.31-07.57.44:997][ 15]TLLua: Display: [Game] ExpMgr@UpdateExp Percent:46928 95',
+]
+
+/** What the game says when a map opens: the modifiers are put on one by one (0 is turned away), then the text of the readable ones. */
+export const MAP_MODIFIERS = [
+  '[2026.10.31-02.21.38:964][701]TLGame: Display: [Game] UCLevelSingleton::AddMapModifier(7000000) success 1 ',
+  '[2026.10.31-02.21.38:964][701]TLGame: Display: [Game] UCLevelSingleton::AddMapModifier(5112006) success 2 ',
+  '[2026.10.31-02.21.38:965][701]TLGame: Display: [Game] UCLevelSingleton::AddMapModifier(101) success 7 ',
+  '[2026.10.31-02.21.38:965][701]TLGame: Display: [Game] UCLevelSingleton::AddMapModifier(2060000) success 0 ',
+  '[2026.10.31-02.21.38:965][701]TLGame: Display: [Game] UCLevelSingleton::AddMapModifier(2060000) success 0 ',
+  '[2026.10.31-02.21.38:965][701]TLGame: Display: [Game] UCLevelSingleton::AddMapModifier(200006) success 5 ',
+  '[2026.10.31-02.21.38:965][701]TLGame: Display: [Game] UCLevelSingleton::AddMapModifier(5112006) success 2 ',
+]
+
+/** The dump of the modifiers a map has, as the game writes it. */
+export const AFFIX_DUMP = [
+  '[2026.10.31-02.21.38:969][701]TLLua: Display: [Game] AffixInfos',
+  '[2026.10.31-02.21.38:970][701]TLLua: Display: [Game] ',
+  '+SuffixInfoList',
+  '+PreNum [0]',
+  '+BAffixInfoList+1+Description [<p>-30</p>% additional Physical Damage for you]',
+  '|              | +DangerNumbers',
+  '|              | +Tier [0]',
+  '|              | +Id [5112006]',
+  '|              | +FId [1141]',
+  '|              +2+Description [affix_class|description|1001200000]',
+  '|              | +DangerNumbers',
+  '|              | +Tier [0]',
+  '|              | +Id [200006]',
+  '|              | +FId [1141]',
+  '|              +3+Description [<p>+10</p>% additional <e id=507>Drop Quantity</e>]',
+  '|              | +DangerNumbers',
+  '|              | +Tier [0]',
+  '|              | +Id [101]',
+  '|              | +FId [1141]',
+  '|              +4+Description [map_modifier|description|2340018]',
+  '|              | +DangerNumbers',
+  '|              | +Tier [0]',
+  '|              | +Id [2340018]',
+  '|              | +FId [1141]',
+  '[2026.10.31-02.21.38:969][701]TLLua: Display: [Game] BattleMgr:CheckJoinFailed()',
+  '+Description [text that follows the dump and is not a modifier]',
+  '| +Id [999]',
+]
+
+/** The player logs in: the game says which character it is. */
+export const LOGIN = [
+  '[2026.10.31-01.46.41:626][866]TLShipping: Display: [Game] PlayerIdTrace@LoginDataMgr:SetPlayerId old=980032478075064320 new=980032478075064320',
+]
+
+/** Another character logs in. */
+export const LOGIN_OTHER = [
+  '[2026.10.31-09.00.00:000][866]TLShipping: Display: [Game] PlayerIdTrace@LoginDataMgr:SetPlayerId old=980032478075064320 new=980032478075064321',
+]
+
+/** A small id the game uses for something else in a fight: not a character. */
+export const SMALL_PLAYER_ID = [
+  '[2026.10.31-03.31.05:233][194]TLLua: Display: [Game] AttrUtils:SetPlayerId = 1',
+]
+
+/** Listing an item on the exchange: it leaves the bag. */
+export const XCHG_LIST = [
+  '[2026.10.31-02.35.05:252][702]TLLua: Display: [Game] ItemChange@ ProtoName=XchgForSale start',
+  '[2026.10.31-02.35.05:252][702]TLLua: Display: [Game] ItemChange@ Delete Id=3010_68f93dc1-d4d3-11f1-a1ef-000000000066 in PageId=100 SlotId=6',
+  '[2026.10.31-02.35.05:252][702]TLLua: Display: [Game] BagMgr@:RemoveBagItem PageId = 100 SlotId = 6',
+  '[2026.10.31-02.35.05:252][702]TLLua: Display: [Game] ItemChange@ ProtoName=XchgForSale end',
+]
+
+/** Buying: the FE goes down. */
+export const XCHG_BUY = [
+  '[2026.10.31-03.34.32:605][666]TLLua: Display: [Game] ItemChange@ ProtoName=XchgBuy start',
+  '[2026.10.31-03.34.32:605][666]TLLua: Display: [Game] ItemChange@ Update Id=100300_b33727d9-ca7e-11f1-b19f-00000000007a BagNum=294 in PageId=102 SlotId=0',
+  '[2026.10.31-03.34.32:605][666]TLLua: Display: [Game] BagMgr@:Modfy BagItem PageId = 102 SlotId = 0 ConfigBaseId = 100300 Num = 294',
+  '[2026.10.31-03.34.32:605][666]TLLua: Display: [Game] ItemChange@ ProtoName=XchgBuy end',
+]
+
+/** Collecting what was bought: the item arrives. */
+export const XCHG_RECEIVE = [
+  '[2026.10.31-03.34.37:533][838]TLLua: Display: [Game] ItemChange@ ProtoName=XchgReceive start',
+  '[2026.10.31-03.34.37:533][838]TLLua: Display: [Game] ItemChange@ Add Id=4520_9db6087b-cf4d-11f1-8f75-000000000051 BagNum=1 in PageId=100 SlotId=5',
+  '[2026.10.31-03.34.37:533][838]TLLua: Display: [Game] BagMgr@:Modfy BagItem PageId = 100 SlotId = 5 ConfigBaseId = 4520 Num = 1',
+  '[2026.10.31-03.34.37:533][838]TLLua: Display: [Game] ItemChange@ ProtoName=XchgReceive end',
+]
+
+/** Taking a listing back: the item returns to the bag. */
+export const XCHG_RECALL = [
+  '[2026.10.31-03.27.28:084][ 13]TLLua: Display: [Game] ItemChange@ ProtoName=XchgRecall start',
+  '[2026.10.31-03.27.28:084][ 13]TLLua: Display: [Game] ItemChange@ Add Id=4533_dcdff642-ca92-11f1-b19f-00000000007a BagNum=1 in PageId=100 SlotId=12',
+  '[2026.10.31-03.27.28:084][ 13]TLLua: Display: [Game] BagMgr@:Modfy BagItem PageId = 100 SlotId = 12 ConfigBaseId = 4533 Num = 1',
+  '[2026.10.31-03.27.28:084][ 13]TLLua: Display: [Game] ItemChange@ ProtoName=XchgRecall end',
+]
