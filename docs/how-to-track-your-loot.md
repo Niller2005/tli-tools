@@ -166,14 +166,29 @@ home folder. To write one without the screen:
 bun run tracker:report --out=loot.csv
 ```
 
-Every line of the report says what kind of run it is about: `map` for a trip into a map, `prison` for a visit
-to the Tartarus prison.
+The report starts from what the tracker saved and reads the log on from where the tracker left it,
+so it says the same as the screen; `--full` reads the whole log from its beginning instead. Every
+line of the report says what kind of run it is about: `map` for a trip into a map, `prison` for a
+visit to the Tartarus prison.
 
 ## Start again later
 
-The tracker keeps the runs, the bag, the prices and its place in the log in `~/.local/share/tli-tracker/state.json`,
-so when it starts again it carries on where it left off. `--reset` makes it forget and read the log from its
-beginning. A log that was truncated (the game was restarted) or rotated is read from its beginning again.
+The tracker keeps the runs, the bag, the prices and its place in the log in a SQLite database,
+`~/.local/share/tli-tracker/tracker.db`, so when it starts again it carries on where it left off.
+`--reset` makes it forget and read the log from its beginning. A log that was truncated (the game
+was restarted) or rotated is read from its beginning again.
+
+The database can be looked at while the tracker runs (it is in WAL mode, so a look never gets in
+the tracker's way):
+
+```
+sqlite3 ~/.local/share/tli-tracker/tracker.db 'select kind, count(*) from runs group by kind'
+sqlite3 ~/.local/share/tli-tracker/tracker.db 'select name, fe from runs order by start_ms desc limit 5'
+```
+
+The state the tracker kept as `state.json` is brought in by itself the first time it runs, and the
+old file is renamed to `state.json.imported` and kept. A database the tracker cannot use is moved
+aside as `tracker.db.corrupt` and kept as well.
 
 ## Name the items yourself
 

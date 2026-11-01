@@ -3,6 +3,7 @@ import { chmodSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import type { RunningEntry } from '@tli/launch'
+import { saveTracker } from '@tli/tracker'
 import { readStatus } from '../src/status'
 
 const NOW = Date.parse('2026-11-01T12:00:00')
@@ -12,38 +13,41 @@ function work(): string {
   return mkdtempSync(join(tmpdir(), 'tli-dashboard-status-'))
 }
 
-/** A tracker state with one run of 120 FE, done an hour ago. */
-function trackerState(now: number): string {
-  return `${JSON.stringify({
-    version: 1,
-    log: { file: '/game/UE_game.log', offset: 0 },
-    tracker: {
-      version: 2,
-      runs: [
-        {
-          id: 1,
-          kind: 'map',
-          zone: 'The Frozen Fjord',
-          name: 'The Frozen Fjord',
-          levelId: 1,
-          start: now - 7200_000,
-          end: now - 3600_000,
-          loot: [],
-          cost: [],
-          fe: 120,
-        },
-      ],
-      current: null,
-      slots: [],
-      instances: [],
-      prices: [],
-      overrides: [],
-      gear: [],
-      nextRunId: 2,
-      taxed: true,
-      mapCosts: true,
+/** A tracker database with one run of 120 FE, done an hour ago. */
+async function writeTrackerState(path: string, now: number): Promise<void> {
+  await saveTracker(
+    {
+      version: 1,
+      log: { file: '/game/UE_game.log', offset: 0 },
+      tracker: {
+        version: 2,
+        runs: [
+          {
+            id: 1,
+            kind: 'map',
+            zone: 'The Frozen Fjord',
+            name: 'The Frozen Fjord',
+            levelId: 1,
+            start: now - 7200_000,
+            end: now - 3600_000,
+            loot: [],
+            cost: [],
+            fe: 120,
+          },
+        ],
+        current: null,
+        slots: [],
+        instances: [],
+        prices: [],
+        overrides: [],
+        gear: [],
+        nextRunId: 2,
+        taxed: true,
+        mapCosts: true,
+      },
     },
-  })}\n`
+    path,
+  )
 }
 
 /** An Arcana state with one visit to the Tarot Path, still going on. */
@@ -82,11 +86,11 @@ const launcher = { list: (): RunningEntry[] => RUNNING }
 describe('reading the status', () => {
   test('the saved states, the log and the prices become the panels', async () => {
     const dir = work()
-    const trackerFile = join(dir, 'tracker.json')
+    const trackerDb = join(dir, 'tracker.db')
     const arcanaFile = join(dir, 'arcana.json')
     const baselineFile = join(dir, 'baseline.json')
     const log = join(dir, 'UE_game.log')
-    writeFileSync(trackerFile, trackerState(NOW))
+    await writeTrackerState(trackerDb, NOW)
     writeFileSync(arcanaFile, arcanaState(NOW))
     writeFileSync(baselineFile, `${JSON.stringify({ fetchedAt: NOW - 60_000, source: 'test', prices: [[1, 2]] })}\n`)
     writeFileSync(log, '[2026.11.01-11.59.00:000][1]TLLua: Display: [Game] something\n')
@@ -97,7 +101,7 @@ describe('reading the status', () => {
         launcher,
         log,
         itemAge: 5000,
-        paths: { tracker: trackerFile, arcana: arcanaFile, baseline: baselineFile },
+        paths: { tracker: trackerDb, arcana: arcanaFile, baseline: baselineFile },
       },
       NOW,
     )
@@ -150,7 +154,7 @@ describe('reading the status', () => {
         launcher: { list: () => [] },
         log: join(dir, 'nowhere.log'),
         paths: {
-          tracker: join(dir, 'no-tracker.json'),
+          tracker: join(dir, 'no-tracker.db'),
           arcana: join(dir, 'no-arcana.json'),
           baseline: join(dir, 'no-baseline.json'),
         },

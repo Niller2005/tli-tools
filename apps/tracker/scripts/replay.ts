@@ -1,15 +1,16 @@
 // Replays a log file through the tracker and prints what came out.
 //
-//   bun scripts/replay.ts [--log=<UE_game.log>] [--runs] [--top=N]
+//   bun scripts/replay.ts [--log=<UE_game.log>] [--runs] [--top=N] [--db=<tracker.db>]
 //   bun scripts/replay.ts --render=160x45 [--out=screen.ansi]
 //   bun scripts/replay.ts --html=160x45 [--out=screen.html]
 //
 // It is how the tracker is checked against a real log: how many runs were found, what was picked
 // up, how long it took and how much memory it used. The `--render` and `--html` flags draw the
-// screen the tracker draws, with OpenTUI's test renderer, and write it out.
-
+// screen the tracker draws, with OpenTUI's test renderer, and write it out. `--db` writes what the
+// replay worked out into a tracker database — the file the tracker itself keeps — and reads it
+// back to say the runs and the FE came out of it the same.
+import { ItemNames, LogReader, Tracker, loadTracker, saveTracker } from '@tli/tracker'
 import { findLog } from '@tli/gamelog'
-import { ItemNames, LogReader, Tracker } from '@tli/tracker'
 import { createTestRenderer } from '@opentui/core/testing'
 import type { CapturedFrame } from '@opentui/core'
 import { TrackerScreen } from '../src/screen'
@@ -190,6 +191,31 @@ console.log(`FE/hour:    ${stats.fePerHour.toFixed(1)}`)
 console.log(`FE/run:     ${stats.fePerRun.toFixed(2)}`)
 console.log(`net worth:  ${stats.netWorth.toFixed(1)} FE`)
 console.log(`prices:     ${tracker.prices.snapshot().learned.length} items`)
+
+/* ---------- the database ---------- */
+
+// with --db, what the replay worked out is written into the database the tracker itself keeps,
+// and read back out of it, to say the runs and the FE survived the round trip
+const dbFile = arg('db')
+if (dbFile !== null) {
+  const saveStarted = performance.now()
+  await saveTracker({ version: 1, log: { file: logFile, offset: reader.position }, tracker: tracker.snapshot() }, dbFile)
+  const savedMs = performance.now() - saveStarted
+  const loadStarted = performance.now()
+  const back = await loadTracker(dbFile)
+  const loadedMs = performance.now() - loadStarted
+  const again = new Tracker({ names })
+  if (back !== null) again.restore(back.tracker)
+  const reread = again.stats()
+  const same = reread.runs === stats.runs && reread.fe === stats.fe
+  console.log('')
+  console.log(`db:         ${dbFile}`)
+  console.log(`db save:    ${savedMs.toFixed(0)} ms`)
+  console.log(`db load:    ${loadedMs.toFixed(0)} ms`)
+  console.log(
+    `db reread:  ${same ? `the same ${reread.runs} runs, ${reread.fe} FE` : `DIFFERENT: ${reread.runs} runs, ${reread.fe} FE (the replay had ${stats.runs}, ${stats.fe})`}`,
+  )
+}
 console.log('')
 console.log('top loot by value:')
 for (const row of best) {

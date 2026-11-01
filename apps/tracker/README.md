@@ -238,13 +238,32 @@ that it leaves the terminal as it was.
 
 | File | What is in it |
 |------|---------------|
-| `~/.local/share/tli-tracker/state.json` | the runs, the bag, the prices and where the tracker was in the log |
+| `~/.local/share/tli-tracker/tracker.db` | the runs, the bag, the prices and where the tracker was in the log, in a SQLite database |
 | `~/.local/share/tli-tracker/baseline.json` | the community prices, and when they were fetched |
 | `~/.config/tli-tracker/items.json` | the names of the items you named yourself |
 
-The tracker saves now and then, and when it is left. When it starts again it carries on where it
-left off in the log. A log that was truncated (the game was restarted) or rotated is read from its
-beginning again.
+The tracker saves now and then, and when it is left; each save writes only what changed, in one
+transaction. When it starts again it carries on where it left off in the log. A log that was
+truncated (the game was restarted) or rotated is read from its beginning again.
+
+The database can be looked at while the tracker runs, with `sqlite3` (it is in WAL mode, so a
+reader never gets in the tracker's way):
+
+```
+sqlite3 ~/.local/share/tli-tracker/tracker.db 'select kind, count(*) from runs group by kind'
+sqlite3 ~/.local/share/tli-tracker/tracker.db 'select name, fe from runs order by start_ms desc limit 5'
+```
+
+The runs are in `runs` (the one going on is the row with `is_current = 1`) with their loot and
+cost in `run_loot` and `run_cost`, the bag in `slots` and `instances`, the prices in `prices` and
+`price_overrides`, the legendaries of the gear bases in `gear`, the switches and the next run's
+number in `settings`, and where the tracker was in the log in `log_position`.
+
+The state the tracker kept before the database — a `state.json` in the same folder — is brought in
+by itself the first time the database is not there, and the old file is renamed to
+`state.json.imported` and kept. A database the tracker cannot use is moved aside as
+`tracker.db.corrupt`, also kept, and a fresh one is written; one from a newer version of the
+tracker is left alone and nothing is written over it.
 
 ## On Linux
 
