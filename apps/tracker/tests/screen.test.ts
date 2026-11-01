@@ -387,6 +387,33 @@ describe('the tracker screen', () => {
     test.renderer.destroy()
   })
 
+  test('the menu opens, picks with enter and runs the key of an entry', async () => {
+    const { test, app, tracker } = await setup(120, 30)
+    test.mockInput.pressKey('m')
+    expect(app.state.menu).toBe(0)
+    await test.renderOnce()
+    const frame = test.captureCharFrame()
+    expect(frame).toContain('Menu')
+    expect(frame).toContain('Clear every price learned')
+
+    const taxed = tracker.taxed
+    test.mockInput.pressKey('t')
+    expect(app.state.menu).toBeNull()
+    expect(tracker.taxed).toBe(!taxed)
+
+    test.mockInput.pressKey('m')
+    for (let i = 0; i < 5; i++) test.mockInput.pressArrow('down')
+    expect(app.state.menu).toBe(5)
+    test.mockInput.pressEnter()
+    expect(app.state.menu).toBeNull()
+    expect(tracker.taxed).toBe(taxed)
+
+    test.mockInput.pressKey('m')
+    test.mockInput.pressEscape()
+    expect(app.state.menu).toBeNull()
+    test.renderer.destroy()
+  })
+
   test('the help covers the panels behind it', async () => {
     const { test } = await setup(120, 24)
     test.mockInput.pressKey('?')

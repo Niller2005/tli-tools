@@ -14,6 +14,33 @@ export type SearchPanel = 'inventory' | 'prices'
 /** The panels, in the order the tab key goes through them. */
 export const PANELS: Panel[] = ['runs', 'inventory', 'prices']
 
+/** One entry of the menu: the key that does it, and what it does. */
+export interface MenuItem {
+  key: string
+  label: string
+  section: string
+}
+
+/** The menu the m key opens; every entry is also a key of its own. */
+export const MENU: MenuItem[] = [
+  { section: 'Prices', key: 'e', label: 'Set the price of the picked item' },
+  { section: 'Prices', key: 'u', label: 'Reset a hand-set price to the learned one' },
+  { section: 'Prices', key: 'd', label: 'Remove the picked item from the prices' },
+  { section: 'Prices', key: 'z', label: 'Clear every price learned from searches' },
+  { section: 'Prices', key: 'b', label: 'Fetch the community prices again' },
+  { section: 'Run', key: 't', label: 'Trade tax on or off' },
+  { section: 'Run', key: 'c', label: 'Map cost counts against the profit or not' },
+  { section: 'Run', key: 'p', label: 'Stop or start the clock' },
+  { section: 'Run', key: 'x', label: 'Write the CSV report' },
+  { section: 'Windows', key: 'a', label: 'Open Arcana in a window' },
+  { section: 'Windows', key: 'v', label: 'Open Vorax in a window' },
+  { section: 'Windows', key: 'w', label: 'Open Warden in a window' },
+  { section: 'List', key: 's', label: 'Change how the list is sorted' },
+  { section: 'List', key: '/', label: 'Search the list' },
+  { section: 'Other', key: '?', label: 'Help' },
+  { section: 'Other', key: 'q', label: 'Quit' },
+]
+
 /** What the screen is showing. */
 export interface ViewState {
   /** the panel the keys move in */
@@ -36,6 +63,8 @@ export interface ViewState {
   searching: SearchPanel | null
   /** the run whose detail is open, or null */
   detail: number | null
+  /** the entry that is picked out in the menu, or null when it is closed */
+  menu: number | null
   /** whether the help is open */
   help: boolean
   /** the price that is being typed in, or null */
@@ -70,6 +99,7 @@ export function freshView(logFile: string, now: number): ViewState {
     searching: null,
     detail: null,
     help: false,
+    menu: null,
     editing: null,
     paused: false,
     message: '',

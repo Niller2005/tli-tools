@@ -60,6 +60,7 @@ The keys:
 | `↑` `↓` (or `k` `j`) | Move in the panel that has the focus |
 | `tab` | The next panel (`shift+tab` the one before) |
 | `enter` | The detail of the run that is picked out |
+| `m` | The menu: every key below in a list by section. Pick with `↑` `↓` and `enter`, or press the entry's key. Choosing "clear learned prices" there is the confirmation. |
 | `esc` | Back, leave the price, or take the filter away |
 | `t` | The trade tax on and off |
 | `c` | The cost of the map counts against the profit, or not |
