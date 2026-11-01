@@ -48,3 +48,6 @@ export { ItemNames, ITEM_TABLE_PATH, userItemsPath, configDir, dataDir, dataPath
 export { LogReader, readTail, TAIL_BYTES, type Batch } from './log'
 export { loadTracker, saveTracker, statePath, STATE_FILE, type SavedTracker } from './store'
 export { zoneName, ZONE_NAMES, PRISON_NAME } from './zones'
+export { trackerStatus, sessionSummary, type SessionSummary, type SummaryRun } from './status'
+export { refreshBaseline } from './baseline'
+export { itemTableAge, readItemTableMeta, type ItemTableMeta } from './items'

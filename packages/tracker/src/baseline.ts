@@ -132,6 +132,19 @@ export async function writeBaseline(data: BaselineData, path = baselinePath()): 
   await rename(tmp, path)
 }
 
+/**
+ * Fetches the community prices and keeps them on disk: the one entry a refresh key runs.
+ *
+ * It is the same fetch `fetchBaseline` makes — no behaviour of its own — and the prices are put
+ * where every reader looks for them, so the tracker works without a network again afterwards.
+ * How old they then are is what `baselineAge` says of what `readBaseline` gives back.
+ */
+export async function refreshBaseline(now = Date.now(), path = baselinePath()): Promise<BaselineData> {
+  const data = await fetchBaseline(now)
+  await writeBaseline(data, path)
+  return data
+}
+
 /** How old the prices are, in ms; null when there are none. */
 export function baselineAge(data: BaselineData | null, now = Date.now()): number | null {
   if (data === null) return null

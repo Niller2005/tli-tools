@@ -14,6 +14,9 @@
     "items:gear": "bun scripts/gear-bases.ts",
     "items:coverage": "bun scripts/coverage.ts"
   },
+  "dependencies": {
+    "@tli/gamelog": "workspace:*"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "latest",

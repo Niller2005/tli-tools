@@ -30,6 +30,7 @@ console.log(tracker.stats())
 | `src/engine.ts` | the tracker: it ties the rest together |
 | `src/log.ts` | reading the log file in pieces, and where it was left |
 | `src/store.ts` | saving and loading the tracker |
+| `src/status.ts` | the status line and the session summary the dashboard draws |
 
 ## The runs
 
@@ -68,6 +69,40 @@ if (baselineIsStale(cached)) {
 
 The prices are in FE, the same currency the exchange prices things in. A failure is only a
 failure: the tracker carries on with what it has.
+
+## The status line and the session summary
+
+The dashboard plan (docs/plan-dashboard.md) draws what the packages work out, so the tracker says
+what it knows as plain objects, from the state it saves or its own snapshot — never by reading the
+log again. Both are quick: a state with the 500 runs the tracker keeps is a few milliseconds.
+
+```ts
+import { sessionSummary, trackerStatus } from '@tli/tracker'
+
+const status = trackerStatus(saved.tracker) // one line: '12 runs today · 41.3 FE/h · last: …'
+const summary = sessionSummary(saved.tracker) // the panel: runsToday, feToday, fePerHour, bestRun, lastRun, feTotal
+```
+
+The day is the player's own: a run counts for today when it started after the local midnight. The
+best run is the one of today whose loot was worth the most (a day of unsold loot has none), and the
+last run and the FE total are of the whole state. The status line is the tracker's contract-C1
+object: `id`, `line`, `tone`, `at`, with an empty line when the tracker has no runs.
+
+## How fresh the data is
+
+The dashboard also shows how old the community prices and the item-name table are, and can ask for
+the prices again. `baselineAge` says how old the prices on disk are (`readBaseline` reads them);
+`refreshBaseline` makes the same fetch `fetchBaseline` makes and keeps the result on disk; and
+`itemTableAge` says how old the shipped table is, from the `meta` at its top that the generating
+script writes.
+
+```ts
+import { baselineAge, itemTableAge, readBaseline, refreshBaseline } from '@tli/tracker'
+
+const age = baselineAge(await readBaseline()) // ms, or null when there is nothing on disk
+const tableAge = await itemTableAge() // ms since data/items.json was built
+await refreshBaseline() // fetch the prices and keep them on disk
+```
 
 ## The data of the items
 

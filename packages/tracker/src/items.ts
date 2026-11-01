@@ -24,6 +24,17 @@ export interface ItemEntry {
 /** The table the tracker ships. */
 export const ITEM_TABLE_PATH = join(import.meta.dir, '..', 'data', 'items.json')
 
+/** What the shipped table says about itself, in the `meta` at its top. */
+export interface ItemTableMeta {
+  /** when the table was built, as an ISO time */
+  generatedAt?: string
+  /** where the table's data came from */
+  source?: string
+  /** how many items the table has */
+  count?: number
+}
+
+
 /** The names of the items, from the shipped table and the player's own file. */
 export class ItemNames {
   private readonly known: Record<string, ItemEntry>
@@ -126,4 +137,26 @@ export function userItemsPath(): string {
 /** The path of a file in the tracker's data directory. */
 export function dataPath(name: string): string {
   return join(dataDir(), name)
+}
+
+/** Reads the shipped table's meta, the small print at its top; null when the table cannot be read. */
+export async function readItemTableMeta(tablePath = ITEM_TABLE_PATH): Promise<ItemTableMeta | null> {
+  try {
+    const raw = JSON.parse(await readFile(tablePath, 'utf8')) as { meta?: ItemTableMeta }
+    return raw.meta ?? null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * How old the shipped item-name table is, from the time its own meta says it was built; null when
+ * the table cannot be read or does not say.
+ */
+export async function itemTableAge(tablePath = ITEM_TABLE_PATH, now = Date.now()): Promise<number | null> {
+  const meta = await readItemTableMeta(tablePath)
+  const generatedAt = meta?.generatedAt
+  if (generatedAt === undefined) return null
+  const at = Date.parse(generatedAt)
+  return Number.isNaN(at) ? null : Math.max(0, now - at)
 }
