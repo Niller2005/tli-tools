@@ -107,6 +107,7 @@ const HELP: [string, string][] = [
   ['e', 'set the price of the item that is picked out (empty = reset)'],
   ['u', 'reset a hand-set price to the learned one'],
   ['d', 'remove the item from the prices (learned and set)'],
+  ['z', 'clear every price learned from exchange searches (press twice)'],
   ['b', 'fetch the community prices again'],
   ['s', 'change how the list is sorted'],
   ['/', 'search the list that has the focus (enter keeps it, esc clears it)'],

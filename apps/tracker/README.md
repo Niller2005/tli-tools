@@ -67,6 +67,7 @@ The keys:
 | `e` | Set the price of the item that is picked out (empty enter resets it) |
 | `u` | Reset a hand-set price back to the learned one |
 | `d` | Remove the item from the prices (a new exchange search brings it back) |
+| `z` | Clear every price learned from exchange searches (press twice; hand-set and community prices stay) |
 | `b` | Fetch the community prices again |
 | `s` | Change how the list is sorted |
 | `/` | Search the list that has the focus |
