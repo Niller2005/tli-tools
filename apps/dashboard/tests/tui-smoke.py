@@ -2,8 +2,10 @@
 """Checks the dashboard's screen in a real terminal.
 
 The dashboard is a full-screen program, so it is run in a pty: the script reads what it draws,
-sends keys, and checks that the tools are listed, that the status badges are there, that a child
-TUI can take the terminal and hand it back, and that the program leaves the terminal as it was.
+sends keys, and checks that the tools are listed, that the status badges and panels are there,
+that the panes of a small terminal tab-switch, that the options dialog keeps a setting, that
+auto-launch opens a tool when its minigame opens, that a child TUI can take the terminal and hand
+it back, and that the program leaves the terminal as it was.
 
     python3 tests/tui-smoke.py [--log=<UE_game.log>]
 
@@ -67,6 +69,65 @@ def read_screen(fd, seconds=1.5):
     return out
 
 
+def replay(data, cols, rows):
+    """The screen the bytes paint, as one string of lines: a small VT replay.
+
+    The dashboard redraws by sending only the cells that changed, so a string can be absent from
+    the raw bytes while being on the screen. This keeps a cell grid and follows the cursor.
+    """
+    screen = [[" "] * cols for _ in range(rows)]
+    row = col = 0
+    text = data.decode("utf8", "replace")
+    at = 0
+    while at < len(text):
+        ch = text[at]
+        if ch == "\x1b":
+            nxt = text[at + 1] if at + 1 < len(text) else ""
+            if nxt in "]PX^_":
+                # a string sequence (OSC, DCS): it ends at BEL or ESC backslash
+                at += 2
+                while at < len(text):
+                    if text[at] == "\x07":
+                        at += 1
+                        break
+                    if text[at : at + 2] == "\x1b\\":
+                        at += 2
+                        break
+                    at += 1
+                continue
+            if nxt == "[":
+                # a control sequence: the cursor position is the only one that matters here
+                at += 2
+                start = at
+                while at < len(text) and text[at] not in "@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz":
+                    at += 1
+                if at >= len(text):
+                    break
+                final, params = text[at], text[start:at]
+                at += 1
+                if final == "H":
+                    parts = params.split(";")
+                    try:
+                        row = int(parts[0] or 1) - 1
+                        col = int(parts[1] if len(parts) > 1 and parts[1] else 1) - 1
+                    except ValueError:
+                        pass
+                continue
+            at += 2
+            continue
+        if ch == "\r":
+            col = 0
+        elif ch == "\n":
+            row = min(row + 1, rows - 1)
+        elif ch == "\b":
+            col = max(0, col - 1)
+        else:
+            if 0 <= row < rows and 0 <= col < cols:
+                screen[row][col] = ch
+            col += 1
+        at += 1
+    return "\n".join("".join(line).rstrip() for line in screen)
+
 def strip(data):
     """The text of what the program drew, without the escape sequences."""
     return ANSI.sub("", data.decode("utf8", "replace"))
@@ -80,27 +141,29 @@ def terminal_attributes(fd):
         return None
 
 
-def spawn(log=None, no_color=False, home=None):
+def spawn(log=None, no_color=False, home=None, cols=120, rows=40, env=None):
     """Starts the dashboard in a pty."""
     pid, fd = pty.fork()
     if pid == 0:
         os.chdir(APP)
-        env = dict(os.environ, TERM="xterm-256color", COLUMNS="120", LINES="40")
-        env.pop("NO_COLOR", None)
+        env_ = dict(os.environ, TERM="xterm-256color", COLUMNS=str(cols), LINES=str(rows))
+        env_.pop("NO_COLOR", None)
         # The test runs where the player is: the tools it starts take no picture of
         # the game, so niri and grim are never run.
-        env["TLI_NO_CAPTURE"] = "1"
+        env_["TLI_NO_CAPTURE"] = "1"
         if home is not None:
-            env["HOME"] = home
+            env_["HOME"] = home
+        if env is not None:
+            env_.update(env)
         cmd = ["bun", "src/main.ts"]
         if log is not None:
             cmd.append(f"--log={log}")
         if no_color:
             cmd.append("--no-color")
         # A new pty has no size; OpenTUI needs to know how big the terminal is.
-        fcntl.ioctl(0, termios.TIOCSWINSZ, struct.pack("HHHH", 40, 120, 0, 0))
-        os.execvpe("bun", cmd, env)
-    fcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack("HHHH", 40, 120, 0, 0))
+        fcntl.ioctl(0, termios.TIOCSWINSZ, struct.pack("HHHH", rows, cols, 0, 0))
+        os.execvpe("bun", cmd, env_)
+    fcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack("HHHH", rows, cols, 0, 0))
     return pid, fd
 
 
@@ -114,9 +177,9 @@ def finish(pid, fd):
     return os.waitstatus_to_exitcode(status)
 
 
-def run(keys, log=None, wait=2.5, no_color=False, home=None, after_start=None):
+def run(keys, log=None, wait=2.5, no_color=False, home=None, after_start=None, cols=120, rows=40, env=None):
     """Runs the dashboard with the given keys; returns what it drew and how it ended."""
-    pid, fd = spawn(log=log, no_color=no_color, home=home)
+    pid, fd = spawn(log=log, no_color=no_color, home=home, cols=cols, rows=rows, env=env)
     before = terminal_attributes(fd)
     screen = read_screen(fd, wait)
     if after_start is not None:
@@ -184,6 +247,52 @@ def steam_home(work, contents):
         f.write(contents)
     return home, game_log
 
+
+def run_narrow(log, work):
+    """Runs the dashboard in a small terminal and checks the panes tab-switch."""
+    pid, fd = spawn(log=log, cols=90, rows=30, home=os.path.join(work, "narrow-home"))
+    problems = []
+    cols, rows = 90, 30
+
+    def shown():
+        # the dashboard redraws only the cells that changed, so the screen is replayed
+        return replay(b"".join(chunks), cols, rows)
+
+    chunks = [read_screen(fd, 2.5)]
+    text = shown()
+    if "Session" not in text:
+        problems.append("the narrow screen does not show the session pane")
+    if "Log and capture" in text:
+        problems.append("the narrow screen shows more than one pane at once")
+
+    os.write(fd, b"\t")
+    time.sleep(0.5)
+    chunks.append(read_screen(fd, 1.5))
+    if "Log and capture" not in shown():
+        problems.append("tab did not bring the log and capture pane")
+
+    os.write(fd, b"\t")
+    time.sleep(0.5)
+    chunks.append(read_screen(fd, 1.5))
+    if "Running tools and data" not in shown():
+        problems.append("a second tab did not bring the running tools pane")
+
+    os.write(fd, b"q")
+    read_screen(fd, 1.0)
+    code = finish(pid, fd)
+    if code != 0:
+        problems.append(f"the dashboard ended with {code}, not 0")
+    return problems
+
+
+def settings_home(work, settings):
+    """Makes a home whose dashboard settings are the given JSON."""
+    home = os.path.join(work, "settings-home")
+    config = os.path.join(home, ".config", "tli-dashboard")
+    os.makedirs(config, exist_ok=True)
+    with open(os.path.join(config, "settings.json"), "w") as f:
+        f.write(settings)
+    return home
 
 def main():
     failures = []
@@ -301,6 +410,70 @@ def main():
             problems.append("the terminal settings were not put back after the tracker")
         check("a child TUI takes the terminal and gives it back", problems)
 
+        # The panels of the status screen, beside the list.
+        screen, code, _ = run([], log=log)
+        text = strip(screen)
+        problems = []
+        for wanted in ["Session", "runs today", "Log and capture", "Running tools and data", "prices"]:
+            if wanted not in text:
+                problems.append(f"the screen does not show {wanted!r}")
+        if code != 0:
+            problems.append(f"the dashboard ended with {code}, not 0")
+        check("the status panels are drawn", problems)
+
+        # A small terminal stacks the panes, and tab says which one is shown.
+        check("a small terminal stacks the panes and tab switches", run_narrow(log, work))
+
+        # The options dialog of the tool under the cursor, kept in the settings file.
+        options_home = settings_home(work, '{"version": 1, "tools": {}}')
+        settings_file = os.path.join(options_home, ".config", "tli-dashboard", "settings.json")
+        screen, code, _ = run(["o", " ", "\x1b"], log=log, home=options_home)
+        text = strip(screen)
+        problems = []
+        if "options" not in text:
+            problems.append("the options dialog was not shown")
+        if "colours off" not in text:
+            problems.append("the options dialog does not list the colours")
+        with open(settings_file) as f:
+            kept = f.read()
+        if '"noColor": true' not in kept:
+            problems.append("the option was not kept in the settings file")
+        if code != 0:
+            problems.append(f"the dashboard ended with {code}, not 0")
+        check("the options dialog shows and keeps a setting", problems)
+
+        # The help lists the keys.
+        screen, code, _ = run(["?", "?"], log=log, home=os.path.join(work, "help-home"))
+        text = strip(screen)
+        problems = []
+        if "this help" not in text:
+            problems.append("the help was not shown")
+        if code != 0:
+            problems.append(f"the dashboard ended with {code}, not 0")
+        check("the help is shown and put away", problems)
+
+        # A tool with auto-launch on opens when its minigame opens, once per transition. The
+        # window is asked of a program that is no terminal at all, so nothing appears on the
+        # player's screen.
+        auto_home = settings_home(work, '{"version": 1, "tools": {"arcana": {"autoLaunch": true}}}')
+        starts_closed = os.path.join(work, "auto.log")
+        with open(starts_closed, "w") as f:
+            f.write(HIDE)
+        screen, code, _ = run(
+            [],
+            log=starts_closed,
+            home=auto_home,
+            wait=2.0,
+            after_start=lambda: append_to(starts_closed, OPEN),
+            env={"TLI_TERMINAL": "false"},
+        )
+        text = strip(screen)
+        problems = []
+        if "opened by itself" not in text:
+            problems.append("the tool was not opened when its minigame opened")
+        if code != 0:
+            problems.append(f"the dashboard ended with {code}, not 0")
+        check("auto-launch opens the tool when its minigame opens", problems)
     # The game's own log, when it is there.
     real = LOG if LOG is not None else (REAL_LOG if os.path.isfile(REAL_LOG) else None)
     if real is None:
