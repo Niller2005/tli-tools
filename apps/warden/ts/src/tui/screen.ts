@@ -129,6 +129,7 @@ export class WardenScreen {
       lines.push([tone('bold', state.runOver)])
       return
     }
+    lines.push([tone(state.held.includes('none known') ? 'dim' : 'accent', state.held)])
     if (state.model === null) {
       lines.push([tone('default', state.reading ? 'Reading the board…' : 'No board read yet.')])
       if (!state.reading && state.ocrProblem !== null) lines.push([tone('yellow', state.ocrProblem)])
