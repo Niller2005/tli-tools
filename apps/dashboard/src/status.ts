@@ -3,8 +3,8 @@
 // The dashboard plan (docs/plan-dashboard.md) has the packages say what they know as plain
 // objects — contract C1 for the lines, C2 for the log and the capture — and the dashboard only
 // draws them. Everything here is read on the 1 s tick, away from the drawing: the log's health
-// and the saved states are small files, and a read that is slow only delays the next tick, never
-// a frame.
+// and the saved states are small (the tracker's is a SQLite database, read without getting in the
+// tracker's way), and a read that is slow only delays the next tick, never a frame.
 
 import { historyOf, load, arcanaStatus } from '@tli/arcana'
 import { logHealth, minigameStatus, type LogHealth, type MinigameView, type ToolStatus } from '@tli/gamelog'

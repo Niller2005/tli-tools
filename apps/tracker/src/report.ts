@@ -3,12 +3,16 @@
 // It is written when the player presses x in the tracker, and it can also be made from the command
 // line:
 //
-//   bun src/report.ts [--out=<file>] [--log=<UE_game.log>]
+//   bun src/report.ts [--out=<file>] [--log=<UE_game.log>] [--full]
+//
+// Without `--full` the report starts from what the tracker saved and reads the log on from where
+// the tracker left it, so it says the same as the screen; `--full` reads the whole log from its
+// beginning into a tracker that knows nothing of the runs that were saved.
 
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { findLog } from '@tli/gamelog'
-import { ItemNames, LogReader, Tracker, readBaseline } from '@tli/tracker'
+import { ItemNames, LogReader, Tracker, loadTracker, readBaseline } from '@tli/tracker'
 
 /** A field in the csv file: quoted when it has a comma or a quote in it. */
 function field(text: string): string {
@@ -91,7 +95,11 @@ async function main(): Promise<void> {
   // the community prices that were fetched last, so the report says the same as the screen
   const cached = await readBaseline()
   if (cached !== null) tracker.prices.setBaseline(cached.prices)
-  const reader = new LogReader(found.file, 0)
+  // what the tracker saved, when it was reading this same log: the report carries on from it
+  const saved = argv.includes('--full') ? null : await loadTracker()
+  const usable = saved !== null && saved.log.file === found.file ? saved : null
+  if (usable !== null) tracker.restore(usable.tracker)
+  const reader = new LogReader(found.file, usable?.log.offset ?? 0)
   reader.readAll((batch) => tracker.feed(batch.lines))
 
   const path = await writeReport(tracker, names, arg('out'))
