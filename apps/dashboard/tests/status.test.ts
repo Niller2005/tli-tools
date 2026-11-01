@@ -3,6 +3,7 @@ import { chmodSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import type { RunningEntry } from '@tli/launch'
+import { save, SCHEMA_VERSION } from '@tli/arcana'
 import { saveTracker } from '@tli/tracker'
 import { readStatus } from '../src/status'
 
@@ -50,33 +51,36 @@ async function writeTrackerState(path: string, now: number): Promise<void> {
   )
 }
 
-/** An Arcana state with one visit to the Tarot Path, still going on. */
-function arcanaState(now: number): string {
-  return `${JSON.stringify({
-    version: 2,
-    log: { file: '/game/UE_game.log', offset: 0 },
-    history: {
-      sessions: [
-        {
-          id: 1,
-          openedAt: now - 60_000,
-          closedAt: null,
-          cells: 3,
-          moves: [],
-          chests: [],
-          chestsSkipped: 0,
-          notes: 0,
-          played: 0,
-          lifeLost: 2,
-          lifeWon: 1,
-        },
-      ],
-      contests: [],
-      trials: [],
-      nextId: 2,
+/** An Arcana database with one visit to the Tarot Path, still going on. */
+async function writeArcanaState(path: string, now: number): Promise<void> {
+  await save(
+    {
+      version: SCHEMA_VERSION,
+      log: { file: '/game/UE_game.log', offset: 0 },
+      history: {
+        sessions: [
+          {
+            id: 1,
+            openedAt: now - 60_000,
+            closedAt: null,
+            cells: 3,
+            moves: [],
+            chests: [],
+            chestsSkipped: 0,
+            notes: 0,
+            played: 0,
+            lifeLost: 2,
+            lifeWon: 1,
+          },
+        ],
+        contests: [],
+        trials: [],
+        nextId: 2,
+      },
+      snapshot: { bag: { slots: [], instances: [] }, prices: [], overrides: [] },
     },
-    snapshot: { bag: { slots: [], instances: [] }, prices: [], overrides: [] },
-  })}\n`
+    path,
+  )
 }
 
 /** A launcher that has one tool open in a tmux pane. */
@@ -87,11 +91,11 @@ describe('reading the status', () => {
   test('the saved states, the log and the prices become the panels', async () => {
     const dir = work()
     const trackerDb = join(dir, 'tracker.db')
-    const arcanaFile = join(dir, 'arcana.json')
+    const arcanaDb = join(dir, 'arcana.db')
     const baselineFile = join(dir, 'baseline.json')
     const log = join(dir, 'UE_game.log')
     await writeTrackerState(trackerDb, NOW)
-    writeFileSync(arcanaFile, arcanaState(NOW))
+    await writeArcanaState(arcanaDb, NOW)
     writeFileSync(baselineFile, `${JSON.stringify({ fetchedAt: NOW - 60_000, source: 'test', prices: [[1, 2]] })}\n`)
     writeFileSync(log, '[2026.11.01-11.59.00:000][1]TLLua: Display: [Game] something\n')
 
@@ -101,7 +105,7 @@ describe('reading the status', () => {
         launcher,
         log,
         itemAge: 5000,
-        paths: { tracker: trackerDb, arcana: arcanaFile, baseline: baselineFile },
+        paths: { tracker: trackerDb, arcana: arcanaDb, baseline: baselineFile },
       },
       NOW,
     )
@@ -129,14 +133,22 @@ describe('reading the status', () => {
   })
 
   test('a capture that is turned off says so, and nothing is run to find it out', async () => {
-    const bin = join(work(), 'bin')
+    const dir = work()
+    const bin = join(dir, 'bin')
     mkdirSync(bin, { recursive: true })
     const grim = join(bin, 'grim')
     writeFileSync(grim, '#!/bin/sh\n')
     chmodSync(grim, 0o755)
 
     const status = await readStatus(
-      { view: null, launcher, capture: { env: { PATH: `${bin}:${process.env.PATH ?? ''}`, TLI_NO_CAPTURE: '1' } } },
+      {
+        view: null,
+        launcher,
+        capture: { env: { PATH: `${bin}:${process.env.PATH ?? ''}`, TLI_NO_CAPTURE: '1' } },
+        // the saved states are read from paths that are not there, so this test never touches
+        // the real ones (reading them brings the old state file in, which writes)
+        paths: { tracker: join(dir, 'no-tracker.db'), arcana: join(dir, 'no-arcana.db') },
+      },
       NOW,
     )
     expect(status.capture.noCapture).toBe(true)
@@ -155,7 +167,7 @@ describe('reading the status', () => {
         log: join(dir, 'nowhere.log'),
         paths: {
           tracker: join(dir, 'no-tracker.db'),
-          arcana: join(dir, 'no-arcana.json'),
+          arcana: join(dir, 'no-arcana.db'),
           baseline: join(dir, 'no-baseline.json'),
         },
       },

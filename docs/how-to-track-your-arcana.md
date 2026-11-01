@@ -107,11 +107,23 @@ Star. The tracker lists them and counts how many of each you fought.
 
 ## Start again later
 
-The tracker keeps the visits, the contests, the trials, the bag, the prices and its place in the log in
-`$XDG_DATA_HOME/tli-arcana/state.json` (`~/.local/share/tli-arcana/state.json` when `XDG_DATA_HOME` is
-not set), so when it starts again it carries on where it left off. `--reset` makes it forget and read
-the log from its beginning. A log that was truncated (the game was restarted) or rotated is read from
-its beginning again, and the visit and the contest that were open are closed.
+The tracker keeps the visits, the contests, the trials, the bag, the prices and its place in the log in a
+SQLite database, `~/.local/share/tli-arcana/arcana.db` (`$XDG_DATA_HOME/tli-arcana/arcana.db` when
+`XDG_DATA_HOME` is set), so when it starts again it carries on where it left off. `--reset` makes it
+forget and read the log from its beginning. A log that was truncated (the game was restarted) or
+rotated is read from its beginning again, and the visit and the contest that were open are closed.
+
+The database can be looked at while the tracker runs (it is in WAL mode, so a look never gets in
+the tracker's way):
+
+```
+sqlite3 ~/.local/share/tli-arcana/arcana.db 'select id, opened_at, closed_at, cells from visits'
+sqlite3 ~/.local/share/tli-arcana/arcana.db 'select arcana, count(*) from trials group by arcana'
+```
+
+The state the tracker kept as `state.json` is brought in by itself the first time it runs, and the
+old file is renamed to `state.json.imported` and kept. A database the tracker cannot use is moved
+aside as `arcana.db.corrupt` and kept as well.
 
 ## What it cannot do
 

@@ -40,7 +40,7 @@ export function parseLine(line: string): Fact | null
 /** Reads what was saved; null when there is nothing saved, or it cannot be read. */
 export async function load(path?: string): Promise<Saved | null>
 
-/** Writes what is saved, next to the old file and then over it. */
+/** Writes what is saved, as the difference from what is there, in one transaction. */
 export async function save(saved: Saved, path?: string): Promise<void>
 
 /** The Arcana tool's status line, as the dashboard draws it (contract C1 of the dashboard plan). */
@@ -80,10 +80,22 @@ pick-ups to that chest, up to `REWARD_WINDOW_MS` after it was opened. The items 
 by the loot tracker (`@tli/tracker`), which already knows how the game writes its item changes and
 how the exchange's prices come back, so the rewards can be valued.
 
-## The files
+## The saved state
 
-The tracker saves under `$XDG_DATA_HOME/tli-arcana` (or `~/.local/share/tli-arcana`): the visits,
-the contests, the trials, the bag and the prices, and where in the log it was.
+The tracker keeps what it knows in a SQLite database, `~/.local/share/tli-arcana/arcana.db`
+(`$XDG_DATA_HOME` moves it), written with `bun:sqlite`. The tables are the parts of the state:
+`visits` with `moves`, `cells` and `chests`, `trials`, `contests` with `contest_chests` and
+`rewards`, `slots` and `instances` for the bag, `prices` and `price_overrides`, `settings`, and
+`log_position` for where the tracker was in the log. The database is in WAL mode, so the dashboard
+can read it while the tracker writes it. Its schema is versioned (the sqlite `user_version`) and
+brought up to date when it is opened.
+
+A save writes only what changed since the last one, in one transaction; the backfill of a log
+hundreds of megabytes long saves as it goes. The state the tracker kept before the database — a
+`state.json` in the same folder, of the version the old loader read — is brought in by itself the
+first time the database is not there, and the file is renamed to `state.json.imported` and kept.
+A file that is not the tracker's database is moved aside as `arcana.db.corrupt` (kept, never
+deleted); a database of a newer schema is left alone and the write to it is refused.
 
 ## Tests
 

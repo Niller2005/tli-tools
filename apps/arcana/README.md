@@ -108,11 +108,24 @@ in this app.
 
 | File | What is in it |
 |------|---------------|
-| `$XDG_DATA_HOME/tli-arcana/state.json` (or `~/.local/share/tli-arcana/state.json`) | the visits, the contests, the trials, the bag and the prices, and where the tracker was in the log |
+| `$XDG_DATA_HOME/tli-arcana/arcana.db` (or `~/.local/share/tli-arcana/arcana.db`) | the visits, the contests, the trials, the bag and the prices, and where the tracker was in the log |
 
-The tracker saves now and then, and when it is left. When it starts again it carries on where it
-left off in the log. A log that was truncated (the game was restarted) or rotated is read from its
-beginning again, and the visit and the contest that were open are closed.
+The tracker saves now and then — and, while it is reading the old lines of a log hundreds of
+megabytes long, every so often along the way — and when it is left. Each save writes only what
+changed, in one transaction, so a crash leaves the last whole save in place. When it starts again
+it carries on where it left off in the log. A log that was truncated (the game was restarted) or
+rotated is read from its beginning again, and the visit and the contest that were open are closed.
+
+The database is in WAL mode, so it can be looked at while the tracker runs:
+
+```
+sqlite3 ~/.local/share/tli-arcana/arcana.db 'select id, opened_at, closed_at, cells from visits'
+sqlite3 ~/.local/share/tli-arcana/arcana.db 'select count(*) from trials'
+```
+
+The state the tracker kept as `state.json` is brought in by itself the first time it runs, and the
+old file is renamed to `state.json.imported` and kept. A database the tracker cannot use is moved
+aside as `arcana.db.corrupt` and kept as well.
 
 ## On Linux
 
