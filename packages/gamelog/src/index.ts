@@ -469,3 +469,8 @@ export function logHint(log: LogState): string | null {
   if (log === 'no-detail') return 'log: enable log'
   return null
 }
+
+/* ---------- the log's health ---------- */
+
+export { logHealth, type LogHealth } from './health'
+export { DETAIL }
