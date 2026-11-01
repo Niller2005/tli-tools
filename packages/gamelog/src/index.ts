@@ -474,3 +474,7 @@ export function logHint(log: LogState): string | null {
 
 export { logHealth, type LogHealth } from './health'
 export { DETAIL }
+
+/* ---------- the status of the tools ---------- */
+
+export { minigameStatus, type ToolStatus } from './status'

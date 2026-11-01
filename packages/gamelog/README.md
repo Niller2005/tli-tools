@@ -45,7 +45,13 @@ export function logHint(log: LogState): string | null
 
 /** The log's health: where it is, how big and how fresh, and whether the game's own lines are in it. */
 export function logHealth(given?: string): LogHealth
-```
+
+/** The status of a tool, as the dashboard draws it (contract C1 of the dashboard plan). */
+export interface ToolStatus { id: string; line: string; tone: 'ok' | 'dim' | 'warn'; at: number }
+
+/** What the log says about a minigame, as one line for the dashboard. */
+export function minigameStatus(game: GameName, state: GameStatus): ToolStatus
+ ```
 
 `scanBack` reads the log's last 8 MB (the log can be over a gigabyte), so a
 tool that starts in the middle of a minigame is right at once. `watchMinigames`
@@ -70,6 +76,14 @@ the last 64 KiB of the file are read to tell `ok` from `no-detail` — the same
 line test (`TLLua:` / `TLGame:`) the follower uses. It takes at most one small
 read, so a dashboard can call it on its tick. `path` is null when the game is
 not installed; a missing file keeps its path with `detail: 'missing'`.
+
+`minigameStatus` (in [`src/status.ts`](src/status.ts)) is the status line of a
+tool that reads a minigame — for the dashboard plan's contract C1. The Vorax and
+Warden tools have no state of their own beyond the minigame they read, so their
+line is just `open` or `closed`, read off the `MinigameTracker` the watcher
+already keeps; a minigame the log says nothing about gives an empty line. The
+`ToolStatus` interface itself is the one every status source returns, so the
+other packages import it from here.
 
 ## Tests
 
