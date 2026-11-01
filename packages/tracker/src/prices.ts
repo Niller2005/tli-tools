@@ -72,6 +72,13 @@ export class PriceStore {
     return this.overrides.delete(item) || had || wasBaseline
   }
 
+  /** Drops every price learned from exchange searches; hand-set and community prices stay. Returns how many. */
+  clearLearned(): number {
+    const n = this.learned.size
+    this.learned.clear()
+    return n
+  }
+
   /** What the item is worth: what the player set, else what was learned, else the baseline. */
   price(item: number): number {
     const set = this.overrides.get(item)

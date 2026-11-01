@@ -48,6 +48,7 @@ export class TrackerApp {
   private readonly names: ItemNames
   private readonly hooks: AppHooks
   private pausedAt: number | null = null
+  private clearAskedAt = 0
 
   constructor(
     renderer: CliRenderer,
@@ -228,6 +229,18 @@ export class TrackerApp {
               wasBaseline ? ', and so do the community prices' : ''
             })`
           : `${name} is not in the prices`
+        return
+      }
+      case 'z': {
+        const now = Date.now()
+        if (now - this.clearAskedAt > 5000) {
+          this.clearAskedAt = now
+          this.state.message = 'press z again within 5 s to clear every price learned from exchange searches'
+          return
+        }
+        this.clearAskedAt = 0
+        const n = this.tracker.prices.clearLearned()
+        this.state.message = `cleared ${n} learned price${n === 1 ? '' : 's'} (hand-set and community prices stay)`
         return
       }
       case 'b': {
