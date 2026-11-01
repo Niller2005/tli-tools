@@ -7,7 +7,7 @@ import type { Session } from '@/app/session'
 import type { CellModel, EventMark, Model } from '@/board/board'
 import type { Action } from '@/engine/actions'
 import { beastIndex, data, type Beast } from '@/engine/data'
-import { cellLabel, tierName } from '@/engine/text'
+import { cellLabel, tierName, toolName } from '@/engine/text'
 import { fixed } from '@/format'
 import type { Advice } from '@/solver/advise'
 import { alsoGood } from '@/solver/advise'
@@ -75,6 +75,8 @@ export interface ViewState {
   keptLines: string[]
   /** the day and objective line */
   day: string | null
+  /** the instruments held and the theme of the run */
+  held: string
   /** the advice, when there is one */
   advice: MoveView | null
   /** whether the solver is still playing the board out */
@@ -104,6 +106,7 @@ export function freshView(captureNote = ''): ViewState {
     notes: [],
     keptLines: [],
     day: null,
+    held: heldLine([], null),
     advice: null,
     solving: false,
     rounds: 0,
@@ -222,6 +225,12 @@ export function ringRows(
   return rows
 }
 
+/** What the tool knows of the run: the instruments held and the theme. */
+export function heldLine(tools: readonly string[], theme: string | null): string {
+  const held = tools.length === 0 ? 'none known' : tools.map((t) => toolName(t)).join(', ')
+  return `Instruments: ${held}${theme === null ? '' : ` · Theme: ${theme}`}`
+}
+
 /** The day, objective and last-reading line of a board. */
 export function dayLine(model: Model, daysLeft: number | null, kept: boolean): string {
   let day = daysLeft !== null ? `Day ${model.day} · ${daysLeft} to Riot` : `Day ${model.day} · Riot not read`
@@ -269,6 +278,7 @@ export function stateFromSession(session: Session, captureNote: string, ocrProbl
     notes: reading?.warnings.filter((warning) => warning.kind === 'note').map((warning) => warning.text) ?? [],
     keptLines,
     day: reading === null ? null : dayLine(reading.model, reading.daysLeft, keptLines.length > 0),
+    held: heldLine(session.tools, data().themeName(session.theme)),
     advice: move,
     solving: session.solving,
     rounds: session.rounds,
@@ -294,6 +304,7 @@ export function plainScreen(state: ViewState): string[] {
   for (const issue of state.problems) lines.push(issue)
   for (const warning of state.warnings) lines.push(warning)
   if (state.day !== null) lines.push(state.day)
+  lines.push(state.held)
   for (const kept of state.keptLines) lines.push(kept)
   lines.push('')
   if (state.advice !== null) {
