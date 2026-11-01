@@ -481,6 +481,17 @@ export const MAX_WAIT = 6
  * and goes costs at most one read per 5 s. */
 export const RECHECK = 20
 
+/** The longest wait between two rechecks of a screen that keeps moving a
+ * little: 30 s. Each recheck that finds nothing new doubles the wait up to
+ * this; a read for any other reason starts over at [`RECHECK`]. */
+export const MAX_RECHECK = 120
+
+/** Samples after which a block's count of flips fades by one: 40 s. */
+const FLIP_FADE = 160
+
+/** A block that flipped this often is a glow or an animation, not a change. */
+const NOISY_FLIPS = 2
+
 /** Auto read's decision, one fingerprint per sample of the game: read a
  * screen once it differs from the last one read and has settled, or has
  * differed for longer than [`MAX_WAIT`] samples; read a screen that moved
@@ -497,6 +508,43 @@ export class Watch {
   private waited = 0
   /** Samples since the last screen read. */
   private since = 0
+  /** Samples without a read after which a small change is read again. */
+  private recheckAfter = RECHECK
+  /** Per block, how often it has gone over and come back under
+   * [`BLOCK_DIFF`] from the screen read: a glow that breathes does it every
+   * few seconds, a real change once. Fading by one every [`FLIP_FADE`] samples. */
+  private readonly flips = new Uint8Array(64 * 36)
+  /** Per block, whether it is over [`BLOCK_DIFF`] from the screen read now. */
+  private readonly off = new Uint8Array(64 * 36)
+  /** Samples taken, for the fade. */
+  private ticks = 0
+
+  /** The blocks that moved from the screen read, not counting those that
+   * keep flipping: the breathing glow of the last day sits a block or two
+   * either side of the threshold and would be read every few seconds. */
+  private moved(read: Uint8Array, print: Uint8Array): number {
+    const fade = ++this.ticks % FLIP_FADE === 0
+    let n = 0
+    let raw = 0
+    for (let k = 0; k < print.length; k++) {
+      const over = Math.abs(read[k] - print[k]) > BLOCK_DIFF ? 1 : 0
+      raw += over
+      if (over !== this.off[k]) {
+        this.off[k] = over
+        if (this.flips[k] < 255) this.flips[k] += 1
+      } else if (fade && this.flips[k] > 0) {
+        this.flips[k] -= 1
+      }
+      if (over === 1 && this.flips[k] < NOISY_FLIPS) n += 1
+    }
+    // Another screen, not a glow: nothing is masked on it.
+    if (raw >= HELD_BLOCKS) {
+      this.flips.fill(0)
+      return raw
+    }
+    return n
+  }
+
   /** The next sample counts as read: a screenshot is on show. */
   private adopt = false
   /** The next sample is read whatever it shows: a held read asks for one
@@ -521,11 +569,15 @@ export class Watch {
     }
     this.since += 1
     const read = this.read
-    const n = read !== null && read.length === print.length ? changed(read, print) : null
+    const n = read !== null && read.length === print.length ? this.moved(read, print) : null
     if (n !== null && n < CHANGED_BLOCKS) {
       this.waited = 0
-      if (n > 0 && this.since >= RECHECK) {
+      if (n > 0 && this.since >= this.recheckAfter) {
+        // A screen that keeps moving a little (an animated banner, a glow)
+        // is read less and less often; a real change starts over.
+        const next = Math.min(this.recheckAfter * 2, MAX_RECHECK)
         this.markRead(print)
+        this.recheckAfter = next
         return true
       }
       return false
@@ -543,6 +595,8 @@ export class Watch {
     this.read = print.slice()
     this.waited = 0
     this.since = 0
+    this.recheckAfter = RECHECK
+    this.off.fill(0)
   }
 
   /** Counts the next sample as read, so an opened screenshot stays on show

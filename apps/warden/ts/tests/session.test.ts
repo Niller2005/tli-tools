@@ -15,6 +15,7 @@ import {
   fingerprint,
   HELD_BLOCKS,
   MAX_WAIT,
+  MAX_RECHECK,
   RECHECK,
   SETTLE,
   Watch,
@@ -256,4 +257,48 @@ test('rollouts are the same on any thread count', () => {
   r.run(25)
   r.runOn(35, 3)
   expect(r.ranking()).toEqual(one)
+})
+
+/** A screen that keeps moving a little is rechecked less and less often, and
+ * a real change brings the short wait back. */
+test('watch backs off rechecks of an animated screen', () => {
+  const w = new Watch()
+  expect(upTo(SETTLE + 1).filter(() => w.sample(print(200, 0))).length).toBe(1)
+  const gaps: number[] = []
+  let since = 0
+  for (let i = 0; i < 500; i++) {
+    since += 1
+    // the animation: one bright block that wanders on, a new one each sample
+    const p = new Uint8Array(64 * 36).fill(200)
+    p[i] = 255
+    if (w.sample(p)) {
+      gaps.push(since)
+      since = 0
+    }
+  }
+  expect(gaps.slice(0, 4)).toEqual([RECHECK, RECHECK * 2, RECHECK * 4, MAX_RECHECK])
+  expect(Math.max(...gaps)).toBe(MAX_RECHECK)
+
+  // a change to another screen is read after it settles, and the wait starts over
+  expect(upTo(SETTLE + 3).filter(() => w.sample(print(90, 0))).length).toBe(1)
+  const again = upTo(RECHECK).map(() => w.sample(print(90, 1))).indexOf(true)
+  expect(again).toBeGreaterThanOrEqual(0)
+  expect(again).toBeLessThan(RECHECK)
+})
+
+/** A glow that breathes by a few blocks, as on the last day's board, is not
+ * read again and again; a real change still is. */
+test('watch ignores blocks that keep flipping', () => {
+  const w = new Watch()
+  const frame = (up: boolean): Uint8Array => {
+    const p = new Uint8Array(64 * 36).fill(200)
+    if (up) p.fill(255, 100, 106)
+    return p
+  }
+  expect(upTo(SETTLE + 1).filter(() => w.sample(frame(false))).length).toBe(1)
+  let reads = 0
+  for (let i = 0; i < 400; i++) if (w.sample(frame(Math.floor(i / 8) % 2 === 0))) reads += 1
+  expect(reads).toBeLessThanOrEqual(2)
+
+  expect(upTo(SETTLE + 3).filter(() => w.sample(print(90, 0))).length).toBe(1)
 })
