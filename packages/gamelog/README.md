@@ -42,6 +42,9 @@ export function watchMinigames(opts?: { log?: string; intervalMs?: number }): Wa
 
 /** What to tell the player about the log itself; null when there is nothing to say. */
 export function logHint(log: LogState): string | null
+
+/** The log's health: where it is, how big and how fresh, and whether the game's own lines are in it. */
+export function logHealth(given?: string): LogHealth
 ```
 
 `scanBack` reads the log's last 8 MB (the log can be over a gigabyte), so a
@@ -60,6 +63,13 @@ The log itself is `ok` (it has the game's own lines), `missing` (there is no
 log) or `no-detail` (the log is there, but the game writes none of its own
 lines: Enable Log is off). A tool must never wait for a minigame it cannot see:
 with `unknown`, `missing` or `no-detail` it carries on as before.
+
+`logHealth` (in [`src/health.ts`](src/health.ts)) is the cheap version for a
+status pane: `findLog` says which file, one `stat` says its size and mtime, and
+the last 64 KiB of the file are read to tell `ok` from `no-detail` — the same
+line test (`TLLua:` / `TLGame:`) the follower uses. It takes at most one small
+read, so a dashboard can call it on its tick. `path` is null when the game is
+not installed; a missing file keeps its path with `detail: 'missing'`.
 
 ## Tests
 
