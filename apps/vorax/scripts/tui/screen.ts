@@ -17,13 +17,21 @@ import {
 } from '@opentui/core'
 import {
   borderColor,
+  brandChunks,
+  chip,
+  chunksWidth,
   color,
   colorEnabled,
   defaultBackground,
   defaultForeground,
   fitEnd,
+  hintChunks,
+  meter,
   num,
+  panelBorderStyle,
+  panelTitle,
   rowChunks,
+  surfaceColor,
   theme,
   textColor,
   titleColor,
@@ -31,7 +39,7 @@ import {
   type Tone,
   visibleLength,
 } from '@tli/tui'
-import { boardOf, moveOf, optionBlocks, type ViewState } from './view'
+import { boardOf, moveOf, optionBlocks, phaseName, type ViewState } from './view'
 
 /** The columns a panel's border takes up. */
 const BORDER = 2
@@ -54,8 +62,8 @@ export class VoraxScreen {
   private readonly renderer: CliRenderer
 
   private readonly header: BoxRenderable
-  private readonly titleText: TextRenderable
-  private readonly targetText: TextRenderable
+  private readonly brandText: TextRenderable
+  private readonly chipsText: TextRenderable
   private readonly gameText: TextRenderable
   private readonly logText: TextRenderable
 
@@ -91,32 +99,33 @@ export class VoraxScreen {
       flexDirection: 'column',
       flexShrink: 0,
     })
-    const titleRow = new BoxRenderable(renderer, {
-      id: 'title-row',
+    const brandBar = new BoxRenderable(renderer, {
+      id: 'brand-bar',
       width: '100%',
       height: 1,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       flexShrink: 0,
+      backgroundColor: surfaceColor(),
     })
-    this.titleText = new TextRenderable(renderer, {
-      id: 'title',
+    this.brandText = new TextRenderable(renderer, {
+      id: 'brand',
       content: '',
       selectable: false,
       fg: textColor(),
       wrapMode: 'none',
     })
-    this.targetText = new TextRenderable(renderer, {
-      id: 'target',
+    this.chipsText = new TextRenderable(renderer, {
+      id: 'chips',
       content: '',
       selectable: false,
       fg: textColor(),
       wrapMode: 'none',
     })
-    titleRow.add(this.titleText)
-    titleRow.add(this.targetText)
-    this.header.add(titleRow)
+    brandBar.add(this.brandText)
+    brandBar.add(this.chipsText)
+    this.header.add(brandBar)
 
     this.gameText = new TextRenderable(renderer, {
       id: 'game',
@@ -230,6 +239,7 @@ export class VoraxScreen {
       flexDirection: 'row',
       alignItems: 'center',
       flexShrink: 0,
+      backgroundColor: surfaceColor(),
     })
     this.hintText = new TextRenderable(renderer, {
       id: 'hints',
@@ -258,24 +268,51 @@ export class VoraxScreen {
     this.drawFooter(state, width)
   }
 
-  /** The border and the title of every panel, in the colour of the panels. */
+  /** The border and the title of every panel: the move panel is the one to look at, so it is the one that stands out. */
   private borders(): void {
-    for (const panel of [this.moveBox, this.optionsBox, this.boardBox]) {
-      panel.borderColor = borderColor(false)
-      panel.titleColor = titleColor(false)
+    const panels: [BoxRenderable, string, boolean][] = [
+      [this.moveBox, panelTitle('Next move', true), true],
+      [this.optionsBox, panelTitle('Options'), false],
+      [this.boardBox, panelTitle('Board'), false],
+    ]
+    for (const [panel, title, focused] of panels) {
+      panel.borderStyle = panelBorderStyle(focused)
+      panel.borderColor = borderColor(focused)
+      panel.titleColor = titleColor(focused)
+      panel.title = title
     }
   }
 
-  /** The title, the target and what the program is reading. */
+  /** The bar along the top, and the two lines under it: the game and the log. */
   private drawHeader(state: ViewState, width: number): void {
-    const title = 'Vorax Helper'
-    const sub = ' · Linux terminal'
-    this.titleText.content = new StyledText([tone('accent', title), tone('dim', sub)])
-    this.titleText.width = visibleLength(title) + visibleLength(sub)
+    const brand = brandChunks('Vorax Helper', 'terminal')
+    this.brandText.content = new StyledText(brand)
+    this.brandText.width = chunksWidth(brand)
 
-    const target = `target ${num(state.target)}`
-    this.targetText.content = new StyledText([tone('gold', target)])
-    this.targetText.width = visibleLength(target)
+    // the state of the helper, most important first; the ones that do not fit are left out
+    const b = state.board
+    const candidates: TextChunk[] = [
+      chip(`target ${num(state.target)}`, 'gold'),
+      b
+        ? chip('board open', 'green')
+        : chip(state.capture.includes('closed') ? 'board closed' : 'looking', 'dim'),
+    ]
+    if (b) candidates.push(chip(`round ${b.round} · ${phaseName(b.phase)}`, 'purple'))
+    candidates.push(chip(state.deepOn ? 'deep on' : 'deep off', state.deepOn ? 'green' : 'dim'))
+
+    const room = width - chunksWidth(brand) - 1
+    const chips: TextChunk[] = []
+    let used = 0
+    for (const candidate of candidates) {
+      const gap = chips.length > 0 ? 1 : 0
+      const candidateWidth = chunksWidth([candidate])
+      if (used + gap + candidateWidth > room) break
+      if (gap > 0) chips.push(tone('default', ' '))
+      chips.push(candidate)
+      used += gap + candidateWidth
+    }
+    this.chipsText.content = new StyledText(chips)
+    this.chipsText.width = used
 
     const game = 'game: '
     this.gameText.content = new StyledText([
@@ -287,12 +324,12 @@ export class VoraxScreen {
     const label = 'log:  '
     const lines = state.logLines > 0 ? ` (${state.logLines} lines read)` : ''
     const pictures = ` · ${state.pictures} pictures read`
-    const room = Math.max(10, width - visibleLength(label) - visibleLength(lines) - visibleLength(pictures))
+    const logRoom = Math.max(10, width - visibleLength(label) - visibleLength(lines) - visibleLength(pictures))
     this.logText.content = new StyledText([
       tone('dim', label),
-      tone('default', fitEnd(state.log, room)),
-      tone('dim', lines),
-      tone('dim', pictures),
+      tone('dim', fitEnd(state.log, logRoom)),
+      tone('orange', lines),
+      tone('orange', pictures),
     ])
     this.logText.width = width
   }
@@ -301,12 +338,28 @@ export class VoraxScreen {
   private drawMove(state: ViewState, width: number): void {
     const board = boardOf(state)
     const move = moveOf(state)
+    const inner = Math.max(10, width - BORDER)
     const lines: TextChunk[][] = []
-    if (board.heading !== '') lines.push([tone('dim', board.heading)])
-    lines.push([move.tone === 'green' ? boldTone('green', move.text) : tone(move.tone, move.text)])
+    if (board.heading !== '') {
+      // the round out of the whole run, as a bar: the run is underway, so it is drawn in the colour of effort
+      const heading = [tone('dim', board.heading)]
+      const meterWidth = inner - visibleLength(board.heading) - 2
+      if (meterWidth >= 8) heading.push(tone('default', '  '), ...meter(board.progress, meterWidth, 'orange'))
+      lines.push(heading)
+    }
+    // the answer is the headline; a notice is still bold; while it is worked out it is shown as busy
+    const headline =
+      move.tone === 'green'
+        ? boldTone('accent', move.text)
+        : move.tone === 'yellow'
+          ? boldTone('yellow', move.text)
+          : state.board !== null
+            ? tone('orange', move.text)
+            : tone(move.tone, move.text)
+    lines.push([headline])
     if (move.basis !== '') lines.push([tone('dim', move.basis)])
     this.moveText.content = new StyledText(this.join(lines))
-    this.moveText.width = Math.max(10, width - BORDER)
+    this.moveText.width = inner
   }
 
   /** The options the helper worked out. */
@@ -317,7 +370,14 @@ export class VoraxScreen {
     if (!this.optionsBox.visible) return
     const lines: TextChunk[][] = []
     for (const block of blocks) {
-      if (block.heading !== '') lines.push([tone('dim', block.heading)])
+      if (block.heading !== '') {
+        const heading = [tone('dim', block.heading)]
+        if (block.meter) {
+          const meterWidth = inner - visibleLength(block.heading) - 2
+          if (meterWidth >= 8) heading.push(tone('default', '  '), ...meter(block.meter.fraction, meterWidth, block.meter.tone))
+        }
+        lines.push(heading)
+      }
       for (const row of block.rows) lines.push(rowChunks(row, inner))
     }
     this.optionsText.content = new StyledText(this.join(lines))
@@ -345,13 +405,9 @@ export class VoraxScreen {
       ['d', `deep check ${state.deepOn ? 'on' : 'off'}`],
       ['q', 'quit'],
     ]
-    const chunks: TextChunk[] = []
-    hints.forEach(([key, label], index) => {
-      if (index > 0) chunks.push(tone('dim', ' · '))
-      chunks.push(tone('accent', key), tone('dim', ` ${label}`))
-    })
+    const chunks = hintChunks(hints)
     if (state.status !== '' && state.board !== null) {
-      chunks.push(tone('dim', '   '), tone('yellow', state.status))
+      chunks.push(tone('default', '   '), tone('yellow', state.status))
     }
     this.hintText.content = new StyledText(chunks)
     this.hintText.width = width
