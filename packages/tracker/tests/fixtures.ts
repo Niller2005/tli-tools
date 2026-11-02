@@ -1,4 +1,8 @@
-// Lines from a real game log, as they are written. They are the yardstick for the parsers.
+// Lines from a real game log, as they are written — the yardstick for the parsers — and the
+// states the store keeps, with the comparisons that do not care what order the tables answer in.
+import { expect } from 'bun:test'
+import { STATE_VERSION, type SavedState } from '../src/engine'
+import type { SavedTracker } from '../src/store'
 
 /**
  * What the community prices API answered, trimmed down to five items.
@@ -355,3 +359,169 @@ export const XCHG_RECALL = [
   '[2026.10.31-03.27.28:084][ 13]TLLua: Display: [Game] BagMgr@:Modfy BagItem PageId = 100 SlotId = 12 ConfigBaseId = 4533 Num = 1',
   '[2026.10.31-03.27.28:084][ 13]TLLua: Display: [Game] ItemChange@ ProtoName=XchgRecall end',
 ]
+
+/* ---------- the states the store keeps ---------- */
+/** A state with something of everything the tracker keeps. */
+export function richState(): SavedState {
+  return {
+    version: STATE_VERSION,
+    character: '980032478075064320',
+    runs: [
+      {
+        id: 1,
+        kind: 'map',
+        zone: 'SD_GeBuLinShanZhai',
+        name: 'Glacial Abyss - Shadow Outpost',
+        levelId: 4708,
+        start: 1000,
+        end: 9000,
+        loot: [
+          [100200, 5],
+          [3010, 1],
+        ],
+        cost: [[100300, 2]],
+        fe: 0,
+        xp: 1234,
+        affixes: [5112006, 101],
+        session: 1,
+      },
+      {
+        id: 2,
+        kind: 'prison',
+        zone: 'S16',
+        name: 'The Tartarus prison',
+        levelId: 5,
+        start: 20000,
+        end: 30000,
+        loot: [],
+        cost: [],
+        fe: 42,
+        xp: 0,
+        affixes: [],
+        session: 0,
+      },
+    ],
+    current: {
+      id: 3,
+      kind: 'map',
+      zone: 'z',
+      name: 'n',
+      levelId: 7,
+      start: 40000,
+      end: null,
+      loot: [[1, 1]],
+      cost: [],
+      fe: 0,
+      xp: 5,
+      affixes: [200006],
+      session: 1,
+    },
+    slots: [
+      { key: '1:23', item: 260105, num: 1, uuid: 'a' },
+      { key: '102:5', item: 100200, num: 30, uuid: null },
+    ],
+    instances: [{ uuid: 'a', item: 260105, page: 1, slot: 23, num: 1 }],
+    prices: [[3010, { price: 12.5, samples: 2, listings: 10, at: 5000 }]],
+    overrides: [[3010, 20]],
+    gear: [[3010, 112151]],
+    nextRunId: 4,
+    taxed: false,
+    mapCosts: true,
+    xp: { level: 94, exp: 6257480 },
+    exchange: [
+      { id: 1, at: 2000, kind: 'list', items: [[3010, -1]] },
+      { id: 2, at: 3000, kind: 'receive', items: [[100300, 40]] },
+    ],
+    sessions: [
+      { id: 1, name: 'Fire farm', start: 500, end: null },
+    ],
+    affixNames: [[5112006, '-30% additional Physical Damage for you']],
+    parked: [
+      {
+        version: STATE_VERSION,
+        character: '1',
+        runs: [
+          { id: 1, kind: 'map', zone: 'z', name: 'n', levelId: 1, start: 1, end: 2, loot: [[7, 3]], cost: [], fe: 0, xp: 9, affixes: [], session: 0 },
+        ],
+        current: null,
+        slots: [{ key: '102:1', item: 7, num: 3, uuid: null }],
+        instances: [],
+        prices: [],
+        overrides: [],
+        nextRunId: 2,
+        taxed: false,
+        mapCosts: true,
+        xp: { level: 3, exp: 10 },
+        exchange: [],
+        sessions: [],
+      },
+    ],
+  }
+}
+
+/** A saved tracker around a state. */
+export function around(state: SavedState, offset = 42): SavedTracker {
+  return { version: 1, log: { file: '/tmp/UE_game.log', offset }, tracker: state }
+}
+
+/** A pile of items in an order the comparison does not care about. */
+export function items(loot: [number, number][]): string[] {
+  return loot.map(([item, qty]) => `${item}:${qty}`).sort()
+}
+
+/** Says a state is the one wanted, whatever order its lists were kept in. */
+export function expectState(loaded: SavedTracker | null, wanted: SavedState): void {
+  expect(loaded).not.toBeNull()
+  const state = loaded?.tracker
+  if (state === undefined) throw new Error('nothing was loaded')
+  expect(state.version).toBe(STATE_VERSION)
+  expect(state.runs.length).toBe(wanted.runs.length)
+  for (const [i, run] of state.runs.entries()) {
+    expect(run.id).toBe(wanted.runs[i]?.id)
+    expect(run.kind).toBe(wanted.runs[i]?.kind)
+    expect(run.zone).toBe(wanted.runs[i]?.zone)
+    expect(run.name).toBe(wanted.runs[i]?.name)
+    expect(run.levelId).toBe(wanted.runs[i]?.levelId)
+    expect(run.start).toBe(wanted.runs[i]?.start)
+    expect(run.end).toBe(wanted.runs[i]?.end)
+    expect(items(run.loot)).toEqual(items(wanted.runs[i]?.loot ?? []))
+    expect(items(run.cost)).toEqual(items(wanted.runs[i]?.cost ?? []))
+    expect(run.fe).toBe(wanted.runs[i]?.fe)
+    expect(run.xp).toBe(wanted.runs[i]?.xp ?? 0)
+    expect(run.affixes).toEqual(wanted.runs[i]?.affixes ?? [])
+    expect(run.session).toBe(wanted.runs[i]?.session ?? 0)
+  }
+  expect(state.current?.id).toBe(wanted.current?.id)
+  expect(state.current?.end).toBe(wanted.current?.end)
+  expect(items(state.current?.loot ?? [])).toEqual(items(wanted.current?.loot ?? []))
+  expect([...state.slots].sort((a, b) => (a.key < b.key ? -1 : 1))).toEqual(
+    [...wanted.slots].sort((a, b) => (a.key < b.key ? -1 : 1)),
+  )
+  expect([...state.instances].sort((a, b) => (a.uuid < b.uuid ? -1 : 1))).toEqual(
+    [...wanted.instances].sort((a, b) => (a.uuid < b.uuid ? -1 : 1)),
+  )
+  expect([...state.prices].sort((a, b) => a[0] - b[0])).toEqual([...wanted.prices].sort((a, b) => a[0] - b[0]))
+  expect([...state.overrides].sort((a, b) => a[0] - b[0])).toEqual([...wanted.overrides].sort((a, b) => a[0] - b[0]))
+  expect([...(state.gear ?? [])].sort((a, b) => a[0] - b[0])).toEqual([...(wanted.gear ?? [])].sort((a, b) => a[0] - b[0]))
+  expect(state.nextRunId).toBe(wanted.nextRunId)
+  expect(state.taxed).toBe(wanted.taxed)
+  expect(state.mapCosts).toBe(wanted.mapCosts)
+  expect(state.character).toBe(wanted.character ?? '')
+  expect(state.xp ?? null).toEqual(wanted.xp ?? null)
+  expect(state.exchange ?? []).toEqual(wanted.exchange ?? [])
+  expect(state.sessions ?? []).toEqual(wanted.sessions ?? [])
+  expect(state.affixNames ?? []).toEqual(wanted.affixNames ?? [])
+  expect(state.current?.xp).toBe(wanted.current === null || wanted.current === undefined ? undefined : wanted.current.xp ?? 0)
+  expect(state.current?.affixes).toEqual(wanted.current === null || wanted.current === undefined ? undefined : wanted.current.affixes ?? [])
+  expect(state.parked?.length ?? 0).toBe(wanted.parked?.length ?? 0)
+  for (const [i, other] of (state.parked ?? []).entries()) {
+    const want = wanted.parked?.[i]
+    expect(other.character).toBe(want?.character)
+    expect(other.runs).toEqual(want?.runs ?? [])
+    expect(other.slots).toEqual(want?.slots ?? [])
+    expect(other.xp).toEqual(want?.xp ?? null)
+    expect(other.nextRunId).toBe(want?.nextRunId ?? 1)
+    // what is the same for everyone is kept once, with the character that is logged in
+    expect(other.prices).toEqual([])
+  }
+}
