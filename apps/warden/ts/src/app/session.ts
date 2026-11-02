@@ -36,7 +36,7 @@ import { cellLabel, cellList, tierName, toolName } from '@/engine/text'
 import type { State } from '@/engine/state'
 import { target as clickTarget, toFrame } from '@/reader/click'
 import { is16x9, layOutScaled } from '@/reader/layout'
-import { ironLawDays, RUN_DAYS, toModel, type Warning, type WarningKind } from '@/reader/model'
+import { ironLawDays, keptWarning, RUN_DAYS, toModel, warningText, type KeptWarning, type Warning } from '@/reader/model'
 import { language } from '@/reader/ocr'
 import { offBoard, readPanelsTitled, type Panels, type Screen } from '@/reader/panels'
 import { CELLS, readScene, type Scene } from '@/reader/scene'
@@ -92,14 +92,8 @@ export class Reading {
    * theme scroll): empty unless the reading on show is a kept one. The
    * next reading installed starts without them. */
   keptLines(): string[] {
-    return this.warnings.filter((w) => keptLine(w.text)).map((w) => w.text)
+    return this.warnings.filter((w) => w.kind === 'kept').map(warningText)
   }
-}
-
-/** Whether a warning is a line [`Session.takeRead`] puts over a kept
- * reading. */
-function keptLine(text: string): boolean {
-  return text === POPUP || text === OFF_BOARD || text === FADING || text.startsWith(THEME_READ) || text.startsWith(SHAPE)
 }
 
 /** The days left until the Riot over a run's readings. The counter only
@@ -142,12 +136,13 @@ function runStart(screen: Screen, under: Model | null): boolean {
  * is not the count in use. */
 function keptDays(read: number | null, left: number | null): Warning | null {
   if (left === null || read === left) return null
-  const kind: WarningKind = read !== null ? 'read' : 'note'
-  const text =
-    read !== null
-      ? `The days counter read ${read}, more than the last count: ${left} day(s) until Riot kept until ${read} reads again.`
-      : `The days counter is hidden: ${left} day(s) until Riot kept from the last read.`
-  return { cell: null, kind, text }
+  return read !== null
+    ? {
+        kind: 'read',
+        cell: null,
+        text: `The days counter read ${read}, more than the last count: ${left} day(s) until Riot kept until ${read} reads again.`,
+      }
+    : { kind: 'note', cell: null, text: `The days counter is hidden: ${left} day(s) until Riot kept from the last read.` }
 }
 
 /** The board under a treasure pick after a consume, and the eater's model
@@ -246,21 +241,13 @@ function bitten(before: Model, read: Model): boolean {
  * this many reads in a row before the one on show. */
 const STEADY_READS = 2
 
-/** The key of a low-confidence cell warning: its text without the
- * confidence number, so the same read on the same cell gives the same key. */
+/** The key of a low-confidence cell warning: the cell, the read and what it
+ * gave, so the same read on the same cell gives the same key whatever the
+ * confidence. */
 function steadyKey(w: Warning): string | null {
-  const at = w.text.indexOf('confidence ')
-  if (at < 0) return null
-  const text = w.text.slice(0, at)
-  return text.startsWith(CHECK_CELL) ? text : null
+  if (w.kind !== 'cellRead' || w.confidence === undefined) return null
+  return `${w.cell}:${w.detail}:${w.read ?? ''}`
 }
-
-/** How the reader's warnings about one cell's read start. */
-const CHECK_CELL = 'Check cell '
-
-/** How the warning about Consume targets the board read does not allow
- * starts. */
-const TARGETS_DIFFER = 'The Consume targets on screen are '
 
 /** The targets of a Consume target pick: the engine's `options` on the read
  * board that the screen marks with big jaws (`jawed`, model indices). When
@@ -271,10 +258,10 @@ export function consumeTargets(options: number[], jawed: number[], eater: number
   if (jawed.length === 0 || (jawed.length === options.length && options.every((n) => jawed.includes(n)))) {
     return [[...options], null]
   }
-  const text = `${TARGETS_DIFFER}${cellList(jawed)} and the board read allows ${cellList(options)}: check the eater in cell ${cellLabel(eater)} and those cells.`
+  const text = `The Consume targets on screen are ${cellList(jawed)} and the board read allows ${cellList(options)}: check the eater in cell ${cellLabel(eater)} and those cells.`
   const both = options.filter((n) => jawed.includes(n))
   const targets = both.length === 0 ? [...options] : both
-  return [targets, { cell: eater, kind: 'read', text }]
+  return [targets, { cell: eater, kind: 'targetsDiffer', text }]
 }
 
 /** The cells a Consume target screen marks with big jaws, as model indices. */
@@ -302,7 +289,7 @@ export function casketMeals(m: Model, read: Model, jawed: number[]): Warning[] {
     const seen = there !== undefined && there.kind === 'inmate' && food.includes(there.beast) ? there.beast : null
     const beast = seen ?? food[0]
     if (seen === null && food.length > 1) {
-      const text = `${CHECK_CELL}${cellLabel(n)}: a new Inmate from ${toolName('revenge')}, taken as ${tierName(tier)} ${data().beastNames[beastIndex(beast)]}: click the cell to correct it.`
+      const text = `Check cell ${cellLabel(n)}: a new Inmate from ${toolName('revenge')}, taken as ${tierName(tier)} ${data().beastNames[beastIndex(beast)]}: click the cell to correct it.`
       warnings.push({ cell: n, kind: 'read', text })
     }
     m.cells[n] = { kind: 'inmate', beast, tier, ivory: cellIvory(here), prey: null, event: cellEvent(here) }
@@ -310,17 +297,6 @@ export function casketMeals(m: Model, read: Model, jawed: number[]): Warning[] {
   return warnings
 }
 
-/** The line shown over the last reading while a game dialog covers the
- * board. */
-const POPUP = 'A popup covers the game: showing the last reading.'
-/** The line shown over the last reading while the board is not on screen. */
-const OFF_BOARD = 'The prison board is not on screen: showing the last reading.'
-/** The line shown over the last reading while the board fades in after a
- * Consume target screen. */
-const FADING = 'The board is still coming in: showing the last reading.'
-/** How the line shown over the last reading after the run theme scroll
- * starts. */
-const THEME_READ = "The run's theme: "
 /** The line for a read kept between runs, see [`Session.install`]. */
 const RUN_OVER_WAIT = 'The run is over: waiting for the next run.'
 /** The line logged for a changed board read held for one more read, see
@@ -364,12 +340,14 @@ interface Scanned {
   u: number
 }
 
-/** What [`Session.takeRead`] did with a read. */
-type Taken = { kind: 'installed' } | { kind: 'kept'; line: string } | { kind: 'skipped' }
+/** What [`Session.takeRead`] did with a read: a kept one carries its line
+ * and whether the run log keeps its frame (off the board and between runs
+ * the frame shows another game screen). */
+type Taken = { kind: 'installed' } | { kind: 'kept'; line: string; saveFrame: boolean } | { kind: 'skipped' }
 
 /** Reads the frame at the reference size the reader's regions are measured
  * on, as `load_png` does, at the interface scale measured near `hint`; see
- * [`shapeLine`] for the shapes refused. `keep` gives the frame back at its
+ * [`shapeKept`] for the shapes refused. `keep` gives the frame back at its
  * own size. */
 async function scan(frame: Rgba, keep: boolean, hint: number | null): Promise<Scanned> {
   const size: [number, number] = [frame.w, frame.h]
@@ -379,18 +357,12 @@ async function scan(frame: Rgba, keep: boolean, hint: number | null): Promise<Sc
   return { scene, panels, size, frame: keep ? frame : null, u }
 }
 
-/** How the line for a game window narrower than 16:9 starts. */
-const SHAPE = 'The game window is '
-
-/** A window as wide as 16:9 or wider is read: [`layOutScaled`] lays it out as
- * the reference frame. A window narrower than 16:9 (by more than 1%) has
- * never been seen, so how the game lays it out is untested: such a frame is
- * not read. */
-function shapeLine([w, h]: [number, number]): string | null {
-  const narrow = w * 9 < h * 16 && !is16x9(w, h)
-  return narrow
-    ? `${SHAPE}${w} x ${h}, narrower than 16:9: that layout is untested and isn't read. Set the game to a 16:9 or wider size: fullscreen or borderless, or a window such as 1920 x 1080 that is not maximized.`
-    : null
+/** A window as wide as 16:9 or wider is read: [`layOutScaled`] lays it out
+ * as the reference frame. A window narrower than 16:9 (by more than 1%)
+ * has never been seen, so how the game lays it out is untested: such a
+ * frame is not read, and the reading on show is kept (see [`KeptKind`]). */
+function shapeKept([w, h]: [number, number]): KeptWarning | null {
+  return w * 9 < h * 16 && !is16x9(w, h) ? keptWarning('shape', [w, h]) : null
 }
 
 /** The fingerprint grid: 64 x 36 blocks, 30 x 30 pixels each on a 1920 x
@@ -830,7 +802,7 @@ export class Session {
    * time and warnings change: the corrections and the running solve stay.
    * Otherwise the corrections go and a solve starts. A game dialog, a frame
    * without the board (see [`@/reader/panels::offBoard`]) or a frame of a
-   * window narrower than 16:9 (see [`shapeLine`]) keeps the last reading and
+   * window narrower than 16:9 (see [`shapeKept`]) keeps the last reading and
    * its solve on show, with a line that says so. The riot screen ends the
    * run, see [`Session.endRun`]. Until the next run starts (a days counter
    * reading at least one under the run's length, or an instrument pick with
@@ -879,7 +851,7 @@ export class Session {
     } else if (taken.kind === 'kept') {
       this.onScreen = false
       // Off the board or between runs the frame shows another game screen.
-      const frame = taken.line !== OFF_BOARD && taken.line !== RUN_OVER_WAIT ? scanned.frame : null
+      const frame = taken.saveFrame ? scanned.frame : null
       this.logMiss(screen, taken.line, frame)
     }
   }
@@ -891,7 +863,7 @@ export class Session {
     this.confirming = false
     this.scanTask = null
     this.size = size
-    const shape = shapeLine(size)
+    const shape = shapeKept(size)
     // The lobby's scroll names the coming run's theme and shows no days
     // counter.
     if (shape === null && panels.theme !== null) {
@@ -910,34 +882,32 @@ export class Session {
       panels.held !== null &&
       panels.held.length === 0
     this.fadeKept = fading
-    const kept =
+    const kept: KeptWarning | null =
       shape !== null
         ? shape
         : panels.screen === 'theme'
-          ? `${THEME_READ}${data().themeName(this.theme) ?? ''}.`
+          ? keptWarning('theme', data().themeName(this.theme) ?? '')
           : panels.screen === 'popup'
-            ? POPUP
+            ? keptWarning('popup')
             : offBoard(panels)
-              ? OFF_BOARD
+              ? keptWarning('offBoard')
               : fading
-                ? FADING
+                ? keptWarning('fading')
                 : null
     if (kept !== null) {
       const r = this.reading
       if (r !== null) {
-        r.warnings = r.warnings.filter((w) => !keptLine(w.text))
-        // Only a window of the wrong shape is the player's to fix.
-        const kind: WarningKind = shape !== null ? 'read' : 'note'
-        r.warnings.unshift({ cell: null, kind, text: kept })
+        r.warnings = r.warnings.filter((w) => w.kind !== 'kept')
+        r.warnings.unshift(kept)
       } else {
         this.missed =
           shape !== null || panels.screen === 'theme'
-            ? kept
+            ? warningText(kept)
             : panels.screen === 'popup'
               ? 'A popup covered the game.'
               : 'The last read found no board or pick on screen.'
       }
-      return { kind: 'kept', line: kept }
+      return { kind: 'kept', line: warningText(kept), saveFrame: kept.keep !== 'offBoard' }
     }
     if (panels.screen === 'runEnd') {
       this.endRun()
@@ -949,7 +919,7 @@ export class Session {
       (panels.days !== null && panels.days >= RUN_DAYS - 1) || (panels.screen === 'instrumentPick' && panels.days === null)
     if (this.runOver !== null && !startsRun) {
       this.missed = RUN_OVER_WAIT
-      return { kind: 'kept', line: RUN_OVER_WAIT }
+      return { kind: 'kept', line: RUN_OVER_WAIT, saveFrame: false }
     }
     // The riot screen missed: a board with a hidden counter on the last day,
     // far from the board on show, is a screen after the run.
@@ -986,7 +956,7 @@ export class Session {
       if (!sameModel(now, before)) {
         this.confirming = true
         this.reread = true
-        return { kind: 'kept', line: CHANGED }
+        return { kind: 'kept', line: CHANGED, saveFrame: true }
       }
     }
     this.runOver = null
@@ -1169,7 +1139,7 @@ export class Session {
       days_left: r.daysLeft,
       tools: [...this.tools],
       theme: data().themeName(this.theme),
-      warnings: r.warnings.map((w) => w.text),
+      warnings: r.warnings.map(warningText),
       frame: file,
       model: r.model,
     })
@@ -1320,7 +1290,7 @@ export class Session {
       const read = cloneModel(reading.model)
       const unedited = (n: number): boolean => !this.edits.has(n + 1)
       if (before !== null) {
-        const unsure = (w: Warning): boolean => w.text.startsWith(CHECK_CELL) && w.cell !== null && unedited(w.cell)
+        const unsure = (w: Warning): boolean => w.kind === 'cellRead' && unedited(w.cell)
         for (const w of reading.warnings.filter(unsure)) {
           const n = w.cell as number
           read.cells[n] = cloneCell(before.cells[n])
@@ -1571,7 +1541,7 @@ export class Session {
       }
     }
     if (this.reading !== null) {
-      this.reading.warnings = this.reading.warnings.filter((w) => !w.text.startsWith(TARGETS_DIFFER))
+      this.reading.warnings = this.reading.warnings.filter((w) => w.kind !== 'targetsDiffer')
       if (warning !== null) this.reading.warnings.push(warning)
     }
     const pick = firstBite ? instantBite(st, bites) : instant(st)

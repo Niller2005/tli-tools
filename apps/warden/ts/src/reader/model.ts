@@ -33,41 +33,169 @@ function index(cell: number): number {
 
 /** What kind of warning it is. */
 export type WarningKind =
-  /** A low-confidence or missing read, or a screen the solver can't use as is. */
+  /** A low-confidence or missing read, or a screen the solver can't use as
+   * is: something for the player to check. */
   | 'read'
+  /** A doubtful read of one cell's content: which read is doubtful and what
+   * it gave are data (see [`CellReadDetail`]) and the sentence is built
+   * from them (see [`warningText`]), so the same read on the same cell is
+   * the same warning whatever its confidence. */
+  | 'cellRead'
+  /** The Consume targets a target screen marks differ from the ones the
+   * board read allows (see [`consumeTargets`] in the session). */
+  | 'targetsDiffer'
   /** The held instruments show as icons only, so the player has to name them. */
   | 'heldToolsUnknown'
   /** A routine line on what was read or kept, such as a pick over the
    * board or a hidden days counter: nothing to check. */
   | 'note'
+  /** A line over a reading kept in place of a read, see [`KeptKind`]. */
+  | 'kept'
 
-/** Something the reader asks the player to check before trusting the pick. */
-export interface Warning {
-  /** The model index of the cell it is about, if any (the warden's cell for a warden read). */
-  cell: number | null
-  kind: WarningKind
-  /** The sentence for the command line. */
-  text: string
+/** Which read of a cell is doubtful, for a `cellRead` warning. */
+export type CellReadDetail =
+  /** Locked or open. */
+  | 'lock'
+  /** The Prison Incident marker. */
+  | 'event'
+  /** The rarity glow behind a locked door. */
+  | 'glow'
+  /** The cell read as empty. */
+  | 'empty'
+  /** The beast in the cell. */
+  | 'beast'
+  /** The rarity of the beast. */
+  | 'rarity'
+  /** A tooltip panel covers the cell. */
+  | 'tooltip'
+  /** The portrait shows no rarity glow (the game draws none after a
+   * reconnect), so the rarity is kept or assumed. */
+  | 'glowless'
+  /** A Prey mark with no Lion to link it to. */
+  | 'prey'
+
+/** Which keep held the last reading in place of a read. */
+export type KeptKind =
+  /** A game dialog covers the board. */
+  | 'popup'
+  /** The prison board is not on screen. */
+  | 'offBoard'
+  /** The board fades in after a Consume target screen. */
+  | 'fading'
+  /** The run theme scroll. */
+  | 'theme'
+  /** A game window narrower than 16:9, whose layout is untested. */
+  | 'shape'
+
+/** Something the reader asks the player to check before trusting the pick.
+ * The sentence the player sees is [`warningText`]: a `cellRead` and a
+ * `kept` line are built from their data, the rest carry theirs. */
+export type Warning =
+  | { kind: 'read'; cell: number | null; text: string }
+  | { kind: 'cellRead'; cell: number; detail: CellReadDetail; read?: string; confidence?: number }
+  | { kind: 'targetsDiffer'; cell: number; text: string }
+  | { kind: 'heldToolsUnknown'; cell: null; text: string }
+  | { kind: 'note'; cell: null; text: string }
+  | { kind: 'kept'; cell: null; keep: 'popup' | 'offBoard' | 'fading' }
+  | { kind: 'kept'; cell: null; keep: 'theme'; theme: string }
+  | { kind: 'kept'; cell: null; keep: 'shape'; size: [number, number] }
+
+/** A line over a reading kept in place of a read, see [`KeptKind`]. */
+export type KeptWarning = Extract<Warning, { kind: 'kept' }>
+
+/** The sentence of a warning, for the command line, the run log and the
+ * screen: the one place the player's words are chosen. */
+export function warningText(w: Warning): string {
+  if (w.kind === 'cellRead') return cellReadText(w)
+  if (w.kind === 'kept') return keptText(w)
+  return w.text
+}
+
+/** The sentence of a doubtful cell read. */
+function cellReadText(w: Extract<Warning, { kind: 'cellRead' }>): string {
+  const at = cellLabel(w.cell)
+  const conf = fmt2(w.confidence ?? 0)
+  switch (w.detail) {
+    case 'lock':
+      return `Check cell ${at}: read as ${w.read} (confidence ${conf}).`
+    case 'event':
+      return `Check cell ${at}: ${data().incidentTerm} marker read with confidence ${conf}.`
+    case 'glow':
+      return `Check cell ${at}: the glow behind the locked door read as ${w.read} (confidence ${conf}).`
+    case 'empty':
+      return `Check cell ${at}: read as an empty cell (confidence ${conf}).`
+    case 'beast':
+      return `Check cell ${at}: beast read as ${w.read} (confidence ${conf}).`
+    case 'rarity':
+      return `Check cell ${at}: rarity read as ${w.read} (confidence ${conf}).`
+    case 'tooltip':
+      return `Check cell ${at}: a tooltip covers it.`
+    case 'glowless':
+      return `Check cell ${at}: the portrait shows no rarity glow, so it is read as ${w.read}.`
+    case 'prey':
+      return `Check cell ${at}: a Prey mark read with no ${data().beastNames[beastIndex('lion')]} to link it to.`
+  }
+}
+
+/** The sentence of a line over a reading kept in place of a read. */
+function keptText(w: KeptWarning): string {
+  switch (w.keep) {
+    case 'popup':
+      return 'A popup covers the game: showing the last reading.'
+    case 'offBoard':
+      return 'The prison board is not on screen: showing the last reading.'
+    case 'fading':
+      return 'The board is still coming in: showing the last reading.'
+    case 'theme':
+      return `The run's theme: ${w.theme}.`
+    case 'shape':
+      return `The game window is ${w.size[0]} x ${w.size[1]}, narrower than 16:9: that layout is untested and isn't read. Set the game to a 16:9 or wider size: fullscreen or borderless, or a window such as 1920 x 1080 that is not maximized.`
+  }
+}
+
+/** The line shown over the last reading while a frame was kept, not read
+ * (see [`KeptKind`]): which keep it was, with the theme name or the frame
+ * size it tells of. */
+export function keptWarning(keep: 'popup' | 'offBoard' | 'fading'): KeptWarning
+export function keptWarning(keep: 'theme', theme: string): KeptWarning
+export function keptWarning(keep: 'shape', size: [number, number]): KeptWarning
+export function keptWarning(keep: KeptKind, about?: string | [number, number]): KeptWarning {
+  if (keep === 'theme') return { kind: 'kept', cell: null, keep, theme: about as string }
+  if (keep === 'shape') return { kind: 'kept', cell: null, keep, size: about as [number, number] }
+  return { kind: 'kept', cell: null, keep }
 }
 
 /** A warning to check. */
 function read(text: string): Warning {
-  return { cell: null, kind: 'read', text }
+  return { kind: 'read', cell: null, text }
 }
 
 /** A warning that is nothing to check. */
 function note(text: string): Warning {
-  return { cell: null, kind: 'note', text }
+  return { kind: 'note', cell: null, text }
 }
 
-/** A warning about a cell. */
+/** A warning about a cell that is not a read of its content (the warden's
+ * place, a meal the session assumed). */
 function cellWarning(cell: number, text: string): Warning {
-  return { cell, kind: 'read', text }
+  return { kind: 'read', cell, text }
+}
+
+/** A doubtful read of cell `cell` (a model index) the reader measured at
+ * `confidence`: what it gave is `read`, so the same read again on the same
+ * cell is the same warning. */
+function lowConf(cell: number, detail: CellReadDetail, read: string | undefined, confidence: number): Warning {
+  return { kind: 'cellRead', cell, detail, read, confidence }
+}
+
+/** A doubtful read of cell `cell` (a model index) that no confidence measures. */
+function cellDoubt(cell: number, detail: 'tooltip' | 'glowless' | 'prey', read?: string): Warning {
+  return { kind: 'cellRead', cell, detail, read }
 }
 
 /** A warning that the held instruments have to be named. */
 function heldToolsUnknown(text: string): Warning {
-  return { cell: null, kind: 'heldToolsUnknown', text }
+  return { kind: 'heldToolsUnknown', cell: null, text }
 }
 
 /** `under` is the last board read before this frame: an instrument or treasure
@@ -216,29 +344,27 @@ export function toModel(scene: Scene, panels: Panels, heldTools: Tool[], under: 
 
 /** The cells and the warden from the board scene. */
 function readBoard(scene: Scene, under: Model | null, m: Model, warn: Warning[]): void {
-  const d = data()
   const kept: number[] = []
   const unlit: number[] = []
   for (const c of CELLS) {
     const r = scene.cell(c)
     const n = index(c)
-    const at = cellLabel(n)
     if (r.covered) {
       if (under !== null) {
         m.cells[n] = cloneCell(under.cells[n])
         kept.push(n)
         continue
       }
-      warn.push(cellWarning(n, `Check cell ${at}: a tooltip covers it.`))
+      warn.push(cellDoubt(n, 'tooltip'))
     }
     if (r.lockedConf < CONF) {
-      warn.push(cellWarning(n, `Check cell ${at}: read as ${r.locked ? 'locked' : 'open'} (confidence ${fmt2(r.lockedConf)}).`))
+      warn.push(lowConf(n, 'lock', r.locked ? 'locked' : 'open', r.lockedConf))
     }
     if (r.event && r.eventConf < CONF) {
-      warn.push(cellWarning(n, `Check cell ${at}: ${d.incidentTerm} marker read with confidence ${fmt2(r.eventConf)}.`))
+      warn.push(lowConf(n, 'event', undefined, r.eventConf))
     }
     const event = r.event ? 'unknown' : null
-    m.cells[n] = cellModel(r, event, n, under, unlit, warn, at)
+    m.cells[n] = cellModel(r, event, n, under, unlit, warn)
   }
   if (kept.length > 0) {
     const it = kept.length === 1 ? 'it is' : 'they are'
@@ -290,7 +416,7 @@ function readBoard(scene: Scene, under: Model | null, m: Model, warn: Warning[])
       }
     }
     if (lion === null) {
-      warn.push(cellWarning(n, `Check cell ${cellLabel(n)}: a Prey mark read with no ${d.beastNames[beastIndex('lion')]} to link it to.`))
+      warn.push(cellDoubt(n, 'prey'))
       continue
     }
     const target = m.cells[lion]
@@ -308,20 +434,17 @@ function cellModel(
   under: Model | null,
   unlit: number[],
   warn: Warning[],
-  at: string
 ): CellModel {
   if (r.locked) {
     if (r.glow !== null && r.glowConf >= TIER_CONF) return { kind: 'scratch', tier: r.glow, event }
     if (r.glow !== null) {
-      warn.push(
-        cellWarning(n, `Check cell ${at}: the glow behind the locked door read as ${tierName(r.glow)} (confidence ${fmt2(r.glowConf)}).`)
-      )
+      warn.push(lowConf(n, 'glow', tierName(r.glow), r.glowConf))
     }
     return { kind: 'sealed', event }
   }
   if (r.inmate === null) {
     if (r.beastConf < CONF) {
-      warn.push(cellWarning(n, `Check cell ${at}: read as an empty cell (confidence ${fmt2(r.beastConf)}).`))
+      warn.push(lowConf(n, 'empty', undefined, r.beastConf))
     }
     return { kind: 'empty', event }
   }
@@ -335,11 +458,11 @@ function cellModel(
   const tier = was !== null && glowless ? (unlit.push(n), was) : r.inmate.tier
   const name = `${tierName(tier)} ${data().beastNames[beastIndex(beast)]}`
   if (r.beastConf < CONF) {
-    warn.push(cellWarning(n, `Check cell ${at}: beast read as ${name} (confidence ${fmt2(r.beastConf)}).`))
+    warn.push(lowConf(n, 'beast', name, r.beastConf))
   } else if (glowless && was === null) {
-    warn.push(cellWarning(n, `Check cell ${at}: the portrait shows no rarity glow, so it is read as ${name}.`))
+    warn.push(cellDoubt(n, 'glowless', name))
   } else if (!glowless && r.tierConf < TIER_CONF) {
-    warn.push(cellWarning(n, `Check cell ${at}: rarity read as ${name} (confidence ${fmt2(r.tierConf)}).`))
+    warn.push(lowConf(n, 'rarity', name, r.tierConf))
   }
   return { kind: 'inmate', beast, tier, ivory: r.tusk, prey: null, event }
 }

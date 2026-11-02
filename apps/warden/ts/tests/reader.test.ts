@@ -5,7 +5,7 @@
 import { existsSync, readdirSync } from 'node:fs'
 import { describe, expect, test } from 'bun:test'
 import { blankModel, cellIvory, type CellModel } from '@/board/board'
-import { RUN_DAYS, TIER_CONF, toModel, type Warning } from '@/reader/model'
+import { RUN_DAYS, TIER_CONF, toModel, warningText, type Warning } from '@/reader/model'
 import { offBoard, readPanels, screenLabel, type Screen } from '@/reader/panels'
 import { tesseractFound } from '@tli/ocr'
 import { buildTemplates, cellTruth, CELLS, loadLabeled, readScene, readSceneWith, type Scene } from '@/reader/scene'
@@ -314,17 +314,17 @@ describe('the board reader', () => {
     expect(covered(scene)).toEqual([15, 16])
     const panels = await readPanels(img)
     const [, warnings] = toModel(scene, panels, [], null, RUN_DAYS)
-    const texts = warnings.map((w) => w.text)
-    expect(texts).toContain('Check cell 15: a tooltip covers it.')
-    expect(texts).toContain('Check cell 16: a tooltip covers it.')
+    const doubtful = warnings.filter((w) => w.kind === 'cellRead').map((w) => [w.cell, w.detail])
+    expect(doubtful).toContainEqual([14, 'tooltip'])
+    expect(doubtful).toContainEqual([15, 'tooltip'])
     const under = blankModel()
     under.cells[14] = { kind: 'inmate', beast: 'rat', tier: 3, ivory: false, prey: null, event: null }
     under.cells[15] = { kind: 'empty', event: null }
     const [m, warnings2] = toModel(scene, panels, [], under, RUN_DAYS)
     expect(m.cells.slice(14, 16)).toEqual(under.cells.slice(14, 16))
-    const texts2 = warnings2.map((w) => w.text)
+    const texts2 = warnings2.map(warningText)
     expect(texts2).toContain('A tooltip covers cells 15 and 16: they are kept from the last board read.')
-    expect(texts2.some((t) => t.startsWith('Check cell 15') || t.startsWith('Check cell 16'))).toBe(false)
+    expect(warnings2.some((w) => w.kind === 'cellRead' && (w.cell === 14 || w.cell === 15))).toBe(false)
   })
 
   /// trainingdata/reports/reconnect-{0007,0012}.png (outside s16), a player's
@@ -348,12 +348,12 @@ describe('the board reader', () => {
         return cell.kind === 'inmate' ? cell.tier : -1
       })
     const flagged = (warnings: Warning[]): (number | null)[] =>
-      warnings.filter((w) => w.text.includes('shows no rarity glow')).map((w) => w.cell)
+      warnings.filter((w) => w.kind === 'cellRead' && w.detail === 'glowless').map((w) => w.cell)
     const [board] = await read(before, null)
     expect(tiers(board)).toEqual([2, 0, 0, -1, 3, 1])
     const [m, warnings] = await read(after, board)
     expect(tiers(m)).toEqual([2, 0, 0, 0, 3, 1])
-    const texts = warnings.map((w) => w.text)
+    const texts = warnings.map(warningText)
     expect(texts.some((t) => t.startsWith('The portraits in cells 04, 05, 06, 08 and 14 show no rarity glow'))).toBe(true)
     expect(flagged(warnings)).toEqual([6])
     const [m2, warnings2] = await read(after, null)
@@ -382,7 +382,7 @@ describe('the board reader', () => {
     under.cells[15] = { ...lion }
     const [m, warnings] = toModel(scene, await readPanels(img), [], under, RUN_DAYS)
     expect(m.cells.slice(13, 16)).toEqual(under.cells.slice(13, 16))
-    expect(warnings.map((w) => w.text)).toContain('A tooltip covers cells 14, 15 and 16: they are kept from the last board read.')
+    expect(warnings.map(warningText)).toContain('A tooltip covers cells 14, 15 and 16: they are kept from the last board read.')
   })
 
   /// The day counts down from the run's length, 30 days for Iron Law
@@ -482,7 +482,7 @@ describe('the board reader', () => {
       .map((c, n) => (c.kind === 'inmate' && c.prey !== null ? [n + 1, c.prey] : null))
       .filter((m): m is [number, { cell: number | null; rounds: number }] => m !== null)
     expect(marks).toEqual([[10, { cell: 3, rounds: 3 }]])
-    expect(warnings.some((w) => w.text.includes('Prey'))).toBe(false)
+    expect(warnings.some((w) => w.kind === 'cellRead' && w.detail === 'prey')).toBe(false)
   })
 
   /// The Prey crosshair reads only where one is drawn: no other frame of
@@ -544,11 +544,11 @@ describe('the reader end to end', () => {
     under.cells[3] = { kind: 'inmate', beast: 'lion', tier: 2, ivory: false, prey: null, event: null }
     const [m, warnings] = toModel(readScene(img), p, [], under, RUN_DAYS)
     expect(m.cells[3]).toEqual(under.cells[3])
-    expect(warnings.map((w) => w.text)).toContain('The pick covers the board: the cells are from the last board read (day 1).')
+    expect(warnings.map(warningText)).toContain('The pick covers the board: the cells are from the last board read (day 1).')
     // Without a board read before it, the run start is assumed.
     const [fresh, freshWarnings] = toModel(readScene(img), p, [], null, RUN_DAYS)
     expect(fresh.cells[3]).toEqual({ kind: 'sealed', event: null })
-    expect(freshWarnings.map((w) => w.text)).toContain(
+    expect(freshWarnings.map(warningText)).toContain(
       'The pick covers the board and no board was read before it: the run start is assumed (every cell locked). For a pick later in the run, read the board first.'
     )
   })

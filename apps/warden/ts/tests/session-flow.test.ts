@@ -13,7 +13,7 @@ import { RunLog } from '@/app/runlog'
 import { ROUND, Session, type Reading } from '@/app/session'
 import type { PreyMark } from '@/board/board'
 import { data, OPULENCE } from '@/engine/data'
-import { loadPng, Rgba } from '@/reader/mod'
+import { loadPng, Rgba, warningText } from '@/reader/mod'
 import { frame, framePath, have, pollUntil, readAll, readNext } from './session-common'
 
 /** A treasure pick after a consume chain that reached Chromatic: the board
@@ -43,7 +43,7 @@ test('a treasure after a chain', async () => {
   expect(pick.model.vault).toEqual([...board.model.vault, eater.beast])
   expect([pick.model.day, pick.model.step, pick.model.choice.kind]).toEqual([board.model.day, 'choice', 'gift'])
   expect(pick.model.devourUsed).toBe(true)
-  expect(pick.warnings.some((w) => w.text.endsWith('cell 02 left for the vault after consuming cell 03.'))).toBe(true)
+  expect(pick.warnings.some((w) => warningText(w).endsWith('cell 02 left for the vault after consuming cell 03.'))).toBe(true)
   expect(s.problems).toEqual([])
 })
 
@@ -61,7 +61,7 @@ test('a treasure seals the last meal', async () => {
   expect(pick.screen).toBe('treasurePick')
   for (const n of [8, 15]) expect(pick.model.cells[n].kind).toBe('sealed')
   const text = "The Warden's Treasure follows a Chromatic Prisoner: the inmate in cell 16 left for the vault after consuming cell 09."
-  expect(pick.warnings.some((w) => w.text === text)).toBe(true)
+  expect(pick.warnings.some((w) => warningText(w) === text)).toBe(true)
   expect(s.problems).toEqual([])
 })
 
@@ -226,7 +226,7 @@ test('a treasure after the Ravenous Chains', async () => {
   expect(pick.model.vault).toEqual([...board.model.vault, 'wolf'])
   const text =
     "The Warden's Treasure follows a Chromatic Prisoner: the inmate in cell 07 left for the vault, lifted by the Ferocious Beast's Ravenous Chains at the start of the day, which removed the inmate in cell 08: check them with View Prison Status."
-  expect(pick.warnings.some((w) => w.text === text)).toBe(true)
+  expect(pick.warnings.some((w) => warningText(w) === text)).toBe(true)
 })
 
 /** A frame sent while a read runs waits for it: the first read is not
@@ -289,7 +289,7 @@ test('the theme scroll sets the theme', async () => {
   expect(s.takeToolsChanged()).toBe(true)
   expect([board.screen, r.screen]).toEqual(['manage', 'manage'])
   expect(r.model).toEqual(board.model)
-  expect(r.warnings.some((w) => w.text.startsWith("The run's theme: "))).toBe(true)
+  expect(r.warnings.some((w) => w.kind === 'kept' && w.keep === 'theme')).toBe(true)
   s.readInBackground(loadPng(framePath('rec4-t422.png')))
   await s.wait()
   expect(s.runOver).not.toBe(null)

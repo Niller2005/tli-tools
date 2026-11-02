@@ -9,9 +9,9 @@ import { cellEvent, type CellModel, type EventMark, type Model } from '@/board/b
 import type { Action } from '@/engine/actions'
 import { beastIndex, data, RAINBOW, type Beast } from '@/engine/data'
 import { cellLabel, tierName, toolName } from '@/engine/text'
+import { warningText } from '@/reader/model'
 import { fixed } from '@/format'
-import type { Advice } from '@/solver/advise'
-import { alsoGood } from '@/solver/advise'
+import { alsoGood, type Advice } from '@/solver/advise'
 import type { SolveOption } from '@/solver/solve'
 
 /** The advice and the playouts behind it. */
@@ -341,9 +341,12 @@ export function stateFromSession(session: Session, captureNote: string, ocrProbl
     missed: session.missed,
     model: reading?.model ?? null,
     problems: session.problems,
-    warnings: reading?.warnings.filter((warning) => warning.cell === null && warning.kind !== 'note').map((warning) => warning.text) ?? [],
-    cellWarnings: reading?.warnings.filter((warning) => warning.cell !== null).map((warning) => warning.text) ?? [],
-    notes: reading?.warnings.filter((warning) => warning.kind === 'note').map((warning) => warning.text) ?? [],
+    warnings:
+      reading?.warnings
+        .filter((warning) => warning.cell === null && (warning.kind === 'read' || warning.kind === 'heldToolsUnknown'))
+        .map(warningText) ?? [],
+    cellWarnings: reading?.warnings.filter((warning) => warning.cell !== null).map(warningText) ?? [],
+    notes: reading?.warnings.filter((warning) => warning.kind === 'note').map(warningText) ?? [],
     keptLines,
     day: reading === null ? null : dayView(reading.model, reading.daysLeft, keptLines.length > 0),
     held: heldView(session.tools, data().themeName(session.theme)),

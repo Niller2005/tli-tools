@@ -15,7 +15,7 @@ import { buildState, cellEvent, type CellModel } from '@/board/board'
 import { TOOLS } from '@/engine/data'
 import { devourOptions, startOptions } from '@/engine/devour'
 import { language } from '@/reader/ocr'
-import { loadPng, readModel } from '@/reader/mod'
+import { loadPng, readModel, warningText } from '@/reader/mod'
 import { Rollouts, solve } from '@/solver/solve'
 import { TUNED } from '@/solver/mod'
 import { black, frame, framePath, have, pollUntil, readAll, readNext, ROLLOUTS } from './session-common'
@@ -160,13 +160,13 @@ test('the frame size is scaled or refused', async () => {
   await read(2560, 1440)
   const wide = s.reading as Reading
   expect(wide.model.cells).toEqual((reference.reading as Reading).model.cells)
-  expect(wide.warnings.every((w) => !w.text.includes('16:9'))).toBe(true)
+  expect(wide.warnings.every((w) => !(w.kind === 'kept' && w.keep === 'shape'))).toBe(true)
   expect(wide.keptLines()).toEqual([])
 
   await read(1440, 1080)
   const kept = s.reading as Reading
   expect(kept.model.cells).toEqual(wide.model.cells)
-  expect(kept.warnings[0].text.startsWith(line)).toBe(true)
+  expect(kept.warnings[0]).toMatchObject({ kind: 'kept', keep: 'shape' })
   const lines = kept.keptLines()
   expect(lines.length === 1 && lines[0].startsWith(line) && lines[0].endsWith('that is not maximized.')).toBe(true)
 
@@ -216,9 +216,9 @@ test('a hidden counter keeps the day', async () => {
     expect([r.daysLeft, r.model.day]).toEqual([16, board.model.day])
     // The Consume target screen always hides the counter, so only the
     // treasure pick says so.
-    const kept = r.warnings.some((w) => w.text.includes('16 day(s) until Riot kept from the last read'))
+    const kept = r.warnings.some((w) => warningText(w).includes('16 day(s) until Riot kept from the last read'))
     expect(kept).toBe(r.screen !== 'chainTarget')
-    expect(r.warnings.every((w) => !w.text.includes('day 1 assumed'))).toBe(true)
+    expect(r.warnings.every((w) => !warningText(w).includes('day 1 assumed'))).toBe(true)
   }
   const pick = s.reading as Reading
   expect(pick.screen).toBe('treasurePick')
@@ -243,13 +243,13 @@ test('a hidden counter on the run start pick is day one', async () => {
   const pick = await readNext(s, names[0])
   expect(pick.screen).toBe('instrumentPick')
   expect([pick.daysLeft, pick.model.day]).toEqual([20, 1])
-  expect(pick.warnings.every((w) => !w.text.includes('kept from the last read'))).toBe(true)
+  expect(pick.warnings.every((w) => !warningText(w).includes('kept from the last read'))).toBe(true)
   // The count 0 kept from the settings was the last run's: its Chains go.
-  expect(pick.warnings.some((w) => w.text === 'A new run: the held instruments were cleared.')).toBe(true)
+  expect(pick.warnings.some((w) => warningText(w) === 'A new run: the held instruments were cleared.')).toBe(true)
   for (let k = 0; k < 2; k++) {
     const board = await readNext(s, names[1])
     expect([board.screen, board.daysLeft]).toEqual(['manage', 16])
-    expect(board.warnings.every((w) => !w.text.startsWith('A new run'))).toBe(true)
+    expect(board.warnings.every((w) => !warningText(w).startsWith('A new run'))).toBe(true)
   }
 })
 
@@ -271,7 +271,7 @@ test('Prison Status gives the board under the pick', async () => {
     expect(r.model.cells).toEqual(shown.model.cells)
     expect(r.model.vault).toEqual(shown.model.vault)
     const patrol = (w: string) => w.includes("Mark today's doors") || w.includes('No destination cards')
-    expect(r.warnings.every((w) => !patrol(w.text))).toBe(true)
+    expect(r.warnings.every((w) => !patrol(warningText(w)))).toBe(true)
     expect(s.problems.every((p) => !patrol(p))).toBe(true)
     expect(r.model.choice.kind).toBe('gift')
     expect(s.advice()?.action.type).toBe('choose')
@@ -287,7 +287,7 @@ test('a Consume target picks a bite', async () => {
   if (s === null) return
   let r = s.reading as Reading
   expect(r.screen).toBe('chainTarget')
-  expect(r.warnings.every((w) => !w.text.includes("can't be solved"))).toBe(true)
+  expect(r.warnings.every((w) => !warningText(w).includes("can't be solved"))).toBe(true)
   let st = buildState(r.model, 1)[0]
   const targets = startOptions(st).map((o) => o.cell)
   expect(targets.length).toBeGreaterThan(0)
@@ -340,13 +340,13 @@ test('a Consume target keeps unsure cells', async () => {
   if (alone === null) return
   let r = alone.reading as Reading
   expect(r.screen).toBe('chainTarget')
-  expect(r.warnings.some((w) => w.text.startsWith('Check cell 03'))).toBe(true)
+  expect(r.warnings.some((w) => w.kind === 'cellRead' && w.cell === 2)).toBe(true)
 
   const s = await readAll([], ['rec4-t070.png', 'rec4-t110.png'])
   if (s === null) return
   r = s.reading as Reading
   expect(r.screen).toBe('chainTarget')
-  expect(r.warnings.every((w) => !w.text.startsWith('Check cell ') && !w.text.includes('days counter'))).toBe(true)
+  expect(r.warnings.every((w) => w.kind !== 'cellRead' && !warningText(w).includes('days counter'))).toBe(true)
   expect(r.model.cells[2]).toEqual({ kind: 'inmate', beast: 'rat', tier: 1, ivory: false, prey: null, event: null })
 })
 
@@ -375,7 +375,7 @@ test('a Consume target follows the jaws', async () => {
   const st = buildState(r.model, 1)[0]
   const options = startOptions(st).map((o) => o.cell).sort((a, b) => a - b)
   if (JSON.stringify(options) !== JSON.stringify(jawed)) {
-    const w = r.warnings.find((x) => x.text.startsWith('The Consume targets on screen are cells 04, 05, 12 and 13'))
+    const w = r.warnings.find((x) => x.kind === 'targetsDiffer')
     expect(w?.cell).toBe(2)
   }
 })
@@ -436,7 +436,7 @@ test('an off-board frame, then the run end', async () => {
   await s.wait()
   const after = s.reading as Reading
   expect([after.model, after.screen, after.at]).toEqual([before.model, before.screen, before.at])
-  expect(after.warnings[0].text).toBe('The prison board is not on screen: showing the last reading.')
+  expect(warningText(after.warnings[0])).toBe('The prison board is not on screen: showing the last reading.')
   expect(after.warnings.slice(1)).toEqual(before.warnings)
   expect(s.ranking).toEqual(ranking)
 
@@ -537,8 +537,8 @@ test('a popup keeps the last reading', async () => {
   await s.wait()
   const after = s.reading as Reading
   expect([after.model, after.screen, after.at]).toEqual([before.model, before.screen, before.at])
-  expect(after.warnings[0].text).toBe('A popup covers the game: showing the last reading.')
-  expect(after.warnings[0].kind).toBe('note')
+  expect(warningText(after.warnings[0])).toBe('A popup covers the game: showing the last reading.')
+  expect(after.warnings[0].kind).toBe('kept')
   expect(after.warnings.slice(1)).toEqual(before.warnings)
   expect(after.keptLines()).toEqual(['A popup covers the game: showing the last reading.'])
   expect(before.keptLines()).toEqual([])
@@ -684,7 +684,7 @@ test('a steady read stops warning', async () => {
   const name = 'rec3-t058.png'
   const s = await readAll([], [name])
   if (s === null) return
-  const check = () => (s.reading as Reading).warnings.filter((w) => w.text.startsWith('Check cell 08: rarity')).length
+  const check = () => (s.reading as Reading).warnings.filter((w) => w.kind === 'cellRead' && w.detail === 'rarity' && w.cell === 7).length
   expect(check()).toBe(1)
   const counts: number[] = []
   for (let k = 0; k < 2; k++) {
@@ -693,5 +693,5 @@ test('a steady read stops warning', async () => {
     counts.push(check())
   }
   expect(counts).toEqual([1, 0])
-  expect((s.reading as Reading).warnings.every((w) => !w.text.startsWith('Check cell'))).toBe(true)
+  expect((s.reading as Reading).warnings.every((w) => w.kind !== 'cellRead')).toBe(true)
 })
