@@ -34,6 +34,8 @@ export interface StoreContract<S> {
   expectImported(loaded: S | null): void
   /** state files that must be refused: left where they are, with nothing written */
   refused: string[]
+  /** a second saved state, different from `full` in what it keeps: the next save has something to do */
+  changed: S
   /**
    * Writes a database file of an older schema version to `path`, with rows in it, as that
    * version's code left it; called once per version before the current one.
@@ -148,7 +150,12 @@ export function theStoreContract<S>(contract: StoreContract<S>): void {
       const seen = dataVersion(watch)
       await contract.save(contract.full, path)
       expect(dataVersion(watch)).toBe(seen)
+
+      // a change does write
+      await contract.save(contract.changed, path)
+      expect(dataVersion(watch)).toBeGreaterThan(seen)
       watch.close()
+      contract.expectSame(await contract.load(path), contract.changed)
     })
   })
 }

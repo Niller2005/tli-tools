@@ -15,7 +15,8 @@
     "items:coverage": "bun scripts/coverage.ts"
   },
   "dependencies": {
-    "@tli/gamelog": "workspace:*"
+    "@tli/gamelog": "workspace:*",
+    "@tli/store": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",

@@ -98,7 +98,10 @@ await saveTracker({ version: 1, log: { file: logFile, offset: reader.position },
 `loadTracker()` gives back the state of the character that played last, with the others in its `parked`; the queries
 below are about that character too. A tracker restored from it carries on with every character.
 
-A save writes only what changed since the last one, in one transaction. The state the tracker kept
+A save writes only what changed since the last one, in one transaction. The life of the file
+itself — opening it, the schema versions, setting a bad one aside, the old `state.json` — is
+`@tli/store`'s, shared with the Arcana tracker and proved the same for both by one contract
+suite; what is this tracker's own is the schema and the rows. The state the tracker kept
 before the database — a `state.json` in the same folder, of the versions the old loader read — is
 brought in by itself the first time the database is not there, and the file is renamed to
 `state.json.imported` and kept. A file that is not the tracker's database is moved aside as
