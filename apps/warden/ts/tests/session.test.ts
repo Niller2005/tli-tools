@@ -1,9 +1,9 @@
 //! The app session without saved frames: the auto read's fingerprint and
 //! watch, the days clock, the Consume targets and Avenger's Casket meals,
-//! and the solve run on any number of threads. A port of the pure parts of
-//! the Rust crate's tests/session.rs; the tests on saved frames are in
-//! session-frames.test.ts, session-flow.test.ts and
-//! session-instruments.test.ts.
+//! the run rules on synthetic reads, and the solve run on any number of
+//! threads. A port of the pure parts of the Rust crate's tests/session.rs;
+//! the tests on saved frames are in session-frames.test.ts,
+//! session-flow.test.ts and session-instruments.test.ts.
 
 import { expect, test } from 'bun:test'
 
@@ -24,6 +24,7 @@ import {
 import type { Reading } from '@/app/session'
 import { blankModel, type CellModel } from '@/board/board'
 import { Rgba, warningText } from '@/reader/mod'
+import type { CellRead } from '@/reader/scene'
 import { Rollouts } from '@/solver/solve'
 import { TUNED } from '@/solver/mod'
 import { buildBoard } from './common'
@@ -316,5 +317,110 @@ test('a steady read keys on identity, not the confidence', async () => {
   expect(read(0.2)).toBe(1)
   expect(read(0.1)).toBe(1) // the same read at another confidence still counts
   expect(read(0.1)).toBe(0) // the third in a row is steady
+  await s.wait()
+})
+
+/** The run rules, on reads made of synthetic (scene, panels) input: the
+ * PNG frames that guard them today (session-frames, session-flow) are
+ * git-ignored and missing, so without these the rules have no test. */
+
+/** The warden's cell, screen cell 3, read as a Normal Wolf; every other
+ * cell locked and sure. */
+const WOLF: Record<number, Partial<CellRead>> = { 3: { locked: false, inmate: { beast: 'wolf', tier: 1 } } }
+
+/** A higher days count read twice is a new run: the first higher read
+ * waits for its second, and the second clears the instruments held over
+ * the old run. */
+test('a higher days count twice is a new run', async () => {
+  const s = new Session(20, ['chains'], null, null)
+  const read = (days: number) => s.readSynthetic(syntheticScene(3, WOLF), syntheticPanels('manage', days))
+  read(16)
+  expect(s.daysLeft()).toBe(16)
+  read(18) // a lone higher count is a misread and waits
+  expect(s.daysLeft()).toBe(16)
+  read(18) // the same higher count again: a new run
+  expect(s.daysLeft()).toBe(18)
+  expect(s.tools).toEqual([])
+  expect((s.reading as Reading).warnings.some((w) => warningText(w) === 'A new run: the held instruments were cleared.')).toBe(true)
+  await s.wait()
+})
+
+/** A live read that changes the board is held for one more read: a blip
+ * that shows the old board again within a second would otherwise cost the
+ * corrections and the running solve. */
+test('a live board change is held until the next read confirms it', async () => {
+  const s = new Session(20, [], null, null)
+  const read = (tier: number, live: boolean) =>
+    s.readSynthetic(syntheticScene(3, { 3: { locked: false, inmate: { beast: 'wolf', tier } } }), syntheticPanels('manage', 16), live)
+  read(1, true)
+  expect((s.reading as Reading).model.cells[2]).toMatchObject({ kind: 'inmate', tier: 1 })
+  read(2, true) // the changed board is held, the old one stays on show
+  expect((s.reading as Reading).model.cells[2]).toMatchObject({ kind: 'inmate', tier: 1 })
+  expect(s.wantsReread()).toBe(true)
+  read(2, true) // the next read confirms it
+  expect((s.reading as Reading).model.cells[2]).toMatchObject({ kind: 'inmate', tier: 2 })
+  expect(s.wantsReread()).toBe(false)
+  await s.wait()
+})
+
+/** The board fades in after a Consume target screen and its instrument
+ * panel reads empty for a frame: such a read is kept once and the next
+ * taken, whatever the panel reads. */
+test('a Consume target frame that fades in is kept once', async () => {
+  const s = new Session(20, ['chains'], null, null)
+  const read = (held: 'none' | 'empty') =>
+    s.readSynthetic(syntheticScene(3, WOLF), syntheticPanels('chainTarget', null, held === 'empty' ? { held: [] } : {}))
+  read('none')
+  const before = s.reading as Reading
+  read('empty')
+  expect(s.reading).toBe(before)
+  expect(before.keptLines()).toEqual(['The board is still coming in: showing the last reading.'])
+  read('empty') // the next read is taken with the panel still empty
+  expect((s.reading as Reading).keptLines()).toEqual([])
+  await s.wait()
+})
+
+/** A game dialog over the board keeps the last reading on show, with a
+ * line that says so, until a frame reads again. */
+test('a popup keeps the last reading', async () => {
+  const s = new Session(20, [], null, null)
+  s.readSynthetic(syntheticScene(3, WOLF), syntheticPanels('manage', 16))
+  const before = s.reading as Reading
+  s.readSynthetic(syntheticScene(3, WOLF), syntheticPanels('popup', null))
+  expect(s.reading).toBe(before)
+  expect(before.keptLines()).toEqual(['A popup covers the game: showing the last reading.'])
+  s.readSynthetic(syntheticScene(3, WOLF), syntheticPanels('manage', 16))
+  expect((s.reading as Reading).keptLines()).toEqual([])
+  await s.wait()
+})
+
+/** The riot screen can be missed: on the run's last day a board read with
+ * the counter hidden that differs from the board on show in six cells or
+ * more is a screen after the run, and ends it. */
+test('a far board on the last day with the counter hidden ends the run', async () => {
+  const s = new Session(20, [], null, 0)
+  s.readSynthetic(syntheticScene(3, WOLF), syntheticPanels('manage', 0))
+  const after: Record<number, Partial<CellRead>> = { ...WOLF }
+  for (let c = 4; c <= 10; c++) after[c] = { locked: false, inmate: { beast: 'rat', tier: 3 } }
+  s.readSynthetic(syntheticScene(3, after), syntheticPanels('patrol', null))
+  expect(s.runOver).not.toBe(null)
+  expect(s.reading).toBe(null)
+  expect(s.daysLeft()).toBe(null)
+  await s.wait()
+})
+
+/** After the riot, only a run start is taken: the screens players stay on
+ * read as junk boards, so a board read between runs is kept waiting. */
+test('between runs only a run start is taken', async () => {
+  const s = new Session(20, [], null, null)
+  s.readSynthetic(syntheticScene(3, WOLF), syntheticPanels('manage', 16))
+  s.readSynthetic(syntheticScene(3, WOLF), syntheticPanels('runEnd', null))
+  expect(s.runOver).not.toBe(null)
+  s.readSynthetic(syntheticScene(3, WOLF), syntheticPanels('manage', 5))
+  expect(s.missed).toBe('The run is over: waiting for the next run.')
+  expect(s.reading).toBe(null)
+  // a pick with the counter hidden is a run start
+  s.readSynthetic(syntheticScene(3, WOLF), syntheticPanels('instrumentPick', null))
+  expect(s.reading).not.toBe(null)
   await s.wait()
 })
