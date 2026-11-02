@@ -6,6 +6,7 @@
 
 import type { CliRenderer, KeyEvent } from '@opentui/core'
 import type { MinigameView } from '@tli/gamelog'
+import { type Tone } from '@tli/tui'
 import {
   defaultSettings,
   missing,
@@ -25,8 +26,8 @@ export interface DashboardState {
   cursor: number
   /** the tools the player has picked */
   picked: Set<string>
-  /** the message under the list */
-  message: string
+  /** the message under the list; an object when it says something went wrong, so it is drawn red */
+  message: string | { text: string; tone: Tone }
   /** what the game's log says about the minigames */
   view: MinigameView | null
   /** what the packages have read: the panels and the tools' status lines */
@@ -231,7 +232,7 @@ export class DashboardApp {
 
     const gone = chosen.flatMap(tool => missing(tool).map(name => `${tool.name} needs ${name}`))
     if (gone.length > 0) {
-      this.state.message = gone.join('; ')
+      this.state.message = { text: gone.join('; '), tone: 'red' }
       this.draw()
       return
     }

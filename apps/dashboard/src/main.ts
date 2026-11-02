@@ -53,7 +53,7 @@ async function dashboard(): Promise<void> {
     try {
       writeSettings(settingsFile, state.settings)
     } catch (error) {
-      state.message = `the settings could not be kept: ${(error as Error).message}`
+      state.message = { text: `the settings could not be kept: ${(error as Error).message}`, tone: 'red' }
     }
   }
 
@@ -73,7 +73,7 @@ async function dashboard(): Promise<void> {
       },
       (error) => {
         fetching = false
-        state.message = `the community prices could not be fetched: ${(error as Error).message}`
+        state.message = { text: `the community prices could not be fetched: ${(error as Error).message}`, tone: 'red' }
         draw()
       },
     )
@@ -187,7 +187,7 @@ async function dashboard(): Promise<void> {
       await launch(result.tools)
       state.message = ''
     } catch (error) {
-      state.message = (error as Error).message
+      state.message = { text: (error as Error).message, tone: 'red' }
     } finally {
       process.off('SIGINT', ignoreSigint)
     }

@@ -27,7 +27,21 @@ bun src/main.ts --no-color
 | `?` | Help |
 | `q` | Quit |
 
-A tool that is on auto shows `⟳ auto` after its badge.
+A tool that is on auto shows a purple `⟳ auto` chip after its badge.
+
+## The look
+
+The dashboard uses the shared palette of [`@tli/tui`](../../packages/tui/README.md), so every kind
+of thing has its own colour: the name in the bar along the top is brand orange on a surface bar,
+tool names are blue, the focused list panel has the heavy accent border, FE amounts are gold, run
+counts orange, times and durations teal, run names blue and a run still going orange. The bar
+along the top also carries the state of things as chips — `log ok` (green) or `log missing`
+(yellow), the capture way, how many tools are running (orange) and how many are on auto (purple).
+The keys at the bottom sit on keycaps on a surface bar. A message under the list is accent, or red
+when something went wrong (a tool whose programs are missing, settings that could not be kept,
+prices that could not be fetched). With `--no-color` or `NO_COLOR` the chips become `[word]`, the
+keycaps plain text and the borders the terminal's own: the shape carries the meaning, never the
+colour alone.
 
 ## How tools start
 
@@ -62,7 +76,7 @@ window ends up on the screen is the compositor's business.
 
 ## The status badges and lines
 
-A tool that reads a minigame shows what the game's log says about it:
+A tool that reads a minigame shows what the game's log says about it, as a tinted chip:
 
 | Badge | Meaning |
 |-------|---------|
