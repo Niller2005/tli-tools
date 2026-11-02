@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { createTestRenderer } from '@opentui/core/testing'
 import { Model } from '@/board/board'
 import { WardenScreen } from '@/tui/screen'
-import { freshView, ringRows, type MoveView } from '@/tui/view'
+import { dayView, freshView, ringRows, type MoveView } from '@/tui/view'
 
 function model(): Model {
   const cells = Array.from({ length: 16 }, (_, index) => {
@@ -66,7 +66,7 @@ describe("Warden's terminal screen", () => {
       option: 0,
     }
     state.model = board
-    state.day = `Day ${board.day} · 4 to Riot`
+    state.day = dayView(board, 4, false)
     state.advice = advice
     state.ranking = [{ rank: 1, mean: ' 1.25', label: 'Go to cell 06', chosen: true }]
     state.ring = ringRows(board, advice, [], [3])
