@@ -107,12 +107,6 @@ export class DashboardApp {
   key(key: KeyEvent): void {
     const char = this.typed(key)
 
-    if (key.ctrl && (char === 'c' || key.name === 'c')) {
-      this.hooks.onQuit()
-      key.preventDefault()
-      return
-    }
-
     // while a capture command is typed in, the input has the keys; only escape comes back
     if (this.state.editing) {
       if (key.name === 'escape') this.endCommand()

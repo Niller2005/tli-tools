@@ -197,12 +197,10 @@ describe('the dashboard screen', () => {
     test.renderer.destroy()
   })
 
-  test('q and ctrl+c leave the dashboard', async () => {
+  test('q leaves the dashboard', async () => {
     const { test, calls } = await setup()
     test.mockInput.pressKey('q')
     expect(calls.quit).toBe(1)
-    test.mockInput.pressCtrlC()
-    expect(calls.quit).toBe(2)
     test.renderer.destroy()
   })
 

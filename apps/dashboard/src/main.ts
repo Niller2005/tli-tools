@@ -10,7 +10,6 @@
 // is opened when its minigame turns open — once per closed-to-open transition, and never on the
 // first sample, however open the board already is when the dashboard comes up.
 
-import type { KeyEvent } from '@opentui/core'
 import { watchMinigames, type Watcher } from '@tli/gamelog'
 import {
   Launcher,
@@ -81,7 +80,6 @@ async function dashboard(): Promise<void> {
 
   while (true) {
     let watcher: Watcher | null = null
-    let tick: NodeJS.Timeout | undefined
     // the minigames' states as the last sample had them: the first sample has none, so nothing
     // counts as a transition however open a board already is
     let previous = statesOf(null)
@@ -92,10 +90,48 @@ async function dashboard(): Promise<void> {
       watcher = null
     }
     const { promise: outcome, resolve: settleOutcome } = Promise.withResolvers<Outcome>()
-    const terminal = await startApp({ argv: process.argv })
+    // the dashboard on the terminal this round; made as soon as the renderer is
+    let app: DashboardApp
+    const refresh = async (): Promise<void> => {
+      const view = watcher?.state() ?? null
+      const opened = newlyOpen(previous, view)
+      previous = statesOf(view)
+      state.view = view
+      state.status = await readStatus({ view, launcher, log: givenLog, itemAge })
+
+      // a tool the player asked for opens by itself: once per open transition, never twice,
+      // and nothing is ever closed by it
+      for (const tool of toolsToAutoLaunch(opened, state.settings, (id) => launcher.isOpen(id))) {
+        const result = openTool(launcher, tool, {
+          parentArgv: process.argv,
+          settings: toolSettings(state.settings, tool.id),
+        })
+        state.message = `opened by itself: ${result.message}`
+      }
+
+      app.draw()
+    }
+    const terminal = await startApp({
+      argv: process.argv,
+      onKey: (key) => {
+        app.key(key)
+      },
+      onQuit: () => {
+        stopWatching()
+        settleOutcome({ kind: 'quit' })
+        void terminal.stop()
+      },
+      onTick: () => {
+        if (reading) return
+        reading = true
+        void refresh().then(() => {
+          reading = false
+        })
+      },
+    })
 
     try {
-      const app = new DashboardApp(terminal.renderer, state, {
+      app = new DashboardApp(terminal.renderer, state, {
         onQuit: () => {
           stopWatching()
           settleOutcome({ kind: 'quit' })
@@ -131,41 +167,10 @@ async function dashboard(): Promise<void> {
       // status, so the renderer never paints that first-wide frame
       app.draw()
 
-      const refresh = async (): Promise<void> => {
-        const view = watcher?.state() ?? null
-        const opened = newlyOpen(previous, view)
-        previous = statesOf(view)
-        state.view = view
-        state.status = await readStatus({ view, launcher, log: givenLog, itemAge })
-
-        // a tool the player asked for opens by itself: once per open transition, never twice,
-        // and nothing is ever closed by it
-        for (const tool of toolsToAutoLaunch(opened, state.settings, (id) => launcher.isOpen(id))) {
-          const result = openTool(launcher, tool, {
-            parentArgv: process.argv,
-            settings: toolSettings(state.settings, tool.id),
-          })
-          state.message = `opened by itself: ${result.message}`
-        }
-
-        app.draw()
-      }
-
       watcher = watchMinigames(givenLog === null ? {} : { log: givenLog })
       await refresh()
 
-      tick = setInterval(() => {
-        if (reading) return
-        reading = true
-        void refresh().then(() => {
-          reading = false
-        })
-      }, 1000)
-
-      const onKey = (key: KeyEvent): void => app.key(key)
-      terminal.renderer.keyInput.on('keypress', onKey)
       terminal.renderer.on('destroy', () => {
-        terminal.renderer.keyInput.off('keypress', onKey)
         settleOutcome({ kind: 'quit' })
       })
 
@@ -174,9 +179,9 @@ async function dashboard(): Promise<void> {
       await terminal.stop()
       throw error
     } finally {
-      clearInterval(tick)
       stopWatching()
     }
+
 
     const result = await outcome
     if (result.kind === 'quit') return
