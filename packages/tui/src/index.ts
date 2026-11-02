@@ -4,6 +4,22 @@
 // helper that starts a renderer and always puts the terminal back.
 
 export {
+  brandChunks,
+  chip,
+  chunksWidth,
+  hintChunks,
+  keyHint,
+  meter,
+  mix,
+  panelBorderStyle,
+  panelTitle,
+  signTone,
+  sparkline,
+  stat,
+  surfaceColor,
+} from './chrome'
+
+export {
   backgroundColor,
   borderColor,
   color,
@@ -15,6 +31,7 @@ export {
   titleColor,
   theme,
   tone,
+  toneColor,
   toneOn,
   type Theme,
   type Tone,
