@@ -30,7 +30,7 @@ The tray icon (by the clock) has the settings: the advice to show, your target s
 and from which round you play on your own (round 11, the protocols, by default).
 
 ## Linux (terminal)
-`scripts/tui.ts` is a terminal version for Linux: no overlay, the same reader and advice. It follows the game's log, takes a
+`scripts/tui.ts` is a terminal version for Linux: the same reader and advice, and with `bun run overlay` running (see [`packages/overlay`](../../packages/overlay/README.md)) the move also appears in a card over the game. It follows the game's log, takes a
 picture of the game window after every move (and watches the window for changes when the log has no detail lines),
 reads the board and shows the move, the chance of reaching your target and the next-best options. The screen is drawn
 with [OpenTUI](https://opentui.com/docs): the header, the **Next move**, **Options** and **Board** panels, and the keys at
@@ -59,6 +59,30 @@ bun scripts/tui.ts
 - Options: `--log=<UE_game.log>`, `--game-title=<regex>`, `--target=<score>`, `--no-deep`, `--no-log`,
   `--niri-screenshot`, `--no-color`.
 - `bun scripts/tui.ts --image=shot.png` reads one screenshot, prints the advice and exits.
+
+### The look of the screen
+
+The screen is drawn in one palette with the other tli tools, and every colour has a job, so the same kind of thing is
+the same colour everywhere:
+
+| Colour | What it marks on the screen |
+|---|---|
+| ember (the name in the top bar) | the helper's name |
+| cyan | the advised move, the panel that has the answer |
+| gold | scores: the target, tank activity, expected Ultimate Activity |
+| green / amber / red | a chance that is close / a long shot / about gone, and what is wrong |
+| blue | names: cards, tanks, instruments |
+| teal / purple / pink | the kind of a tank: magic, rare, boss |
+| orange | work under way: the round's progress, a deep check still running, pictures and log lines read |
+| yellow | a warning from the reader ("check tank 3") |
+| dim | labels, paths and hints |
+
+The bar along the top carries the state as chips (`[target 925,000] [board open] [round 6 · potion] [deep on]`, left
+out one by one when the terminal is narrow), the **Next move** panel is the one that stands out (heavy border, its
+answer in bold cyan), and progress — the round out of the run, a deep check out of its playouts — is drawn as a bar
+in orange. The keys at the bottom sit on caps. With `--no-color` (or `NO_COLOR`) every one of these is still there in
+plain text: the chips become `[bracketed]`, the bars become plain lines, and the move panel is still told apart by
+its heavy border.
 
 ## The overlay
 The overlay is the Windows app's card that sits over the game while you play, so you never have to switch windows.

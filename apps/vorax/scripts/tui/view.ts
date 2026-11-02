@@ -4,6 +4,7 @@
 // into something that can be drawn and the report in `report.ts` prints them, so the advice can
 // be looked at without a terminal.
 
+import { LAST_ROUND } from '@/engine/game'
 import type { Advice, Ranked } from '@/strategy/advisor'
 import type { HelperInput, InstrumentAdvice, Row as DeepRow } from '@/web/helper'
 import { type Row, num, type Tone } from '@tli/tui'
@@ -80,6 +81,12 @@ export function freshView(target: number, deepOn: boolean): ViewState {
 
 /** A big number, short: 1.12M, 900k. */
 export const short = (n: number): string => (n >= 1e6 ? `${(n / 1e6).toFixed(2)}M` : `${Math.round(n / 1000)}k`)
+
+/** The tone of a chance: green when it is close, yellow when it is a long shot, red when it is about gone. */
+const pTone = (p: number): Tone => (p >= 0.6 ? 'green' : p >= 0.3 ? 'yellow' : 'red')
+
+/** The tone of a kind of thing on the board: the common quiet, the magic calm, the rare special, the boss loud. */
+const KIND: Record<string, Tone> = { normal: 'dim', magic: 'teal', rare: 'purple', supreme: 'pink', boss: 'pink' }
 
 /** A potion, and the tanks it goes on. */
 const cardMove = (x: HelperInput, r: { index: number | null; targets: number[] }): string =>
@@ -182,6 +189,8 @@ export function moveOf(v: ViewState): Move {
 export interface Block {
   /** the heading above the rows; empty when there is none */
   heading: string
+  /** the progress bar the screen draws at the end of the heading, when the block is still working */
+  meter?: { fraction: number; tone: Tone }
   /** the rows */
   rows: Row[]
 }
@@ -206,11 +215,12 @@ export function optionBlocks(v: ViewState): Block[] {
   if (d?.rows.length) {
     blocks.push({
       heading: `Chance to reach ${num(v.target)}${d.finished ? '' : ` · checking ${d.done}/${d.total}`}`,
+      meter: d.finished ? undefined : { fraction: d.total > 0 ? d.done / d.total : 0, tone: 'orange' },
       rows: d.rows.slice(0, 5).map(r => ({
         cells: [
-          { text: `${Math.round(r.p * 100)}%`, width: 4, align: 'right', tone: r.out ? 'dim' : undefined },
-          { text: `${label(r)}${r.out ? ' (ruled out)' : ''}`, tone: r.out ? 'dim' : undefined },
-          { text: `avg ${short(r.mean)}`, tone: 'dim', width: 10 },
+          { text: `${Math.round(r.p * 100)}%`, width: 4, align: 'right', tone: r.out ? 'dim' : pTone(r.p) },
+          { text: `${label(r)}${r.out ? ' (ruled out)' : ''}`, tone: r.out ? 'dim' : 'blue' },
+          { text: `avg ${short(r.mean)}`, tone: r.out ? 'dim' : 'gold', width: 10 },
         ],
       })),
     })
@@ -235,9 +245,9 @@ export function optionBlocks(v: ViewState): Block[] {
       heading: 'Played to the end of the run',
       rows: rows.map(r => ({
         cells: [
-          { text: r.end ? short(r.end.activity) : '-', width: 6, align: 'right', tone: 'dim' },
-          { text: r.end ? `${Math.round(r.end.reached * 100)}%` : '-', width: 4, align: 'right', tone: 'dim' },
-          { text: `${r.text}${r.noEffect ? ' (does nothing here)' : ''}` },
+          { text: r.end ? short(r.end.activity) : '-', width: 6, align: 'right', tone: r.end ? 'gold' : 'dim' },
+          { text: r.end ? `${Math.round(r.end.reached * 100)}%` : '-', width: 4, align: 'right', tone: r.end ? pTone(r.end.reached) : 'dim' },
+          { text: `${r.text}${r.noEffect ? ' (does nothing here)' : ''}`, tone: 'blue' },
         ],
       })),
     })
@@ -250,8 +260,8 @@ export function optionBlocks(v: ViewState): Block[] {
       heading: 'This round only · expected Ultimate Activity after it',
       rows: q.ranking.slice(0, 5).map(r => ({
         cells: [
-          { text: short(r.value), width: 6, align: 'right' },
-          { text: cardMove(x, r) },
+          { text: short(r.value), width: 6, align: 'right', tone: 'gold' },
+          { text: cardMove(x, r), tone: 'blue' },
         ],
       })),
     })
@@ -263,8 +273,8 @@ export function optionBlocks(v: ViewState): Block[] {
         .sort((p, q2) => (q2.value ?? 0) - (p.value ?? 0))
         .map(r => ({
           cells: [
-            { text: r.value === null ? '-' : `${Math.round(r.value * 100)}%`, width: 4, align: 'right' },
-            { text: r.name },
+            { text: r.value === null ? '-' : `${Math.round(r.value * 100)}%`, width: 4, align: 'right', tone: r.value === null ? 'dim' : pTone(r.value) },
+            { text: r.name, tone: 'blue' },
           ],
         })),
     })
@@ -282,6 +292,8 @@ export function optionBlocks(v: ViewState): Block[] {
 export interface BoardPanel {
   /** the round and the refreshes that are left */
   heading: string
+  /** how far through the run the round is, for the progress bar beside the heading */
+  progress: number
   /** what the reader wasn't sure of */
   warnings: string[]
   /** the board's rows */
@@ -291,7 +303,7 @@ export interface BoardPanel {
 /** The board, as the board panel shows it. */
 export function boardOf(v: ViewState): BoardPanel {
   const b = v.board
-  if (!b) return { heading: '', warnings: [], rows: [] }
+  if (!b) return { heading: '', progress: 0, warnings: [], rows: [] }
   const x = b.x
   const rows: Row[] = []
   x.tanks.forEach((t, i) => {
@@ -302,16 +314,17 @@ export function boardOf(v: ViewState): BoardPanel {
     rows.push({
       cells: [
         { text: `${i + 1}`, width: 1 },
-        { text: t.archetype, width: 11 },
-        { text: t.rarity, tone: 'dim', width: 7 },
-        { text: `${num(t.activity)} × ${num(t.quantity)}`, width: 16, align: 'right' },
+        { text: t.archetype, width: 11, tone: 'blue' },
+        { text: t.rarity, width: 7, tone: KIND[t.rarity] ?? 'dim' },
+        { text: `${num(t.activity)} × ${num(t.quantity)}`, width: 16, align: 'right', tone: 'gold' },
       ],
     })
   })
-  rows.push({ cells: [{ text: 'hand:', tone: 'dim', width: 12 }, { text: x.hand.join(' | ') || '-' }] })
-  rows.push({ cells: [{ text: 'instruments:', tone: 'dim', width: 12 }, { text: x.instruments.join(' | ') || '-' }] })
+  rows.push({ cells: [{ text: 'hand:', tone: 'dim', width: 12 }, { text: x.hand.join(' | ') || '-', tone: 'blue' }] })
+  rows.push({ cells: [{ text: 'instruments:', tone: 'dim', width: 12 }, { text: x.instruments.join(' | ') || '-', tone: 'purple' }] })
   return {
     heading: `Round ${b.round} · ${phaseName(b.phase)} pick · refreshes: ${x.potionRefreshes ?? '?'} potion, ${x.instrumentRefreshes ?? '?'} instrument`,
+    progress: Math.min(1, b.round / LAST_ROUND),
     warnings: b.warnings,
     rows,
   }
