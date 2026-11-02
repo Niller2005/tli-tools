@@ -11,8 +11,11 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { decodePngClamped, type Image } from '@tli/png'
+import { maskOverlay, readRects } from '@tli/overlay'
 import {
   grimGeometry,
+  outputRect,
+  type Rect,
   planCapture,
   type NiriOutput,
   type NiriWindow,
@@ -31,6 +34,11 @@ export interface GrabOptions {
 export interface Capture {
   /** the capture's state for the header: which window, or why there is none */
   status(): string
+  /**
+   * where the last picture was taken from, in the compositor's logical pixels: the whole output, or the
+   * region the game is in. Null when it is not known (a custom command, Niri's own window screenshot).
+   */
+  area(): Rect | null
   /** a picture of the game window; throws when there is none */
   grab(options?: GrabOptions): Promise<Image<Uint8ClampedArray>>
   close(): void
@@ -104,6 +112,7 @@ export function createCapture(o: { title: RegExp; command?: string; niriScreensh
   if (process.env.TLI_NO_CAPTURE) {
     return {
       status: () => 'capture disabled (TLI_NO_CAPTURE)',
+      area: () => null,
       async grab() {
         throw new Error('capture disabled')
       },
@@ -122,6 +131,7 @@ export function createCapture(o: { title: RegExp; command?: string; niriScreensh
   if (o.command) {
     return {
       status: () => state,
+      area: () => null,
       async grab() {
         const out = nextPath()
         const r = await run(['sh', '-c', o.command!.split('{out}').join(JSON.stringify(out))])
@@ -146,7 +156,7 @@ export function createCapture(o: { title: RegExp; command?: string; niriScreensh
   }
   // The silent ways need the game to be on the screen, which needs the workspace
   // to be the active one on its output.
-  const plan = async (w: NiriWindow, windows: NiriWindow[]): Promise<Plan> => {
+  const plan = async (w: NiriWindow, windows: NiriWindow[]): Promise<{ plan: Plan; outputs: Record<string, NiriOutput> }> => {
     const workspaces = (await niriJson('workspaces')) as NiriWorkspace[]
     const [outputs, overview] = await Promise.all([
       niriJson('outputs') as Promise<Record<string, NiriOutput>>,
@@ -154,7 +164,7 @@ export function createCapture(o: { title: RegExp; command?: string; niriScreensh
       // then taken as if it were closed.
       niriJson('overview-state').catch(() => ({ is_open: false })) as Promise<{ is_open: boolean }>,
     ])
-    return planCapture({
+    const plan = planCapture({
       window: w,
       windows,
       workspaces,
@@ -162,6 +172,7 @@ export function createCapture(o: { title: RegExp; command?: string; niriScreensh
       overviewOpen: overview.is_open,
       niriScreenshot: allowNiriScreenshot,
     })
+    return { plan, outputs }
   }
   const grim = async (args: string[]): Promise<Image<Uint8ClampedArray>> => {
     // grim writes the pixels as they are, in a PPM: there is no PNG to
@@ -182,13 +193,16 @@ export function createCapture(o: { title: RegExp; command?: string; niriScreensh
   }
   let retryAt = 0
   let lastFailure = ''
+  let lastArea: Rect | null = null
   return {
     status: () => state,
+    area: () => lastArea,
     async grab(options: GrabOptions = {}) {
       if (options.force !== true && Date.now() < retryAt) {
         state = lastFailure
         throw new Error(lastFailure)
       }
+      lastArea = null
       try {
         const windows = (await niriJson('windows')) as NiriWindow[]
         const w = await find(windows)
@@ -202,7 +216,7 @@ export function createCapture(o: { title: RegExp; command?: string; niriScreensh
           return img
         }
 
-        const p = await plan(w, windows)
+        const { plan: p, outputs } = await plan(w, windows)
         if (p.kind === 'none') {
           state = p.reason
           throw new Error(p.reason)
@@ -213,6 +227,10 @@ export function createCapture(o: { title: RegExp; command?: string; niriScreensh
           const args = p.kind === 'output' ? ['-o', p.output] : ['-g', grimGeometry(p.region)]
           try {
             const img = await grim(args)
+            // the overlay is a layer of the output, so grim takes it too: it is blacked out, not read
+            const area = p.kind === 'output' ? outputRect(outputs[p.output]) : p.region
+            maskOverlay(img, area, readRects())
+            lastArea = area
             state = `window ${w.id} "${w.title ?? ''}" (${img.width} x ${img.height}, silent)`
             retryAt = 0
             lastFailure = ''

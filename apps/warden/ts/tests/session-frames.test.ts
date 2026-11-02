@@ -564,9 +564,14 @@ test('a mark on the advised door', async () => {
   const centre = 615 + 345 * card
   expect(x >= centre - 165 && x < centre + 165 && y >= 750 && y < 920).toBe(true)
   expect(halfW >= 150 && halfW < 180 && halfH >= 75 && halfH < 95).toBe(true)
+  // on the screen: the box moves with the area the frame was taken from and scales with it
+  const frame = loadPng(board)
+  const on = s.markOn({ x: 100, y: 50, width: frame.w * 2, height: frame.h * 2 })
+  expect(on).toEqual({ x: 100 + 2 * (x - halfW), y: 50 + 2 * (y - halfH), width: 4 * halfW, height: 4 * halfH })
   s.readLive(loadPng(popup))
   await s.wait()
   expect(s.mark()).toBe(null)
+  expect(s.markOn({ x: 0, y: 0, width: 10, height: 10 })).toBe(null)
 
   s = new Session(20, [], null, null)
   s.readInBackground(loadPng(board))

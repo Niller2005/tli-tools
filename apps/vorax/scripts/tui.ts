@@ -27,6 +27,8 @@ import { createCapture, type Capture } from '@tli/capture'
 import { findLog, minigameCaptureGate, watchMinigames, type MinigameView, type Watcher } from '@tli/gamelog'
 import { startApp } from '@tli/tui'
 import type { KeyEvent } from '@opentui/core'
+import { publishCard } from '@tli/overlay'
+import { cardOf } from './tui/card'
 import { VoraxApp } from './tui/app'
 import { createAdvisor } from './tui/advice'
 import { fileHandle } from './tui/log'
@@ -340,6 +342,7 @@ const app = new VoraxApp(renderer, view, {
 })
 draw = () => {
   app.draw()
+  publishCard('vorax', cardOf(view))
   renderer.requestRender()
 }
 
@@ -353,6 +356,7 @@ renderer.on('destroy', () => {
 
 /** Leaves, and puts the terminal back. */
 async function quit(): Promise<void> {
+  publishCard('vorax', null)
   await terminal.stop()
   process.exit(0)
 }

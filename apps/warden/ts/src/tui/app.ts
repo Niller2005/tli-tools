@@ -7,6 +7,8 @@ import type { CliRenderer } from '@opentui/core'
 import type { Session } from '@/app/session'
 import { problem } from '@/reader/ocr'
 import { WardenScreen } from './screen'
+import { publishCard, type Rect } from '@tli/overlay'
+import { cardOf } from './card'
 import { freshView, stateFromSession, type ViewState } from './view'
 
 /** What the app tells the program around it. */
@@ -26,6 +28,8 @@ export class WardenApp {
 
   private readonly session: Session
   private readonly hooks: AppHooks
+  /** where the last picture of the game was taken from, in the compositor's logical pixels */
+  area: () => Rect | null = () => null
 
   constructor(renderer: CliRenderer, session: Session, hooks: AppHooks) {
     this.session = session
@@ -39,6 +43,8 @@ export class WardenApp {
   draw(captureNote = this.state.captureNote): void {
     Object.assign(this.state, stateFromSession(this.session, captureNote, problem()))
     this.screen.draw(this.state)
+    const area = this.area()
+    publishCard('warden', cardOf(this.state, area === null ? null : this.session.markOn(area)))
   }
 
   /** Does a key press. */

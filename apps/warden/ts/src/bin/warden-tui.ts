@@ -26,6 +26,7 @@ import type { KeyEvent } from '@opentui/core'
 import { Session, Watch, fingerprint } from '@/app/session'
 import { timed } from '@/app/profile'
 import { Rgba, loadPng } from '@/reader/mod'
+import { publishCard } from '@tli/overlay'
 import { WardenApp } from '@/tui/app'
 import { plainScreen, stateFromSession } from '@/tui/view'
 
@@ -165,6 +166,7 @@ async function run(): Promise<void> {
     command: a.captureCmd ?? undefined,
     niriScreenshot: a.niriScreenshot,
   })
+  app.area = () => capture.area()
   // The game's log says whether the board is on screen; without it (the log is
   // missing, or it has no detail) the window is watched as before.
   const log = a.noLog ? null : watchMinigames(a.logPath === null ? {} : { log: a.logPath })
@@ -230,6 +232,7 @@ async function run(): Promise<void> {
       else next = performance.now()
     }
   } finally {
+    publishCard('warden', null)
     capture.close()
     log?.close()
     await terminal.stop()

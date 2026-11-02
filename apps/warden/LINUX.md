@@ -13,6 +13,11 @@ bun run tui --capture-cmd 'grim -g "0,0 1920x1080" {out}'   # another compositor
 bun run cli solve frame.png --seed 1 --rollouts 400
 ```
 
+With `bun run overlay` running in another terminal (see [`packages/overlay`](../../packages/overlay/README.md)), the
+move and the ranking also appear in a card over the game. The capture blacks the card out of every picture it takes,
+so place it where the board is not read (`--left`, `--top`). The overlay also outlines the cell, door, button or card
+to click for the advised move.
+
 `bun run tui` and `bun run cli` are the scripts in `package.json`; they run `ts/src/bin/warden-tui.ts` and
 `ts/src/bin/warden-cli.ts`. They need `bun` and `tesseract`.
 

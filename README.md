@@ -33,6 +33,7 @@ Or run a tool directly:
 | `bun run vorax` | Vorax Helper |
 | `bun run warden` | Warden |
 | `bun run warden:cli -- read\|solve\|capture\|bench …` | Warden command line |
+| `bun run overlay` | Card over the game with the move from Vorax / Warden ([how](packages/overlay/README.md)) |
 | `bun run tracker` | Loot tracker |
 | `bun run tracker:report` | Loot report as a csv file |
 | `bun run arcana` | Arcana tracker |
@@ -72,6 +73,7 @@ the helpers fall back to watching the screen.
 | `packages/capture` | Silent game-window capture on Linux (`grim`, or a custom command) |
 | `packages/ocr` | `tesseract` runner and TSV parser |
 | `packages/gamelog` | Where the game's log is, and which minigame it says is open |
+| `packages/overlay` | Layer-shell card over the game, fed by Vorax and Warden; masked out of captures |
 | `packages/launch` | The tools that can be started, and the terminal windows or tmux panes to start them in |
 | `packages/tracker` | Log parsing behind the loot tracker: the bag, the runs, the prices |
 | `packages/arcana` | Log parsing behind the Arcana tracker: Tarot Path sessions, Fateful Contests, trials |

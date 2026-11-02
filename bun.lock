@@ -62,6 +62,7 @@
         "@tli/capture": "workspace:*",
         "@tli/gamelog": "workspace:*",
         "@tli/ocr": "workspace:*",
+        "@tli/overlay": "workspace:*",
         "@tli/png": "workspace:*",
         "@tli/tui": "workspace:*",
       },
@@ -78,6 +79,7 @@
         "@tli/capture": "workspace:*",
         "@tli/gamelog": "workspace:*",
         "@tli/ocr": "workspace:*",
+        "@tli/overlay": "workspace:*",
         "@tli/png": "workspace:*",
         "@tli/tui": "workspace:*",
       },
@@ -102,6 +104,7 @@
     "packages/capture": {
       "name": "@tli/capture",
       "dependencies": {
+        "@tli/overlay": "workspace:*",
         "@tli/png": "workspace:*",
       },
       "devDependencies": {
@@ -133,6 +136,14 @@
     },
     "packages/ocr": {
       "name": "@tli/ocr",
+    },
+    "packages/overlay": {
+      "name": "@tli/overlay",
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@types/node": "latest",
+        "typescript": "^5.9.0",
+      },
     },
     "packages/png": {
       "name": "@tli/png",
@@ -192,6 +203,8 @@
     "@tli/launch": ["@tli/launch@workspace:packages/launch"],
 
     "@tli/ocr": ["@tli/ocr@workspace:packages/ocr"],
+
+    "@tli/overlay": ["@tli/overlay@workspace:packages/overlay"],
 
     "@tli/png": ["@tli/png@workspace:packages/png"],
 
