@@ -148,6 +148,15 @@
     "packages/png": {
       "name": "@tli/png",
     },
+    "packages/store": {
+      "name": "@tli/store",
+      "devDependencies": {
+        "@tli/tracker": "workspace:*",
+        "@types/bun": "latest",
+        "@types/node": "latest",
+        "typescript": "^5.9.0",
+      },
+    },
     "packages/tracker": {
       "name": "@tli/tracker",
       "dependencies": {
@@ -207,6 +216,8 @@
     "@tli/overlay": ["@tli/overlay@workspace:packages/overlay"],
 
     "@tli/png": ["@tli/png@workspace:packages/png"],
+
+    "@tli/store": ["@tli/store@workspace:packages/store"],
 
     "@tli/tracker": ["@tli/tracker@workspace:packages/tracker"],
 
