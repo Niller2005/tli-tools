@@ -3,10 +3,11 @@
 // The capture loop, the session and the screen all speak in terms of these plain values. There is
 // no terminal code here, so the advice and the board can be checked without opening a terminal.
 
+import type { Tone } from '@tli/tui'
 import type { Session } from '@/app/session'
-import type { CellModel, EventMark, Model } from '@/board/board'
+import { cellEvent, type CellModel, type EventMark, type Model } from '@/board/board'
 import type { Action } from '@/engine/actions'
-import { beastIndex, data, type Beast } from '@/engine/data'
+import { beastIndex, data, RAINBOW, type Beast } from '@/engine/data'
 import { cellLabel, tierName, toolName } from '@/engine/text'
 import { fixed } from '@/format'
 import type { Advice } from '@/solver/advise'
@@ -31,6 +32,12 @@ export interface CellView {
   top: string
   /** what the cell holds */
   body: string
+  /** the cell's number on its own, "04" */
+  label: string
+  /** the tone the cell's body is drawn in */
+  bodyTone: Tone
+  /** whether the cell carries an incident mark */
+  event: boolean
   /** whether this is the cell the advice points at */
   advised: boolean
   /** whether this is the warden's cell */
@@ -73,10 +80,10 @@ export interface ViewState {
   notes: string[]
   /** the notes kept over the read */
   keptLines: string[]
-  /** the day and objective line */
-  day: string | null
+  /** the day and objective line, in parts */
+  day: DayView | null
   /** the instruments held and the theme of the run */
-  held: string
+  held: HeldView
   /** the advice, when there is one */
   advice: MoveView | null
   /** whether the solver is still playing the board out */
@@ -106,7 +113,7 @@ export function freshView(captureNote = ''): ViewState {
     notes: [],
     keptLines: [],
     day: null,
-    held: heldLine([], null),
+    held: heldView([], null),
     advice: null,
     solving: false,
     rounds: 0,
@@ -174,6 +181,21 @@ export function shortCell(cell: CellModel): string {
   }
 }
 
+/** The tone a cell's body is drawn in: Chromatics gold, rare things purple, names blue, nests teal. */
+function cellTone(cell: CellModel): Tone {
+  switch (cell.kind) {
+    case 'inmate':
+      if (cell.tier >= RAINBOW) return 'gold'
+      return cell.tier >= 2 ? 'purple' : 'blue'
+    case 'scouted':
+      return 'purple'
+    case 'nest':
+      return 'teal'
+    default:
+      return 'dim'
+  }
+}
+
 /** Column and row of model cell `n` on the screen's 6x4 ring, clockwise from the Interrogation Room. */
 export function ringPosition(n: number): [number, number] {
   if (n <= 5) return [n, 0]
@@ -201,47 +223,93 @@ export function ringRows(
     cells: Array.from({ length: 6 }, () => ({
       top: '',
       body: '',
+      label: '',
       advised: false,
       warden: false,
       warned: false,
       near: false,
+      bodyTone: 'dim',
+      event: false,
     })),
   }))
   model.cells.slice(0, 16).forEach((cell, n) => {
     const [col, row] = ringPosition(n)
+    const label = cellLabel(n)
+    const advised = pick === n
     let top = ''
+    if (advised) top += '›'
     if (model.warden === n) top += '@'
-    top += cellLabel(n)
+    top += label
     if (near.includes(n)) top += '~'
     if (warned.includes(n)) top += '?'
     const target = rows[row]?.cells[col]
     if (target === undefined) return
     target.top = top
     target.body = shortCell(cell)
-    target.advised = pick === n
+    target.label = label
+    target.advised = advised
     target.warden = model.warden === n
     target.warned = warned.includes(n)
+    target.near = near.includes(n)
+    target.bodyTone = cellTone(cell)
+    target.event = cellEvent(cell) !== null
   })
   return rows
 }
 
 /** What the tool knows of the run: the instruments held and the theme. */
-export function heldLine(tools: readonly string[], theme: string | null): string {
-  const held = tools.length === 0 ? 'none known' : tools.map((t) => toolName(t)).join(', ')
-  return `Instruments: ${held}${theme === null ? '' : ` · Theme: ${theme}`}`
+export interface HeldView {
+  /** the instruments held, by name */
+  instruments: string[]
+  /** the run's theme, when it is known */
+  theme: string | null
 }
 
-/** The day, objective and last-reading line of a board. */
-export function dayLine(model: Model, daysLeft: number | null, kept: boolean): string {
-  let day = daysLeft !== null ? `Day ${model.day} · ${daysLeft} to Riot` : `Day ${model.day} · Riot not read`
-  if (kept) day += ' · last reading'
+/** What the tool knows of the run, in the parts the screen colours by meaning. */
+export function heldView(tools: readonly string[], theme: string | null): HeldView {
+  return { instruments: tools.map((t) => toolName(t)), theme }
+}
+
+/** The instruments and the theme as the one plain line the image command prints. */
+export function heldText(held: HeldView): string {
+  const names = held.instruments.length === 0 ? 'none known' : held.instruments.join(', ')
+  return `Instruments: ${names}${held.theme === null ? '' : ` · Theme: ${held.theme}`}`
+}
+
+/** The day line of a board, in the parts the screen colours by meaning. */
+export interface DayView {
+  /** the day of the run */
+  day: number
+  /** the days left to the Riot, when they were read */
+  toRiot: number | null
+  /** whether the line is a reading kept over a closed board */
+  kept: boolean
+  /** the run's objective and its progress, when there is one */
+  objective: { name: string; progress: string; done: boolean } | null
+}
+
+/** The day, objective and last-reading line of a board, in parts. */
+export function dayView(model: Model, daysLeft: number | null, kept: boolean): DayView {
+  let objective: DayView['objective'] = null
   if (model.objective !== null) {
-    const objective = data().objective(model.objective.id)
-    if (objective !== null) {
-      const name = objective.name.replace(/^(Objective: )+/, '')
-      const progress = model.objective.progress >= objective.target ? 'done' : `${model.objective.progress}/${objective.target}`
-      day += ` · ${name} ${progress}`
+    const read = data().objective(model.objective.id)
+    if (read !== null) {
+      objective = {
+        name: read.name.replace(/^(Objective: )+/, ''),
+        progress: `${model.objective.progress}/${read.target}`,
+        done: model.objective.progress >= read.target,
+      }
     }
+  }
+  return { day: model.day, toRiot: daysLeft, kept, objective }
+}
+
+/** The day line as the one plain line the image command prints. */
+export function dayText(view: DayView): string {
+  let day = view.toRiot !== null ? `Day ${view.day} · ${view.toRiot} to Riot` : `Day ${view.day} · Riot not read`
+  if (view.kept) day += ' · last reading'
+  if (view.objective !== null) {
+    day += ` · ${view.objective.name} ${view.objective.done ? 'done' : view.objective.progress}`
   }
   return day
 }
@@ -277,8 +345,8 @@ export function stateFromSession(session: Session, captureNote: string, ocrProbl
     cellWarnings: reading?.warnings.filter((warning) => warning.cell !== null).map((warning) => warning.text) ?? [],
     notes: reading?.warnings.filter((warning) => warning.kind === 'note').map((warning) => warning.text) ?? [],
     keptLines,
-    day: reading === null ? null : dayLine(reading.model, reading.daysLeft, keptLines.length > 0),
-    held: heldLine(session.tools, data().themeName(session.theme)),
+    day: reading === null ? null : dayView(reading.model, reading.daysLeft, keptLines.length > 0),
+    held: heldView(session.tools, data().themeName(session.theme)),
     advice: move,
     solving: session.solving,
     rounds: session.rounds,
@@ -303,8 +371,8 @@ export function plainScreen(state: ViewState): string[] {
   }
   for (const issue of state.problems) lines.push(issue)
   for (const warning of state.warnings) lines.push(warning)
-  if (state.day !== null) lines.push(state.day)
-  lines.push(state.held)
+  if (state.day !== null) lines.push(dayText(state.day))
+  lines.push(heldText(state.held))
   for (const kept of state.keptLines) lines.push(kept)
   lines.push('')
   if (state.advice !== null) {

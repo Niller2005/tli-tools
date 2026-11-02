@@ -52,6 +52,15 @@ screen-watch fallback explicit. The terminal screen is drawn with
 [OpenTUI](https://opentui.com/docs), so the terminal is restored on every way out. See
 [LINUX.md](LINUX.md) for capture and OCR requirements.
 
+The screen is drawn in the colours the terminal tools share, each with its job: the advice and the
+advised cell accent, the loot of the board and of the move ranking gold, the beasts and the
+objective blue, the rare inmates and the run's theme purple, the day counter orange, the countdown
+to the Riot teal, the warnings yellow and the problems red. The bar along the top carries the state
+of the read as chips (a board on show, a read in flight, a solve running, a missing OCR), and the
+bar along the bottom carries the keys on caps and the marks of the board as a legend. The marks
+tell their meaning without the colours too: `›` the advised cell, `@` the warden's cell, `~` a move
+nearly as good as the advice, `?` a cell to check and `!` an incident mark.
+
 The playouts of the solve run in a worker, so the window keeps painting and the capture keeps its
 pace while they do. `WARDEN_PROFILE=<file>` writes the time each stage took (the capture, the
 fingerprint, the read, the solve, the drawing) to that file, one JSON line each.
