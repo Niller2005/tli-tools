@@ -9,6 +9,7 @@ import { portrait } from '@/reader/scene'
 import type { Spot } from '@/reader/panels'
 import {
   bestMatch,
+  buttons,
   completedTail,
   days,
   door,
@@ -203,6 +204,14 @@ describe('the panel reader', () => {
     // The card under the mouse: "Go" dropped and "Cell 11" garbled; it is read again.
     const hovered = [line('to Cell 8', 588, 869), line('to celgl', 927, 869), line('Go to Cell 13', 1234, 869)]
     expect((await doors(hovered, async (x) => (x === 1007 ? 11 : null))).map((c) => c[0])).toEqual([8, 11, 13])
+  })
+
+  test('the decision buttons are read on the name row only', () => {
+    const line = (text: string, x: number, y: number): Line => ({ text, rect: new Rect(x, y, 100, 30) })
+    // Junk from the pulsing card art above card 1 ("e n-.z", seen on a Hunt day) is no End button.
+    expect(buttons([line('e n-.z', 506, 796), line('Go to Cell 15', 560, 845)])).toEqual([])
+    const found = buttons([line('Consume', 390, 865), line('Hunt', 700, 865), line('End', 1000, 865)])
+    expect(found.map((b) => b[0])).toEqual(['Consume', 'Hunt', 'End'])
   })
 
   test('the interrogation cards', () => {
