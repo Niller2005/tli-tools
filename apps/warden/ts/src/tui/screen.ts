@@ -21,15 +21,12 @@ import {
 import {
   backgroundColor,
   borderColor,
-  brandChunks,
-  chip,
-  chunksWidth,
   color,
   colorEnabled,
   defaultBackground,
   defaultForeground,
   fit,
-  hintChunks,
+  footerChunks,
   meter,
   panelBorderStyle,
   panelTitle,
@@ -39,7 +36,9 @@ import {
   titleColor,
   tone,
   toneOn,
+  topBarChunks,
   type Tone,
+  visibleLength,
 } from '@tli/tui'
 import { moveName, type CellView, type DayView, type HeldView, type RingView, type ViewState } from './view'
 
@@ -200,13 +199,10 @@ export class WardenScreen {
 
   /** The bar along the top: the name of the tool, and the state of the read as chips. */
   private drawHeader(width: number, state: ViewState): void {
-    const chunks = brandChunks('Warden', 'Tartarus prison board, Linux terminal')
-    if (chunksWidth(chunks) > width) chunks.length = 2
-    for (const [text, style] of this.stateChips(state)) {
-      const piece: TextChunk[] = [tone('default', '  '), chip(text, style)]
-      if (chunksWidth(chunks) + chunksWidth(piece) > width) break
-      chunks.push(...piece)
-    }
+    const chunks = topBarChunks(
+      { name: 'Warden', sub: 'Tartarus prison board, Linux terminal', chips: this.stateChips(state) },
+      width,
+    )
     this.headerText.content = new StyledText(chunks)
     this.headerText.width = width
   }
@@ -234,19 +230,20 @@ export class WardenScreen {
 
   /** The bar along the bottom: the keys on caps, then the marks of the board as a legend. */
   private drawFooter(width: number): void {
-    const chunks = hintChunks([
-      ['r', 'read now'],
-      ['q', 'quit'],
+    const after = LEGEND.map(([mark, style, label]): TextChunk[] => [
+      mark === '›' ? toneOn('accent', ` ${mark} `, theme.selection) : tone(style, ` ${mark} `),
+      tone('dim', label),
     ])
-    for (const [mark, style, label] of LEGEND) {
-      const piece: TextChunk[] = [
-        tone('default', colorEnabled() ? '   ' : '  '),
-        mark === '›' ? toneOn('accent', ` ${mark} `, theme.selection) : tone(style, ` ${mark} `),
-        tone('dim', ` ${label}`),
-      ]
-      if (chunksWidth(chunks) + chunksWidth(piece) > width) break
-      chunks.push(...piece)
-    }
+    const chunks = footerChunks(
+      {
+        hints: [
+          ['r', 'read now'],
+          ['q', 'quit'],
+        ],
+        after,
+      },
+      width,
+    )
     this.footerText.content = new StyledText(chunks)
     this.footerText.width = width
   }
@@ -378,7 +375,7 @@ export class WardenScreen {
 
   /** One line of one cell, padded out, and picked out by a background when it is advised. */
   private cellLine(chunks: TextChunk[], cell: CellView, cellWidth: number): TextChunk[] {
-    const pad = ' '.repeat(Math.max(0, cellWidth - chunksWidth(chunks)))
+    const pad = ' '.repeat(Math.max(0, cellWidth - chunks.reduce((sum, chunk) => sum + visibleLength(chunk.text), 0)))
     if (!cell.advised || !colorEnabled()) return [...chunks, tone('default', pad)]
     const on = (chunk: TextChunk): TextChunk => ({ ...chunk, bg: color(theme.selection) })
     return [...chunks.map(on), on(tone('accent', pad))]
