@@ -42,11 +42,6 @@ export class VoraxApp {
 
   /** Does a key press. */
   key(key: KeyEvent): void {
-    if (key.ctrl && key.name === 'c') {
-      this.hooks.onQuit()
-      return
-    }
-
     switch (this.typed(key)) {
       case 'q':
         this.hooks.onQuit()

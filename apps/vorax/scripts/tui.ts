@@ -26,7 +26,6 @@ import { tesseractFound } from '@tli/ocr'
 import { createCapture, type Capture } from '@tli/capture'
 import { findLog, minigameCaptureGate, watchMinigames, type MinigameView, type Watcher } from '@tli/gamelog'
 import { startApp } from '@tli/tui'
-import type { KeyEvent } from '@opentui/core'
 import { publishCard } from '@tli/overlay'
 import { cardOf } from './tui/card'
 import { VoraxApp } from './tui/app'
@@ -321,13 +320,20 @@ const terminal = await startApp({
     advisor.close()
     cap.close()
     minigames?.close()
+    publishCard('vorax', null)
+  },
+  onKey: (key) => {
+    app.key(key)
+  },
+  onTick: () => {
+    draw()
   },
 })
 const renderer = terminal.renderer
 
 const app = new VoraxApp(renderer, view, {
   onQuit: () => {
-    void quit()
+    void terminal.quit()
   },
   onSnap: () => {
     void snap('manual')
@@ -346,20 +352,6 @@ draw = () => {
   renderer.requestRender()
 }
 
-const onKey = (key: KeyEvent): void => {
-  app.key(key)
-}
-renderer.keyInput.on('keypress', onKey)
-renderer.on('destroy', () => {
-  renderer.keyInput.off('keypress', onKey)
-})
-
-/** Leaves, and puts the terminal back. */
-async function quit(): Promise<void> {
-  publishCard('vorax', null)
-  await terminal.stop()
-  process.exit(0)
-}
 
 connectLog()
 let polling = false
@@ -372,7 +364,7 @@ setInterval(async () => {
 setInterval(() => loop?.check(), CHECK_MS)
 setInterval(() => { if (!loop) connectLog() }, 5000)
 setInterval(look, 450)
-setInterval(draw, 1000)
+setInterval(look, 450)
 
 draw()
 
