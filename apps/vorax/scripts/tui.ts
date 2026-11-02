@@ -24,7 +24,7 @@ import { instrumentAdvice, quick, type HelperInput } from '@/web/helper'
 import { decodePngClamped } from '@tli/png'
 import { tesseractFound } from '@tli/ocr'
 import { createCapture, type Capture } from '@tli/capture'
-import { findLog, minigameCaptureGate, watchMinigames, type MinigameView, type Watcher } from '@tli/gamelog'
+import { findLog, minigameCaptureGate, retryCapture, watchMinigames, type MinigameView, type Watcher } from '@tli/gamelog'
 import { startApp } from '@tli/tui'
 import { publishCard } from '@tli/overlay'
 import { cardOf } from './tui/card'
@@ -201,8 +201,8 @@ const watch = createWatch()
 let snapping = false, pending: string | null = null, rebase = true, watchBusy = false, firstLook = true
 let minigames: Watcher | null = null
 let minigamesPath: string | null = null
-let retryAt = 0
-let lastCaptureError = ''
+// the capture's back-off window: a failed grab holds the next automatic one back for 2 s
+const retry = retryCapture<Img>(cap)
 
 /** What the game's log says about the Vorax board now. */
 function minigameView(): MinigameView | null {
@@ -213,13 +213,9 @@ async function snap(kind: string) {
   if (snapping) { pending = kind; return }
   const manual = kind === 'manual'
   const gate = minigameCaptureGate(minigameView(), 'vorax')
-  if (!gate.allowed && !manual) {
-    view.capture = gate.status
-    draw()
-    return
-  }
-  if (!manual && Date.now() < retryAt) {
-    view.capture = lastCaptureError
+  const held = retry.heldUp(gate, manual)
+  if (held !== '') {
+    view.capture = held
     draw()
     return
   }
@@ -229,19 +225,15 @@ async function snap(kind: string) {
   let captureStatus = gateNote
   try {
     // a watched change has already held still; a log trigger waits for the cards to land
-    const grab = () => cap.grab({ force: manual })
+    const grab = () => retry.grab({ force: manual })
     const img = kind === 'manual' || kind === 'watch' ? await grab() : await waitStable(() => grab() as never) as unknown as Img
     const r = await readPicture(img, kind)
     if (kind === 'watch') { if (r === 'new') watch.settle(); else if (r === 'same') watch.falseAlarm() }
-    retryAt = 0
-    lastCaptureError = ''
     captureStatus = gateNote === '' ? cap.status() : `${gateNote} · ${cap.status()}`
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     view.status = message
-    lastCaptureError = message
-    retryAt = Date.now() + 2000
-    captureStatus = gateNote === '' ? message : `${message} · ${gateNote}`
+    captureStatus = message
   } finally {
     view.capture = captureStatus
     snapping = false; rebase = true
@@ -254,13 +246,9 @@ async function snap(kind: string) {
 async function look() {
   if (watchBusy || snapping) return
   const gate = minigameCaptureGate(minigameView(), 'vorax')
-  if (!gate.allowed) {
-    view.capture = gate.status
-    draw()
-    return
-  }
-  if (Date.now() < retryAt) {
-    view.capture = lastCaptureError
+  const held = retry.heldUp(gate)
+  if (held !== '') {
+    view.capture = held
     draw()
     return
   }
@@ -268,17 +256,12 @@ async function look() {
   watchBusy = true
   try {
     if (firstLook) { firstLook = false; void snap('watch'); return }
-    const t = watchThumb(await cap.grab())
-    retryAt = 0
-    lastCaptureError = ''
+    const t = watchThumb(await retry.grab())
     view.capture = gate.status === '' ? cap.status() : `${gate.status} · ${cap.status()}`
     if (rebase) { watch.setBase(t); rebase = false; return }
     if (watch.feed(t, Date.now())) void snap('watch')
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    view.capture = gate.status === '' ? message : `${message} · ${gate.status}`
-    lastCaptureError = message
-    retryAt = Date.now() + 2000
+    view.capture = err instanceof Error ? err.message : String(err)
     firstLook = true
     draw()
   } finally { watchBusy = false }
