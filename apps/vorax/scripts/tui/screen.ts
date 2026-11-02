@@ -17,15 +17,12 @@ import {
 } from '@opentui/core'
 import {
   borderColor,
-  brandChunks,
-  chip,
-  chunksWidth,
   color,
   colorEnabled,
   defaultBackground,
   defaultForeground,
   fitEnd,
-  hintChunks,
+  footerChunks,
   meter,
   num,
   panelBorderStyle,
@@ -36,6 +33,7 @@ import {
   textColor,
   titleColor,
   tone,
+  topBarChunks,
   type Tone,
   visibleLength,
 } from '@tli/tui'
@@ -63,7 +61,6 @@ export class VoraxScreen {
 
   private readonly header: BoxRenderable
   private readonly brandText: TextRenderable
-  private readonly chipsText: TextRenderable
   private readonly gameText: TextRenderable
   private readonly logText: TextRenderable
 
@@ -116,15 +113,7 @@ export class VoraxScreen {
       fg: textColor(),
       wrapMode: 'none',
     })
-    this.chipsText = new TextRenderable(renderer, {
-      id: 'chips',
-      content: '',
-      selectable: false,
-      fg: textColor(),
-      wrapMode: 'none',
-    })
     brandBar.add(this.brandText)
-    brandBar.add(this.chipsText)
     this.header.add(brandBar)
 
     this.gameText = new TextRenderable(renderer, {
@@ -285,34 +274,18 @@ export class VoraxScreen {
 
   /** The bar along the top, and the two lines under it: the game and the log. */
   private drawHeader(state: ViewState, width: number): void {
-    const brand = brandChunks('Vorax Helper', 'terminal')
-    this.brandText.content = new StyledText(brand)
-    this.brandText.width = chunksWidth(brand)
-
-    // the state of the helper, most important first; the ones that do not fit are left out
+    // the state of the helper, most important first
     const b = state.board
-    const candidates: TextChunk[] = [
-      chip(`target ${num(state.target)}`, 'gold'),
+    const chips: [string, Tone][] = [
+      [`target ${num(state.target)}`, 'gold'],
       b
-        ? chip('board open', 'green')
-        : chip(state.capture.includes('closed') ? 'board closed' : 'looking', 'dim'),
+        ? ['board open', 'green']
+        : [state.capture.includes('closed') ? 'board closed' : 'looking', 'dim'],
     ]
-    if (b) candidates.push(chip(`round ${b.round} · ${phaseName(b.phase)}`, 'purple'))
-    candidates.push(chip(state.deepOn ? 'deep on' : 'deep off', state.deepOn ? 'green' : 'dim'))
-
-    const room = width - chunksWidth(brand) - 1
-    const chips: TextChunk[] = []
-    let used = 0
-    for (const candidate of candidates) {
-      const gap = chips.length > 0 ? 1 : 0
-      const candidateWidth = chunksWidth([candidate])
-      if (used + gap + candidateWidth > room) break
-      if (gap > 0) chips.push(tone('default', ' '))
-      chips.push(candidate)
-      used += gap + candidateWidth
-    }
-    this.chipsText.content = new StyledText(chips)
-    this.chipsText.width = used
+    if (b) chips.push([`round ${b.round} · ${phaseName(b.phase)}`, 'purple'])
+    chips.push([state.deepOn ? 'deep on' : 'deep off', state.deepOn ? 'green' : 'dim'])
+    this.brandText.content = new StyledText(topBarChunks({ name: 'Vorax Helper', sub: 'terminal', chips }, width))
+    this.brandText.width = width
 
     const game = 'game: '
     this.gameText.content = new StyledText([
@@ -405,11 +378,7 @@ export class VoraxScreen {
       ['d', `deep check ${state.deepOn ? 'on' : 'off'}`],
       ['q', 'quit'],
     ]
-    const chunks = hintChunks(hints)
-    if (state.status !== '' && state.board !== null) {
-      chunks.push(tone('default', '   '), tone('yellow', state.status))
-    }
-    this.hintText.content = new StyledText(chunks)
+    this.hintText.content = new StyledText(footerChunks({ hints, message: state.status }, width))
     this.hintText.width = width
   }
 

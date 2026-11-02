@@ -77,12 +77,13 @@ the same colour everywhere:
 | yellow | a warning from the reader ("check tank 3") |
 | dim | labels, paths and hints |
 
-The bar along the top carries the state as chips (`[target 925,000] [board open] [round 6 · potion] [deep on]`, left
-out one by one when the terminal is narrow), the **Next move** panel is the one that stands out (heavy border, its
-answer in bold cyan), and progress — the round out of the run, a deep check out of its playouts — is drawn as a bar
-in orange. The keys at the bottom sit on caps. With `--no-color` (or `NO_COLOR`) every one of these is still there in
-plain text: the chips become `[bracketed]`, the bars become plain lines, and the move panel is still told apart by
-its heavy border.
+The bar along the top carries the name and the state as chips (`[target 925,000] [board open] [round 6 · potion]
+[deep on]`, left out one by one when the terminal is narrow, after the "terminal" note is cut), the **Next move**
+panel is the one that stands out (heavy border, its answer in bold cyan), and progress — the round out of the run, a
+deep check out of its playouts — is drawn as a bar in orange. The keys at the bottom sit on caps; a note from the
+reader about the last picture replaces them, and on a narrow terminal they are given up from the middle, the read key
+and the quit key last. With `--no-color` (or `NO_COLOR`) every one of these is still there in plain text: the chips
+become `[bracketed]`, the bars become plain lines, and the move panel is still told apart by its heavy border.
 
 ## The overlay
 The overlay is the Windows app's card that sits over the game while you play, so you never have to switch windows.
