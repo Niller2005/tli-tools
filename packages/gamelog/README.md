@@ -85,6 +85,19 @@ already keeps; a minigame the log says nothing about gives an empty line. The
 `ToolStatus` interface itself is the one every status source returns, so the
 other packages import it from here.
 
+## The capture seam
+
+A live tool takes its pictures through the gate: `minigameCaptureGate` says
+whether the log allows a capture, and `captureMinigame` takes one picture
+through it (a manual read is the one exception, and says that it forced one).
+Around that, `retryCapture` wraps the capture with the back-off window both
+live tools keep: a failed grab is remembered for 2 s, during which the next
+automatic grab is refused with the same message instead of hammering the game
+window, while a manual read forces its way through. Its `heldUp(gate)` is the
+header note while nothing may be captured: the closed gate's status, or the
+last failure while its window is open — never both. The clock is injectable
+(`now`), which is how the tests cover the window without waiting.
+
 ## Tests
 
 ```

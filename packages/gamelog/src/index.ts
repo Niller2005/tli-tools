@@ -421,6 +421,66 @@ export async function captureMinigame<T>(
   }
 }
 
+/** How long a failed capture holds the next automatic one back. */
+const RETRY_WINDOW_MS = 2000
+
+/**
+ * A capture that waits out its own failures. A failed grab opens a 2 s window during which the next
+ * automatic grab is refused with the same message instead of hammering the game's window; a manual
+ * read forces its way through. The clock is injected so the tests do not wait.
+ */
+export interface RetryCapture<T> extends MinigameCapture<T> {
+  /** an automatic capture is waiting out the last failure's window */
+  paused(): boolean
+  /** the last failure's message, '' when there is none */
+  error(): string
+  /**
+   * What the header says while no capture may go ahead: the closed gate's status, or the last
+   * failure while its window is open — never both. '' when a capture may go ahead. A manual read
+   * is never held up.
+   */
+  heldUp(gate: CaptureGate, manual?: boolean): string
+}
+
+/**
+ * Wraps a minigame capture with the back-off window both live tools keep: a failure is remembered
+ * for `windowMs` (2 s by default, what the tools use today), and `force` — a manual read — bypasses
+ * it. `grab` records the window itself, so a tool only has to ask `heldUp` what to show.
+ */
+export function retryCapture<T>(
+  capture: MinigameCapture<T>,
+  opts: { windowMs?: number; now?: () => number } = {},
+): RetryCapture<T> {
+  const windowMs = opts.windowMs ?? RETRY_WINDOW_MS
+  const now = opts.now ?? Date.now
+  let retryAt = 0
+  let lastError = ''
+  const paused = () => now() < retryAt
+  return {
+    async grab(options: { force?: boolean } = {}) {
+      if (options.force !== true && paused()) throw new Error(lastError)
+      try {
+        const image = await capture.grab(options)
+        retryAt = 0
+        lastError = ''
+        return image
+      } catch (err) {
+        lastError = err instanceof Error ? err.message : String(err)
+        retryAt = now() + windowMs
+        throw err instanceof Error ? err : new Error(lastError)
+      }
+    },
+    paused,
+    error: () => lastError,
+    heldUp(gate, manual = false) {
+      if (manual) return ''
+      if (!gate.allowed) return gate.status
+      if (paused()) return lastError
+      return ''
+    },
+  }
+}
+
 /** Watches the log for the minigames' states. */
 export interface Watcher {
   /** the states as they are now */
