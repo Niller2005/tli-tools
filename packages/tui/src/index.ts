@@ -7,6 +7,8 @@ export {
   brandChunks,
   chip,
   chunksWidth,
+  cutChunks,
+  footerChunks,
   hintChunks,
   keyHint,
   meter,
@@ -17,6 +19,9 @@ export {
   sparkline,
   stat,
   surfaceColor,
+  topBarChunks,
+  type FooterBar,
+  type TopBar,
 } from './chrome'
 
 export {
