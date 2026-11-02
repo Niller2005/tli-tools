@@ -13,6 +13,7 @@
     "@tli/capture": "workspace:*",
     "@tli/gamelog": "workspace:*",
     "@tli/ocr": "workspace:*",
+    "@tli/overlay": "workspace:*",
     "@tli/png": "workspace:*",
     "@tli/tui": "workspace:*"
   },

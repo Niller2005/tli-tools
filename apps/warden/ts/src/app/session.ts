@@ -1489,6 +1489,16 @@ export class Session {
     return toFrame(click, this.size[0], this.size[1], this.uiScale)
   }
 
+  /** [`mark`] on the screen: the box in the logical pixels of `area`, the part of the screen the frame was taken
+   * from. Null when [`mark`] is. */
+  markOn(area: { x: number; y: number; width: number; height: number }): { x: number; y: number; width: number; height: number } | null {
+    const m = this.mark()
+    if (m === null) return null
+    const sx = area.width / this.size[0]
+    const sy = area.height / this.size[1]
+    return { x: area.x + (m[0] - m[2]) * sx, y: area.y + (m[1] - m[3]) * sy, width: 2 * m[2] * sx, height: 2 * m[3] * sy }
+  }
+
   /** The line the window shows under the advice `a`; see [`whyShown`]. */
   whyShown(a: Advice): string {
     return this.state !== null ? whyShown(this.state, this.ranking, a) : a.why
