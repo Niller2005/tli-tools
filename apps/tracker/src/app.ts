@@ -101,11 +101,6 @@ export class TrackerApp {
 
   /** Does a key press. */
   key(key: KeyEvent): void {
-    if (key.ctrl && key.name === 'c') {
-      this.hooks.onQuit()
-      return
-    }
-
     if (this.state.searching !== null) {
       this.searchKey(key)
       return
