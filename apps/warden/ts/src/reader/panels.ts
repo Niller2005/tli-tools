@@ -167,6 +167,10 @@ function rerollsRegion(): [Rect, number] {
 }
 /** Distance between the centres of two destination cards. */
 const CARD_PITCH = 345
+/** Where a lone End button's name sits, centred on the row (day 17 frame: 959, 877). */
+function endAlone(): Rect {
+  return new Rect(880, 855, 160, 45)
+}
 /** The middle of the destination cards' row, which spans y 750-920 with the
  * text at y 880 (rec1-t049). */
 const DOOR_Y = 835
@@ -419,7 +423,9 @@ export async function doors(lines: Line[], reread: (x: number) => Promise<number
       const s = squash(l.text)
       // A bare number is no card: the labels of the board's cells, the numbers on the End panel and the
       // art all read as digits, and a card says "Go to Cell N" (OCR may garble the words, not drop them all).
-      return s.startsWith('go') || s.startsWith('to') || s.includes('cel') || (door(l.text) !== null && /[a-z]/i.test(l.text))
+      // A line with none of those words needs three letters ("ot 4" off the End panel's art is no card).
+      const letters = s.replace(/[0-9]/g, '').length
+      return s.startsWith('go') || s.startsWith('to') || s.includes('cel') || (door(l.text) !== null && letters >= 3)
     })
     .sort((a, b) => a.rect.centre()[0] - b.rect.centre()[0])
   const cards: Line[][] = []
@@ -464,11 +470,17 @@ export function interrogation(lines: Line[]): [number, number] | null {
   return [a, b]
 }
 
+/** The least y of a decision button's name: the names sit at y 880 and the
+ * door labels at 860, while the cards' art and the buttons' icons (y 810)
+ * read as short junk above them, and "e n-.z" matches "End" at 0.67. */
+const BUTTON_NAME_Y = 850
+
 /** The decision buttons left to right, each with its name's centre. */
 export function buttons(lines: Line[]): [string, [number, number]][] {
   const found: [string, [number, number]][] = []
   const names = ['Consume', 'Replace', 'Hunt', 'End']
   for (const l of lines) {
+    if (l.rect.centre()[1] < BUTTON_NAME_Y) continue
     const m = bestMatch(l.text, names, 0.65)
     if (m === null) continue
     const name = names[m[0]]
@@ -610,6 +622,16 @@ export async function readPanelsTitled(img: Rgba, title: Rgba): Promise<Panels> 
       const LABELS = new Rect(360, 840, 1160, 80)
       const strip = await doors(await ocr(img, LABELS, 2.5), (x) => reread(img, x))
       if (read(strip) > read(readDoors)) readDoors = strip
+    }
+    if (found.length === 0 && read(readDoors) < 2) {
+      // An End button alone (nothing left to Consume, Replace or Hunt) sits in the middle of the row over its
+      // medallion, where the row read as a whole loses its name; the name alone, enlarged, reads.
+      const lone = buttons(await ocr(img, endAlone(), 3.0)).filter((b) => b[0] === 'End')
+      if (lone.length > 0) {
+        found.push(...lone)
+        p.decision = ['End']
+        readDoors = []
+      }
     }
     if (has(heading, 'Select an Objective', 0.75)) {
       // Without brackets or a target glow nothing is picked: the board
