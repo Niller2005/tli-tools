@@ -344,5 +344,5 @@ commits, delete what is dead, run `bun run test` and `bun run typecheck`, update
 | 4 | App runtime | done |
 | 6 | Tracker screen draws only | done |
 | 7 | Capture retry policy | done |
-| 5 | Header and footer chrome | open |
+| 5 | Header and footer chrome | done |
 | 8 | Click projection | open, conditional |
