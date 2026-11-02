@@ -23,15 +23,10 @@ import type { SessionSummary } from '@tli/tracker'
 import {
   backgroundColor,
   borderColor,
-  brandChunks,
-  chip,
-  chunksWidth,
   duration,
   fe,
-  fit,
-  hintChunks,
+  footerChunks,
   num,
-  pad,
   panelBorderStyle,
   panelTitle,
   surfaceColor,
@@ -40,42 +35,21 @@ import {
   tone,
   toneOn,
   theme,
+  topBarChunks,
   visibleLength,
   type Tone,
 } from '@tli/tui'
 import type { DashboardState } from './app'
+import { panelChunks, toolRowChunks, type PanelRow, type ToolRow } from './rows'
 import type { StatusData } from './status'
 
 /** Below this many columns the panels are stacked under the list, one at a time. */
 export const NARROW = 100
 
-/** How a minigame's state is shown. */
-const BADGE: Record<MinigameState, [string, Tone]> = {
-  open: ['● open', 'green'],
-  closed: ['○ closed', 'dim'],
-  unknown: ['? unknown', 'dim'],
-}
 
 /** How a status line's tone is drawn. */
 const LINE_TONE: Record<ToolStatus['tone'], Tone> = { ok: 'green', dim: 'dim', warn: 'yellow' }
 
-/** One tool, as the list shows it. */
-export interface ToolRow {
-  /** the tool itself */
-  tool: Tool
-  /** whether the cursor is on it */
-  current: boolean
-  /** whether it is picked */
-  selected: boolean
-  /** the programs it needs that are not installed */
-  missing: string[]
-  /** the minigame's state, when the tool has one */
-  badge: [MinigameState, string | null] | null
-  /** whether the tool opens by itself when its minigame opens */
-  auto: boolean
-  /** the tool's status line, when it says something the badge does not */
-  line: { text: string; tone: Tone } | null
-}
 
 /**
  * The status line a row shows.
@@ -111,17 +85,6 @@ export function toolRows(state: DashboardState): ToolRow[] {
   })
 }
 
-/** One row of a panel: a label and what it says. */
-export interface PanelRow {
-  /** what the value is about; '' for a blank line */
-  label: string
-  /** the value itself: one string, or pieces that each carry their own colour */
-  value: string | TextChunk[]
-  /** how a value written as one string is drawn */
-  tone?: Tone
-  /** how the label is drawn; dim unless the label is itself a name */
-  labelTone?: Tone
-}
 
 /** A size in bytes, as a person reads it: "412 MB". */
 export function bytes(size: number): string {
@@ -604,8 +567,6 @@ export class DashboardScreen {
 
   /** The bar along the top: the name in the brand colour, the state of things as chips. */
   private drawTitle(state: DashboardState): void {
-    const chunks = brandChunks('Dashboard', 'Torchlight: Infinite tools')
-
     // the chips say how the machine is: green when a thing is on, yellow when it is not
     const flags: [string, Tone][] = []
     if (state.status.health.detail === 'ok') flags.push(['log ok', 'green'])
@@ -621,13 +582,7 @@ export class DashboardScreen {
     ).length
     if (auto > 0) flags.push([`${auto} auto`, 'purple'])
 
-    // a chip that does not fit is left out, so the bar never spills over the edge
-    for (const [text, style] of flags) {
-      const gap = tone('default', '  ')
-      const flagged = chip(text, style)
-      if (chunksWidth(chunks) + visibleLength(gap.text) + visibleLength(flagged.text) > this.renderer.width) break
-      chunks.push(gap, flagged)
-    }
+    const chunks = topBarChunks({ name: 'Dashboard', sub: 'Torchlight: Infinite tools', chips: flags }, this.renderer.width)
     this.titleText.content = new StyledText(chunks)
   }
 
@@ -654,7 +609,7 @@ export class DashboardScreen {
     for (const row of toolRows(state)) {
       const line = this.lines.get(row.tool.id)
       if (line === undefined) continue
-      line.row.content = new StyledText(this.rowChunks(row, this.listWidth - 2))
+      line.row.content = new StyledText(toolRowChunks(row, this.listWidth - 2))
       line.description.visible = row.current
     }
   }
@@ -663,12 +618,12 @@ export class DashboardScreen {
   private drawPanels(state: DashboardState): void {
     const now = state.status.at === 0 ? Date.now() : state.status.at
     const width = Math.max(4, this.panelWidth - 2)
-    this.session.text.content = new StyledText(this.panelChunks(sessionRows(state.status.summary), width))
+    this.session.text.content = new StyledText(panelChunks(sessionRows(state.status.summary), width))
     this.health.text.content = new StyledText(
-      this.panelChunks([...healthRows(state.status.health, now), ...captureRows(state.status.capture)], width),
+      panelChunks([...healthRows(state.status.health, now), ...captureRows(state.status.capture)], width),
     )
     this.toolsPanel.text.content = new StyledText(
-      this.panelChunks(
+      panelChunks(
         [...runningRows(state.status.running, now), { label: '', value: '' }, ...freshnessRows(state.status)],
         width,
       ),
@@ -687,16 +642,9 @@ export class DashboardScreen {
     this.messageText.content = new StyledText([tone(message.tone, message.text)])
   }
 
-  /** The bar along the bottom: as many key hints as fit, the keys on caps. */
+  /** The bar along the bottom: the keys on caps; the menu key and the quit key are the last to go. */
   private drawFooter(): void {
-    let hints = HINTS
-    let chunks = hintChunks(hints)
-    // the first hint (move) and the last (quit) are kept; the ones between go until it fits
-    while (hints.length > 2 && chunksWidth(chunks) > this.renderer.width) {
-      hints = hints.filter((_, index) => index !== 1)
-      chunks = hintChunks(hints)
-    }
-    this.footerText.content = new StyledText(chunks)
+    this.footerText.content = new StyledText(footerChunks({ hints: HINTS }, this.renderer.width))
   }
 
   /** The options dialog, or the help, over the whole screen. */
@@ -722,13 +670,20 @@ export class DashboardScreen {
     const rows = optionRows(tool)
     const settings = state.settings.tools[tool.id] ?? {}
 
+    // a dialog has the focus while it is open, so it takes the heavy border and the accent title
+    const inner = Math.max(30, ...rows.map(row => visibleLength(row.label) + 24))
     const chunks: TextChunk[] = [
-      ...hintChunks([
-        ['↑↓', 'move'],
-        ['space', 'toggle'],
-        ['⏎', 'edit'],
-        ['esc', 'close'],
-      ]),
+      ...footerChunks(
+        {
+          hints: [
+            ['↑↓', 'move'],
+            ['space', 'toggle'],
+            ['⏎', 'edit'],
+            ['esc', 'close'],
+          ],
+        },
+        inner,
+      ),
       tone('default', '\n'),
     ]
     rows.forEach((row, index) => {
@@ -751,8 +706,6 @@ export class DashboardScreen {
       chunks.push(tone('default', '\n'))
     })
 
-    // a dialog has the focus while it is open, so it takes the heavy border and the accent title
-    const inner = Math.max(30, ...rows.map(row => visibleLength(row.label) + 24))
     this.overlayBox.borderStyle = panelBorderStyle(true)
     this.overlayBox.borderColor = borderColor(true)
     this.overlayBox.titleColor = titleColor(true)
@@ -805,83 +758,4 @@ export class DashboardScreen {
     this.commandRow.visible = false
   }
 
-  /** The pieces of one tool's line. */
-  private rowChunks(row: ToolRow, width: number): TextChunk[] {
-    // the cursor is told in the accent colour, the picked tools by their green checkbox, the
-    // names in blue; the badge and the auto mark are chips, and what does not fit is left out
-    const chunks = [
-      tone(row.current ? 'accent' : 'default', row.current ? '>' : ' '),
-      tone('default', ' '),
-      tone(row.selected ? 'green' : 'dim', row.selected ? '[x]' : '[ ]'),
-      tone('default', ' '),
-      tone('blue', row.tool.name),
-    ]
-    // what is left of the row, after what has been drawn already
-    const room = () => width - chunksWidth(chunks)
-    // a group of chunks with the two columns of quiet space that separate it from the last
-    const fits = (...group: TextChunk[]) => 2 + chunksWidth(group) <= room()
-
-    if (row.missing.length > 0) {
-      const text = fit(`needs ${row.missing.join(', ')}`, Math.max(0, room() - 2))
-      if (text !== '') chunks.push(tone('default', '  '), tone('red', text))
-    }
-    // the badge, the log's hint, the auto mark and the tool's own line. When they do not all
-    // fit, the line is kept ahead of the hint and the auto mark: the bar and the log panel say
-    // the hint's news, and the options and the message say the auto mark's.
-    let badge: TextChunk | null = null
-    let hint: TextChunk | null = null
-    if (row.badge !== null) {
-      const [state, logHint] = row.badge
-      const [text, style] = BADGE[state]
-      badge = chip(text, style)
-      if (logHint !== null) hint = tone('dim', `  ${logHint}`)
-    }
-    const auto = row.auto ? chip('⟳ auto', 'purple') : null
-    const line = row.line
-
-    if (badge !== null && fits(badge)) chunks.push(tone('default', '  '), badge)
-
-    const hintWidth = hint === null ? 0 : chunksWidth([hint])
-    const autoWidth = auto === null ? 0 : 2 + chunksWidth([auto])
-    const lineWidth = line === null ? 0 : 2 + visibleLength(line.text)
-    const spare = room()
-    const hintIn = hint !== null && (line === null ? hintWidth <= spare : hintWidth + autoWidth + lineWidth <= spare)
-    const autoIn =
-      auto !== null &&
-      (line === null
-        ? autoWidth <= spare - (hintIn ? hintWidth : 0)
-        : autoWidth + lineWidth <= spare - (hintIn ? hintWidth : 0))
-    if (hintIn && hint !== null) chunks.push(hint)
-    if (autoIn && auto !== null) chunks.push(tone('default', '  '), auto)
-
-    if (line !== null) {
-      const text = fit(line.text, Math.max(0, room() - 2))
-      if (text !== '') chunks.push(tone('default', '  '), tone(line.tone, text))
-    }
-
-    return chunks
-  }
-
-  /** The lines of one panel: a quiet label, and a value in the colour of what it says. */
-  private panelChunks(rows: PanelRow[], width: number): TextChunk[] {
-    const labelWidth = Math.min(14, Math.max(0, ...rows.map(row => visibleLength(row.label))))
-    const chunks: TextChunk[] = []
-    for (const row of rows) {
-      if (row.label === '') {
-        chunks.push(tone('default', '\n'))
-        continue
-      }
-      const room = Math.max(0, width - labelWidth - 2)
-      // a value of pieces keeps its colours while it fits; one that does not becomes a plain
-      // line, cut to the room the panel has
-      const value =
-        typeof row.value === 'string'
-          ? [tone(row.tone ?? 'default', fit(row.value, room))]
-          : chunksWidth(row.value) <= room
-            ? row.value
-            : [tone(row.tone ?? 'default', fit(row.value.map(chunk => chunk.text).join(''), room))]
-      chunks.push(tone(row.labelTone ?? 'dim', pad(row.label, labelWidth + 2)), ...value, tone('default', '\n'))
-    }
-    return chunks
-  }
 }

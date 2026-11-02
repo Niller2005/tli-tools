@@ -29,6 +29,10 @@ bun src/main.ts --no-color
 
 A tool that is on auto shows a purple `⟳ auto` chip after its badge.
 
+On a narrow terminal the bar along the bottom gives up its keys from the middle: the move key and
+the quit key are the last to go, so there is always a way to move and a way to leave. The bar
+along the top keeps the tool's name and cuts its subtitle first, then leaves chips out.
+
 ## The look
 
 The dashboard uses the shared palette of [`@tli/tui`](../../packages/tui/README.md), so every kind
