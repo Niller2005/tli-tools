@@ -338,11 +338,11 @@ commits, delete what is dead, run `bun run test` and `bun run typecheck`, update
 
 | # | Item | State |
 |---|---|---|
-| 3 | Warning identity | open |
+| 3 | Warning identity | done |
 | 2 | Run-tracking module | open |
 | 1 | Persistence module | done |
 | 4 | App runtime | done |
 | 6 | Tracker screen draws only | done |
-| 7 | Capture retry policy | open |
+| 7 | Capture retry policy | done |
 | 5 | Header and footer chrome | open |
 | 8 | Click projection | open, conditional |
