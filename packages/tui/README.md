@@ -74,6 +74,28 @@ The bars along the top and the bottom are drawn on `surfaceColor()`. A panel tha
 gets the heavy border and the accent colour, so the focus can be told even by someone who cannot
 see the colour.
 
+### The two bars
+
+The bar along the top and the bar along the bottom are built by the same module, and it is the
+module — not each screen — that decides what shrinks first when the terminal is narrow:
+
+```typescript
+import { footerChunks, topBarChunks } from '@tli/tui'
+
+topBarChunks({ name: 'Dashboard', sub: 'Torchlight: Infinite tools', chips: [['log ok', 'green']] }, width)
+footerChunks({ hints: [['↑/↓', 'move'], ['?', 'help'], ['q', 'quit']], message: '' }, width)
+```
+
+The top bar shrinks in this order: the sub is cut from the front (its end is the part worth
+reading, the file's name), then the chips are left out from the end, and the tool's name is cut
+last. The bottom bar shrinks in this order: a message, when there is one, replaces the lot;
+otherwise the quiet pieces after the keys go (from the end), then the keys between the first and
+the last, then the chips before the keys, then the first key. The last key — quit — is the last
+to go, and what still does not fit is cut. Neither bar is ever wider than the terminal.
+
+A key hint is the key on a cap with one space before its label — ` q quit` with colours, `q quit`
+without them — so the two modes read the same.
+
 ## The rows of a table
 
 A row is a list of cells. A cell with a width keeps it; the others share what is left:
