@@ -28,13 +28,51 @@ tone('gold', fe(1234.5))
 tone('dim', 'a quiet label')
 ```
 
-The tones are `default`, `dim`, `bold`, `accent`, `cyan`, `gold`, `green`, `yellow`, `red` and
-`paused`. The colours themselves are in `theme`, so a tool can use `theme.text` or `theme.dim`
-directly when it needs a colour of its own.
+The tones are `default`, `dim`, `bold`, `accent` (and its plain twin `cyan`), `brand`, `gold`,
+`green`, `yellow`, `red`, `blue`, `purple`, `orange`, `teal`, `pink`, `key` and `paused`. The
+colours themselves are in `theme`, so a tool can use `theme.text` or `theme.dim` directly when it
+needs a colour of its own.
+
+Each colour has a job, so the same thing has the same colour in every tool:
+
+| Colour | For |
+|--------|-----|
+| `brand` (ember orange) | the name of the tool in the bar along the top |
+| `accent` (cyan) | the focus: the focused panel, the picked row, the keys that can be pressed |
+| `gold` | money: FE amounts |
+| `green` / `red` | a gain and a loss, what is on and what is wrong |
+| `yellow` | a warning |
+| `blue` | names: items, maps, things that can be opened |
+| `purple` | rare things: experience, special states |
+| `orange` | effort and heat: a run in progress, a count that grows |
+| `teal` | times and durations, a quiet success |
+| `pink` | a mark that should not be missed |
+| `dim` | labels, hints and paths |
 
 Colours are turned off with `--no-color` or with the `NO_COLOR` environment variable. When they
 are off, `tone` gives plain text, the borders use the terminal's own colour and the scrollbars use
 it too: nothing is coloured.
+
+## The chrome
+
+`chrome.ts` has the small pieces of design the tools share. Every one of them turns plain when the
+colours are off:
+
+```typescript
+import { brandChunks, chip, hintChunks, meter, panelBorderStyle, panelTitle, stat } from '@tli/tui'
+
+brandChunks('TLI Loot Tracker', 'v1')                      // ◆ TLI Loot Tracker  v1
+hintChunks([['q', 'quit'], ['?', 'help']])                 // the keys on caps, the labels quiet
+chip('tax on', 'green')                                    // a label on a tinted background, [tax on] without colours
+stat('FE/h', '1,204', 'gold')                              // a quiet label and a value in a tone
+meter(0.4, 20, 'purple')                                   // ━━━━━━━━────────────
+panelTitle('Runs', true)                                   // " ● Runs "
+panelBorderStyle(true)                                     // 'heavy' for the focused panel, 'rounded' for the others
+```
+
+The bars along the top and the bottom are drawn on `surfaceColor()`. A panel that has the focus
+gets the heavy border and the accent colour, so the focus can be told even by someone who cannot
+see the colour.
 
 ## The rows of a table
 

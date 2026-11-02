@@ -12,12 +12,18 @@ import { RGBA, TextAttributes, type TextChunk } from '@opentui/core'
 export interface Theme {
   /** the background of the screen */
   background: string
+  /** the bars along the top and the bottom, and the keys in the hints */
+  surface: string
+  /** the key caps in the hints */
+  keycap: string
   /** the ordinary text */
   text: string
   /** the quiet text: labels, hints and paths */
   dim: string
-  /** the main accent: titles, the marker of the selected row */
+  /** the main accent: the focus, the marker of the selected row */
   accent: string
+  /** the brand: the name of the tool in the bar along the top */
+  brand: string
   /** money: FE amounts */
   gold: string
   /** what is on, or what made a profit */
@@ -26,6 +32,16 @@ export interface Theme {
   yellow: string
   /** what is wrong */
   red: string
+  /** a name, a thing that can be opened */
+  blue: string
+  /** a rare thing: experience, a special state */
+  purple: string
+  /** heat and effort: a run that is on, a count that grows */
+  orange: string
+  /** a calm second accent: times, a quiet success */
+  teal: string
+  /** a loud second accent: a mark that should not be missed */
+  pink: string
   /** the border of a panel that does not have the focus */
   border: string
   /** the border of the panel that has the focus */
@@ -42,20 +58,28 @@ export interface Theme {
 
 /** The colours of the tools. */
 export const theme: Theme = {
-  background: '#101010',
-  text: '#d4d4d4',
-  dim: '#8b8b8b',
+  background: '#0f1115',
+  surface: '#171a21',
+  keycap: '#2a303b',
+  text: '#d8dce3',
+  dim: '#8a919e',
   accent: '#54d1e0',
+  brand: '#f0944d',
   gold: '#e8c06a',
   green: '#7ec97e',
   yellow: '#d7b25a',
   red: '#e06c75',
-  border: '#585858',
+  blue: '#6cb2f5',
+  purple: '#c29bf0',
+  orange: '#ef8f4a',
+  teal: '#4fd1b5',
+  pink: '#ee8fb8',
+  border: '#454c59',
   borderFocused: '#54d1e0',
   panelTitle: '#e6e6e6',
-  selection: '#2f4653',
-  scrollTrack: '#333333',
-  scrollThumb: '#6f6f6f',
+  selection: '#2b4352',
+  scrollTrack: '#232731',
+  scrollThumb: '#5b6370',
 }
 
 let colorOverride: boolean | undefined
@@ -100,37 +124,81 @@ export type Tone =
   | 'bold'
   | 'accent'
   | 'cyan'
+  | 'brand'
   | 'gold'
   | 'green'
   | 'yellow'
   | 'red'
+  | 'blue'
+  | 'purple'
+  | 'orange'
+  | 'teal'
+  | 'pink'
+  | 'key'
   | 'paused'
 
 const BOLD = TextAttributes.BOLD
 const INVERSE = TextAttributes.INVERSE
 
+/** The colour a tone is written in; `undefined` for the tones that are not a colour of their own. */
+export function toneColor(style: Tone | undefined): string | undefined {
+  switch (style) {
+    case 'dim':
+      return theme.dim
+    case 'accent':
+    case 'cyan':
+      return theme.accent
+    case 'brand':
+      return theme.brand
+    case 'gold':
+      return theme.gold
+    case 'green':
+      return theme.green
+    case 'yellow':
+    case 'paused':
+      return theme.yellow
+    case 'red':
+      return theme.red
+    case 'blue':
+      return theme.blue
+    case 'purple':
+      return theme.purple
+    case 'orange':
+      return theme.orange
+    case 'teal':
+      return theme.teal
+    case 'pink':
+      return theme.pink
+    default:
+      return undefined
+  }
+}
+
 /** A piece of text in one of the tools' colours. */
 export function tone(style: Tone | undefined, text: string): TextChunk {
   if (text === '' || !colorEnabled()) return { __isChunk: true, text }
   switch (style) {
-    case 'dim':
-      return { __isChunk: true, text, fg: color(theme.dim) }
     case 'bold':
       return { __isChunk: true, text, fg: color(theme.text), attributes: BOLD }
-    case 'accent':
-      return { __isChunk: true, text, fg: color(theme.accent), attributes: BOLD }
-    case 'cyan':
-      return { __isChunk: true, text, fg: color(theme.accent) }
-    case 'gold':
-      return { __isChunk: true, text, fg: color(theme.gold), attributes: BOLD }
-    case 'green':
-      return { __isChunk: true, text, fg: color(theme.green), attributes: BOLD }
-    case 'yellow':
-      return { __isChunk: true, text, fg: color(theme.yellow) }
-    case 'red':
-      return { __isChunk: true, text, fg: color(theme.red) }
+    case 'key':
+      return { __isChunk: true, text, fg: color(theme.text), bg: color(theme.keycap), attributes: BOLD }
     case 'paused':
       return { __isChunk: true, text, fg: color(theme.yellow), attributes: INVERSE }
+    case 'accent':
+    case 'brand':
+    case 'gold':
+    case 'green':
+      return { __isChunk: true, text, fg: color(toneColor(style) ?? theme.text), attributes: BOLD }
+    case 'dim':
+    case 'cyan':
+    case 'yellow':
+    case 'red':
+    case 'blue':
+    case 'purple':
+    case 'orange':
+    case 'teal':
+    case 'pink':
+      return { __isChunk: true, text, fg: color(toneColor(style) ?? theme.text) }
     default:
       return { __isChunk: true, text, fg: color(theme.text) }
   }
