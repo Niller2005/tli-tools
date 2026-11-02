@@ -93,6 +93,7 @@
       "name": "@tli/arcana",
       "dependencies": {
         "@tli/gamelog": "workspace:*",
+        "@tli/store": "workspace:*",
         "@tli/tracker": "workspace:*",
       },
       "devDependencies": {
@@ -151,6 +152,7 @@
     "packages/store": {
       "name": "@tli/store",
       "devDependencies": {
+        "@tli/arcana": "workspace:*",
         "@tli/tracker": "workspace:*",
         "@types/bun": "latest",
         "@types/node": "latest",

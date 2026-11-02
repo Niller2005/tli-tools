@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@tli/gamelog": "workspace:*",
+    "@tli/store": "workspace:*",
     "@tli/tracker": "workspace:*"
   },
   "devDependencies": {

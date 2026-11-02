@@ -38,11 +38,12 @@ export interface StoreContract<S> {
   changed: S
   /**
    * Writes a database file of an older schema version to `path`, with rows in it, as that
-   * version's code left it; called once per version before the current one.
+   * version's code left it; called once per version before the current one, so only a tool whose
+   * schema has versions behind it needs them.
    */
-  writeOldFile(path: string, version: number): void
+  writeOldFile?(path: string, version: number): void
   /** says what was read from a file of an older schema version is what that version held */
-  expectOld(loaded: S | null, version: number): void
+  expectOld?(loaded: S | null, version: number): void
 }
 
 /** Runs the contract suite; called from the entry files, one per tool. */
@@ -67,9 +68,11 @@ export function theStoreContract<S>(contract: StoreContract<S>): void {
       test(`a database of schema version ${version} is carried to this one with what it held`, async () => {
         const path = own(`old-v${version}`)
         mkdirSync(dirname(path), { recursive: true })
+        if (contract.writeOldFile === undefined) throw new Error('no fixture for an older schema version')
         contract.writeOldFile(path, version)
 
         const loaded = await contract.load(path)
+        if (contract.expectOld === undefined) throw new Error('no comparison for an older schema version')
         contract.expectOld(loaded, version)
         // it can be written to, and what it held is still there
         if (loaded === null) throw new Error('nothing was loaded')
