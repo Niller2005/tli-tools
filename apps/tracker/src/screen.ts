@@ -108,18 +108,16 @@ function stamp(ms: number): string {
   return `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
 }
 
-/** What the screen tells the app when the player uses the mouse. */
+/** What the screen tells the app when the player uses it. */
 export interface ScreenHooks {
   /** the player clicked a panel */
   onFocus?: (panel: Panel) => void
   /** the player clicked a row of a list */
   onPick?: (panel: Panel, index: number) => void
-  /** the player confirmed a price */
-  onPrice?: (item: number, price: string) => void
-  /** the player confirmed the name of a session */
-  onName?: (text: string) => void
-  /** the player typed a word in the search box */
-  onSearch?: (text: string) => void
+  /** the player typed in the input box that is open */
+  onEdit?: (text: string) => void
+  /** the player pressed enter in the input box that is open */
+  onSubmit?: (text: string) => void
 }
 
 /** A panel with a list in it. */
@@ -209,10 +207,6 @@ export class TrackerScreen {
   private leftWidth = 0
   /** the width of the right column */
   private rightWidth = 0
-  /** the item whose price is being typed in */
-  private editingItem: number | null = null
-  /** whether the box that is open asks for the name of a session, not for a price */
-  private naming = false
 
   constructor(renderer: CliRenderer, tracker: Tracker, hooks: ScreenHooks = {}) {
     this.renderer = renderer
@@ -442,17 +436,17 @@ export class TrackerScreen {
     this.root.add(this.overlay)
 
     this.priceInput.on(InputRenderableEvents.ENTER, (value: string) => {
-      if (this.naming) {
-        this.hooks.onName?.(value)
-        return
-      }
-      const item = this.editingItem
-      if (item === null) return
-      this.hooks.onPrice?.(item, value)
+      this.hooks.onSubmit?.(value)
+    })
+    this.priceInput.on(InputRenderableEvents.INPUT, (value: string) => {
+      this.hooks.onEdit?.(value)
     })
 
+    this.searchInput.on(InputRenderableEvents.ENTER, (value: string) => {
+      this.hooks.onSubmit?.(value)
+    })
     this.searchInput.on(InputRenderableEvents.INPUT, (value: string) => {
-      this.hooks.onSearch?.(value)
+      this.hooks.onEdit?.(value)
     })
   }
 
@@ -503,46 +497,41 @@ export class TrackerScreen {
     return { box, scroll, text, key: '' }
   }
 
-  /** Starts typing in a price. */
-  beginPrice(item: number, name: string, value: string): void {
-    this.editingItem = item
-    this.naming = false
-    this.priceInput.width = 12
-    this.priceInput.value = value
-    this.priceLabel.content = new StyledText([
-      tone('dim', 'price '),
-      tone('blue', name),
-      tone('dim', ' (FE)  '),
-    ])
-    this.priceInput.visible = true
-    this.priceLabel.visible = true
-    this.priceHint.visible = true
-    this.priceInput.focus()
+  /** The input box the state has open, drawn from the state: which one it is, its label and its
+   * text. The cursor in the text is the input's own; the value is only written when it differs,
+   * so writing what the player typed does not move the cursor. */
+  private drawBox(state: ViewState): void {
+    const box = state.box
+    const priceOpen = box !== null && box.kind !== 'search'
+    this.priceLabel.visible = priceOpen
+    this.priceInput.visible = priceOpen
+    this.priceHint.visible = priceOpen
+    if (priceOpen && box !== null) {
+      this.priceInput.width = box.kind === 'name' ? 28 : 12
+      this.priceLabel.content =
+        box.kind === 'name'
+          ? new StyledText([tone('purple', 'session '), tone('dim', 'name  ')])
+          : new StyledText([tone('dim', 'price '), tone('blue', box.name), tone('dim', ' (FE)  ')])
+      if (this.priceInput.value !== box.text) this.priceInput.value = box.text
+      this.priceInput.focus()
+    } else {
+      this.priceInput.blur()
+      this.priceInput.width = 12
+    }
+
+    const searchOpen = box !== null && box.kind === 'search'
+    this.searchLabel.visible = searchOpen
+    this.searchInput.visible = searchOpen
+    this.searchHint.visible = searchOpen
+    if (searchOpen && box !== null) {
+      this.searchLabel.content = new StyledText([tone('dim', 'search ')])
+      if (this.searchInput.value !== box.text) this.searchInput.value = box.text
+      this.searchInput.focus()
+    } else {
+      this.searchInput.blur()
+    }
   }
 
-  /** Starts typing in the name of a session. */
-  beginName(value: string): void {
-    this.naming = true
-    this.editingItem = null
-    this.priceInput.value = value
-    this.priceInput.width = 28
-    this.priceLabel.content = new StyledText([tone('purple', 'session '), tone('dim', 'name  ')])
-    this.priceInput.visible = true
-    this.priceLabel.visible = true
-    this.priceHint.visible = true
-    this.priceInput.focus()
-  }
-
-  /** Stops typing in a price or in the name of a session. */
-  endPrice(): void {
-    this.editingItem = null
-    this.naming = false
-    this.priceInput.width = 12
-    this.priceInput.blur()
-    this.priceInput.visible = false
-    this.priceLabel.visible = false
-    this.priceHint.visible = false
-  }
 
   /** Scrolls the page or the detail that covers the screen by some rows, or back to its top. */
   scrollOverlay(by: number, top = false): void {
@@ -550,23 +539,6 @@ export class TrackerScreen {
     else this.overlayScroll.scrollBy(by)
   }
 
-  /** Starts typing in the search box. */
-  beginSearch(text: string): void {
-    this.searchInput.value = text
-    this.searchLabel.content = new StyledText([tone('dim', 'search ')])
-    this.searchInput.visible = true
-    this.searchLabel.visible = true
-    this.searchHint.visible = true
-    this.searchInput.focus()
-  }
-
-  /** Stops typing in the search box. */
-  endSearch(): void {
-    this.searchInput.blur()
-    this.searchInput.visible = false
-    this.searchLabel.visible = false
-    this.searchHint.visible = false
-  }
 
   /** Draws the state. */
   draw(state: ViewState): void {
@@ -581,6 +553,7 @@ export class TrackerScreen {
     const prices = priceRows(this.tracker, state.pricesSort, state.pricesFilter)
     this.drawBag(state, bag)
     this.drawPrices(state, prices)
+    this.drawBox(state)
     this.drawFooter(state, width)
     this.drawOverlay(state, width, height)
   }
@@ -925,10 +898,10 @@ export class TrackerScreen {
     segments.push(...this.baselineChip(state))
     this.hintText.content = new StyledText(this.pack(segments, width))
     this.hintText.width = width
-    this.hintText.visible = state.editing === null && state.searching === null && !state.naming
+    this.hintText.visible = state.box === null
     this.priceHint.content = new StyledText(
       hintChunks(
-        state.naming
+        state.box?.kind === 'name'
           ? [['enter', 'starts it'], ['esc', 'leaves it']]
           : [['enter', 'keeps it · empty enter resets'], ['esc', 'leaves it']],
       ),

@@ -74,14 +74,11 @@ export class TrackerApp {
         this.select(panel, index)
         this.draw()
       },
-      onPrice: (item, price) => {
-        this.setPrice(item, price)
+      onEdit: (text) => {
+        this.edit(text)
       },
-      onName: (text) => {
-        this.setName(text)
-      },
-      onSearch: (text) => {
-        this.search(text)
+      onSubmit: (text) => {
+        this.submit(text)
       },
     })
     renderer.root.add(this.screen.root)
@@ -101,21 +98,18 @@ export class TrackerApp {
 
   /** Does a key press. */
   key(key: KeyEvent): void {
-    if (this.state.searching !== null) {
-      this.searchKey(key)
-      return
-    }
-
-    if (this.state.editing !== null || this.state.naming) {
+    // while an input box is open it has the keys; only escape comes back
+    if (this.state.box !== null) {
       if (key.name === 'escape') {
-        this.state.editing = null
-        this.state.naming = false
-        this.screen.endPrice()
+        const box = this.state.box
+        if (box.kind === 'search') this.clearFilter(box.panel)
+        this.state.box = null
         key.preventDefault()
         this.draw()
       }
       return
     }
+
 
     if (this.state.menu !== null) {
       this.menuKey(key)
@@ -242,8 +236,7 @@ export class TrackerApp {
           return
         }
         const known = this.tracker.prices.price(item)
-        this.state.editing = { item, text: known > 0 ? String(known) : '' }
-        this.screen.beginPrice(item, this.names.name(item), this.state.editing.text)
+        this.state.box = { kind: 'price', item, name: this.names.name(item), text: known > 0 ? String(known) : '' }
         return
       }
       case 'u': {
@@ -298,9 +291,15 @@ export class TrackerApp {
         }
         return
       }
-      case '/':
-        this.beginSearch()
+      case '/': {
+        const panel = this.state.focus
+        if (panel === 'runs') {
+          this.state.message = 'there is nothing to search in the runs'
+          return
+        }
+        this.state.box = { kind: 'search', panel, text: this.filterOf(panel) }
         return
+      }
       case 'x':
         this.hooks.onReport()
         return
@@ -324,9 +323,11 @@ export class TrackerApp {
         this.screen.scrollOverlay(0, true)
         return
       }
-      case 'n':
-        this.beginNaming()
+      case 'n': {
+        const last = this.tracker.sessions[this.tracker.sessions.length - 1]
+        this.state.box = { kind: 'name', text: `Session ${(last?.id ?? 0) + 1}` }
         return
+      }
       case 'N': {
         const ended = this.tracker.endSession()
         this.state.message = ended === null ? 'there is no session going on' : `the session ${ended.name} is over`
@@ -352,45 +353,28 @@ export class TrackerApp {
     this.state.message = this.hooks.onOpenWindow(tool)
   }
 
-  /** Opens the search box of the panel that has the focus. */
-  private beginSearch(): void {
-    if (this.state.focus === 'runs') {
-      this.state.message = 'there is nothing to search in the runs'
-      return
-    }
-    this.state.searching = this.state.focus
-    this.screen.beginSearch(this.filterOf(this.state.focus))
+  /** A keystroke in whichever input box is open: the state keeps what is typed so far. */
+  private edit(text: string): void {
+    const box = this.state.box
+    if (box === null) return
+    box.text = text
+    if (box.kind === 'search') this.setFilter(box.panel, text)
     this.draw()
   }
 
-  /** Does a key while the search box is open: the box has the keys, not the screen. */
-  private searchKey(key: KeyEvent): void {
-    const panel = this.state.searching
-    if (panel === null) return
-    if (key.name === 'escape') {
-      key.preventDefault()
-      this.state.searching = null
-      this.clearFilter(panel)
-      this.screen.endSearch()
+  /** The enter key in whichever input box is open. */
+  private submit(text: string): void {
+    const box = this.state.box
+    if (box === null) return
+    if (box.kind === 'price') this.setPrice(box.item, text)
+    else if (box.kind === 'name') this.setName(text)
+    else {
+      // a search is kept when the box closes; only escape takes it away
+      this.state.box = null
       this.draw()
-      return
-    }
-    if (key.name === 'return' || key.name === 'kpenter' || key.name === 'linefeed') {
-      key.preventDefault()
-      this.state.searching = null
-      this.screen.endSearch()
-      this.draw()
-      return
     }
   }
 
-  /** Filters the panel that is being searched, as the words are typed. */
-  private search(text: string): void {
-    const panel = this.state.searching
-    if (panel === null) return
-    this.setFilter(panel, text)
-    this.draw()
-  }
 
   /** A key while a page is open: scroll it, or close it. */
   private pageKey(key: KeyEvent): void {
@@ -411,19 +395,11 @@ export class TrackerApp {
     else if (key.name === 'pagedown') this.screen.scrollOverlay(10)
   }
 
-  /** Opens the box that asks for the name of a session. */
-  private beginNaming(): void {
-    this.state.naming = true
-    const last = this.tracker.sessions[this.tracker.sessions.length - 1]
-    this.screen.beginName(`Session ${(last?.id ?? 0) + 1}`)
-  }
-
   /** Starts the session the player named. */
   private setName(text: string): void {
     const session = this.tracker.startSession(text, Date.now())
     this.state.message = `the session ${session.name} began: the runs from now on are its`
-    this.state.naming = false
-    this.screen.endPrice()
+    this.state.box = null
     this.draw()
   }
 
@@ -481,6 +457,7 @@ export class TrackerApp {
 
   /** Sets the price of an item, when the player confirms one. */
   private setPrice(item: number, price: string): void {
+    this.state.box = null
     const value = Number(price)
     if (price.trim() === '') {
       this.resetPrice(item)
@@ -492,8 +469,6 @@ export class TrackerApp {
     } else {
       this.state.message = `${price} is not a price`
     }
-    this.state.editing = null
-    this.screen.endPrice()
     this.draw()
   }
 
@@ -513,8 +488,6 @@ export class TrackerApp {
           ? `the set price of ${name} is gone, ${where} counts (${known} FE)`
           : `the set price of ${name} is gone, and nothing else knows what it is worth`
     }
-    this.state.editing = null
-    this.screen.endPrice()
     this.draw()
   }
 
