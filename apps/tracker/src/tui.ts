@@ -31,7 +31,6 @@ import {
   writeBaseline,
 } from '@tli/tracker'
 import { startApp } from '@tli/tui'
-import type { KeyEvent } from '@opentui/core'
 import { TrackerApp } from './app'
 import { writeReport } from './report'
 
@@ -103,16 +102,23 @@ function readLog(): void {
 
 const terminal = await startApp({
   onShutdown: () => save(),
+  onKey: (key) => {
+    app.key(key)
+  },
+  onTick: () => {
+    readLog()
+    app.draw()
+  },
+  onSave: () => save(),
 })
-const renderer = terminal.renderer
 
 /* ---------- the app ---------- */
 
 const launcher = new Launcher()
 
-const app = new TrackerApp(renderer, tracker, names, logFile, {
+const app = new TrackerApp(terminal.renderer, tracker, names, logFile, {
   onQuit: () => {
-    void quit()
+    void terminal.quit()
   },
   onOpenWindow: (tool) => {
     // the tool goes into a window of its own, so the tracker keeps following the log
@@ -145,15 +151,6 @@ if (cached !== null) {
   app.state.baselineCount = cached.prices.length
 }
 
-/* ---------- the keys ---------- */
-
-const onKey = (key: KeyEvent): void => {
-  app.key(key)
-}
-renderer.keyInput.on('keypress', onKey)
-renderer.on('destroy', () => {
-  renderer.keyInput.off('keypress', onKey)
-})
 
 /* ---------- going round ---------- */
 
@@ -182,11 +179,6 @@ async function save(): Promise<void> {
   }).catch(() => undefined)
 }
 
-/** Leaves, and puts the terminal back. */
-async function quit(): Promise<void> {
-  await terminal.stop()
-  process.exit(0)
-}
 
 // the first read: the whole log, so the tracker knows about the runs that were already farmed
 readLog()
@@ -195,13 +187,5 @@ app.draw()
 // the community prices: the ones on disk are used until they are old, then they are fetched again
 if (baselineOn && baselineIsStale(cached)) void refreshBaseline()
 
-setInterval(() => {
-  readLog()
-  app.draw()
-}, 1000)
-
-setInterval(() => {
-  void save()
-}, 30_000)
 
 await terminal.done
