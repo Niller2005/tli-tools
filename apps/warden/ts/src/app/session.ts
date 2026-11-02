@@ -249,6 +249,61 @@ function steadyKey(w: Warning): string | null {
   return `${w.cell}:${w.detail}:${w.read ?? ''}`
 }
 
+/** The screens a frame can show, by what the run does with the board on
+ * it. Named once: the same sets were spelled out as literals in five
+ * places with four memberships, each different on purpose (see each
+ * class). */
+
+/** Whether `screen` reads the board as it stands, so the reading becomes
+ * the run's board - what a pick covers - and its prey marks are counted
+ * and its chains reset: a patrol, a manage, the Sewer Ratway's cell pick
+ * (the Hunt's prey pick shows the same board) and View Prison Status. A
+ * Consume target screen is not one (its board is the day's consume, with
+ * the jaws over its targets); the Interrogation Room's pick is not (an
+ * interrogation moves no inmate); a day banner covers the board; and a
+ * pick covers the board it is read over. */
+function boardRead(screen: Screen): boolean {
+  return screen === 'patrol' || screen === 'manage' || screen === 'cellPick' || screen === 'prisonStatus'
+}
+
+/** Whether `screen` shows a board a live read can change under the player
+ * on the same screen and day: such a change is held for one more read
+ * that confirms it, because one read in about ten is a blip that shows
+ * the old board again within a second. The Interrogation Room's pick
+ * shows a board that can change; a Consume target screen's board is the
+ * day's consume, not the read's; View Prison Status is opened on purpose;
+ * and a screen that reads as unknown is no board to confirm. */
+function blipRead(screen: Screen): boolean {
+  return screen === 'patrol' || screen === 'manage' || screen === 'cellPick' || screen === 'interrogation'
+}
+
+/** Whether `screen` carries a decision, so a Warden's Treasure closes on
+ * it: the day's screens (a patrol's cards, a manage's buttons, a Consume
+ * target pick, a cell pick, an interrogation), an instrument pick and the
+ * day banner that ends the day. View Prison Status decides nothing, and a
+ * screen that reads as unknown carries no cards or buttons. */
+function decisionScreen(screen: Screen): boolean {
+  return (
+    screen === 'patrol' ||
+    screen === 'manage' ||
+    screen === 'chainTarget' ||
+    screen === 'cellPick' ||
+    screen === 'interrogation' ||
+    screen === 'instrumentPick' ||
+    screen === 'dayBanner'
+  )
+}
+
+/** Whether a board read of `screen` with the days counter hidden on the
+ * run's last day can be a screen after the run (the riot screen missed):
+ * the day's board screens, the Consume target screen (which hides the
+ * counter every day) and whatever the player stays on after the riot,
+ * which reads as unknown. The picks and View Prison Status do not show
+ * around the run's end. */
+function afterRunRead(screen: Screen): boolean {
+  return screen === 'patrol' || screen === 'manage' || screen === 'chainTarget' || screen === 'unknown'
+}
+
 /** The targets of a Consume target pick: the engine's `options` on the read
  * board that the screen marks with big jaws (`jawed`, model indices). When
  * the two differ, a warning on the eater's cell; when none of the jawed
@@ -933,7 +988,7 @@ export class Session {
     // The riot screen missed: a board with a hidden counter on the last day,
     // far from the board on show, is a screen after the run.
     const r = this.reading
-    if (this.days.left === 0 && panels.days === null && ['patrol', 'manage', 'chainTarget', 'unknown'].includes(panels.screen) && r !== null) {
+    if (this.days.left === 0 && panels.days === null && afterRunRead(panels.screen) && r !== null) {
       const model = toModel(scene, panels, this.tools, null, this.runDays())[0]
       const len = Math.min(model.cells.length, r.model.cells.length)
       let differ = 0
@@ -954,7 +1009,7 @@ export class Session {
     if (
       live &&
       !confirming &&
-      ['patrol', 'manage', 'cellPick', 'interrogation'].includes(panels.screen) &&
+      blipRead(panels.screen) &&
       panels.days !== null &&
       last !== null &&
       last.panels.screen === panels.screen &&
@@ -1063,7 +1118,7 @@ export class Session {
     }
     if (panels.screen === 'treasurePick') {
       this.treasure = this.treasure ?? 0
-    } else if (['patrol', 'manage', 'chainTarget', 'cellPick', 'interrogation', 'instrumentPick', 'dayBanner'].includes(panels.screen)) {
+    } else if (decisionScreen(panels.screen)) {
       this.treasure = null
     }
     // View Prison Status shows the real board under a pick, and so does the
@@ -1275,14 +1330,14 @@ export class Session {
         reading.model.swapUsed = m.swapUsed
       }
     }
-    if (['patrol', 'manage', 'cellPick', 'prisonStatus'].includes(reading.screen)) {
+    if (boardRead(reading.screen)) {
       this.board = cloneModel(reading.model)
       this.chained = false
       this.meal = null
     }
     if (reading.screen === 'cellPick' && prey) {
       // nothing
-    } else if (['patrol', 'cellPick', 'prisonStatus'].includes(reading.screen)) {
+    } else if (boardRead(reading.screen) && reading.screen !== 'manage') {
       this.consume = null
     } else if (reading.screen === 'manage') {
       this.consume = cloneModel(reading.model)
@@ -1333,7 +1388,7 @@ export class Session {
     if (this.vaultTop === null || day < this.vaultTop[0] || vault.length > this.vaultTop[1].length) {
       this.vaultTop = [day, [...vault]]
     }
-    if (['patrol', 'manage', 'cellPick', 'prisonStatus'].includes(reading.screen)) {
+    if (boardRead(reading.screen)) {
       const seen = this.preySeen
       this.preySeen = preyCells(reading.model).map((x) => {
         const found = seen.find(([c, d]) => c === x && d <= day)
