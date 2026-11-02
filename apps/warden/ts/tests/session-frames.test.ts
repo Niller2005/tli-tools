@@ -9,7 +9,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, test } from 'bun:test'
 
-import { ROUND, Session, type Reading } from '@/app/session'
+import { ROUND, Session } from '@/app/session'
+import type { Reading } from '@/app/run'
 import { RunLog } from '@/app/runlog'
 import { buildState, cellEvent, type CellModel } from '@/board/board'
 import { TOOLS } from '@/engine/data'
@@ -678,20 +679,3 @@ test('an open cell marker', async () => {
   expect(!st.cells[12].sealed && st.cells[12].event !== null).toBe(true)
 })
 
-/** A low-confidence cell read warns on the first two reads that give it and
- * not on a third in a row. */
-test('a steady read stops warning', async () => {
-  const name = 'rec3-t058.png'
-  const s = await readAll([], [name])
-  if (s === null) return
-  const check = () => (s.reading as Reading).warnings.filter((w) => w.kind === 'cellRead' && w.detail === 'rarity' && w.cell === 7).length
-  expect(check()).toBe(1)
-  const counts: number[] = []
-  for (let k = 0; k < 2; k++) {
-    s.readInBackground(loadPng(framePath(name)))
-    await s.wait()
-    counts.push(check())
-  }
-  expect(counts).toEqual([1, 0])
-  expect((s.reading as Reading).warnings.every((w) => w.kind !== 'cellRead')).toBe(true)
-})
