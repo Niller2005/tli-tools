@@ -8,9 +8,6 @@
 import { expect, test } from 'bun:test'
 
 import {
-  casketMeals,
-  consumeTargets,
-  DaysClock,
   differs,
   fingerprint,
   HELD_BLOCKS,
@@ -21,7 +18,7 @@ import {
   Session,
   Watch,
 } from '@/app/session'
-import type { Reading } from '@/app/session'
+import { casketMeals, consumeTargets, DaysClock, type Reading } from '@/app/run'
 import { blankModel, type CellModel } from '@/board/board'
 import { Rgba, warningText } from '@/reader/mod'
 import type { CellRead } from '@/reader/scene'

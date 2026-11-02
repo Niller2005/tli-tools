@@ -5,7 +5,8 @@
 
 import { expect, test } from 'bun:test'
 
-import { Session, type Reading } from '@/app/session'
+import { Session } from '@/app/session'
+import type { Reading } from '@/app/run'
 import { IRON_LAW, TOOLS, toolFromKey, type Tool } from '@/engine/data'
 import { loadPng, warningText } from '@/reader/mod'
 import { frame, framePath, have, readAll } from './session-common'

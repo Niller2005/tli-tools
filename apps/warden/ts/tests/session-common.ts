@@ -5,7 +5,8 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { Session, type Reading } from '@/app/session'
+import { Session } from '@/app/session'
+import type { Reading } from '@/app/run'
 import type { Tool } from '@/engine/data'
 import { loadPng, Rgba } from '@/reader/mod'
 import { Scene, type CellRead } from '@/reader/scene'
