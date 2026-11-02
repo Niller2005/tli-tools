@@ -759,6 +759,15 @@ export class Session {
     this.read(frame, true)
   }
 
+  /** Instals a read the reader made of a frame the caller holds as data:
+   * the scene and the panels, at the reference size. The test seam for the
+   * run rules, which are otherwise reached only through PNG frames; `live`
+   * marks a frame captured from the game (see [`Session.readLive`]). */
+  readSynthetic(scene: Scene, panels: Panels, live = false): void {
+    this.live = live
+    this.takeRead(scene, panels, [REF_W, REF_H])
+  }
+
   private read(frame: Rgba, live: boolean): void {
     if (this.scanTask !== null) {
       this.queued = { frame, live }

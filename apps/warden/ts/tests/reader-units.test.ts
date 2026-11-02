@@ -2,7 +2,8 @@
 //! (src/reader/layout.rs, src/reader/panels.rs).
 
 import { describe, expect, test } from 'bun:test'
-import { Rect, REF_H, REF_W, Rgba } from '@/reader/mod'
+import { readModel, Rect, REF_H, REF_W, Rgba } from '@/reader/mod'
+import type { Warning } from '@/reader/model'
 import { framePoint, is16x9, layOut, layOutTitle, type Layout } from '@/reader/layout'
 import { target, toFrame } from '@/reader/click'
 import { portrait } from '@/reader/scene'
@@ -339,5 +340,34 @@ describe('the click targets', () => {
     expect(Math.abs(y - 835)).toBeLessThan(1.5)
     expect(hw).toBeCloseTo(165, 1)
     expect(hh).toBeCloseTo(85, 1)
+  })
+})
+
+/** A doubtful read the reader flags, for the identity assertions below. */
+function cellReads(warnings: Warning[]): Extract<Warning, { kind: 'cellRead' }>[] {
+  return warnings.filter((w): w is Extract<Warning, { kind: 'cellRead' }> => w.kind === 'cellRead')
+}
+
+describe('the warnings of a read frame', () => {
+  /** A warning says which cell and which read of it is doubtful, with the
+   * confidence measured: its identity, not its sentence (see
+   * [`warningText`]). */
+  test('the warnings carry their identity', async () => {
+    const day19 = await readModel(new URL('./fixtures/s16-board-day19.png', import.meta.url).pathname, [])
+    const doubtful = cellReads(day19[1])
+    expect(doubtful).toHaveLength(2)
+    expect(doubtful[0]).toMatchObject({ cell: 7, detail: 'rarity', read: 'Ultimate Alpha Wolf' })
+    expect(doubtful[0].confidence).toBeCloseTo(0.24, 2)
+    expect(doubtful[1]).toMatchObject({ cell: 15, detail: 'event' })
+    expect(doubtful[1].confidence).toBeCloseTo(0.03, 2)
+
+    const tyranny = await readModel(new URL('./fixtures/s16-theme-tyranny.png', import.meta.url).pathname, [])
+    const reads = cellReads(tyranny[1])
+    expect(reads[0]).toMatchObject({ cell: 8, detail: 'lock', read: 'locked' })
+    expect(reads[0].confidence).toBeCloseTo(0.14, 2)
+    expect(reads[1]).toMatchObject({ cell: 9, detail: 'beast', read: 'Normal Berserk Lion' })
+    expect(reads[2]).toMatchObject({ cell: 10, detail: 'glowless', read: 'Normal Alpha Wolf' })
+    expect(reads[2].confidence).toBeUndefined()
+    expect(tyranny[1]).toContainEqual({ kind: 'note', cell: null, text: "The run's theme: Tyranny. Nothing to solve on this screen." })
   })
 })
