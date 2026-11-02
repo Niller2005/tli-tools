@@ -22,7 +22,6 @@ import { createCapture } from '@tli/capture'
 import { captureMinigame, logHint, minigameCaptureGate, watchMinigames } from '@tli/gamelog'
 import { asBytes } from '@tli/png'
 import { startApp } from '@tli/tui'
-import type { KeyEvent } from '@opentui/core'
 import { Session, Watch, fingerprint } from '@/app/session'
 import { timed } from '@/app/profile'
 import { Rgba, loadPng } from '@/reader/mod'
@@ -138,27 +137,30 @@ async function run(): Promise<void> {
     return
   }
 
-  const terminal = await startApp()
-  const renderer = terminal.renderer
   let readNow = false
   let quitting = false
+
+  /** What the player wanting to leave does: the loop ends, and the terminal is put back. */
+  function leave(): void {
+    quitting = true
+    void terminal.stop()
+  }
+
+  const terminal = await startApp({
+    onKey: (key) => {
+      app.key(key)
+    },
+    onQuit: leave,
+  })
+  const renderer = terminal.renderer
   const app = new WardenApp(renderer, session, {
     onRead: () => {
       readNow = true
     },
-    onQuit: () => {
-      quitting = true
-      void terminal.stop()
-    },
+    onQuit: leave,
   })
 
-  const onKey = (key: KeyEvent): void => {
-    app.key(key)
-  }
-  renderer.keyInput.on('keypress', onKey)
-  renderer.on('destroy', () => {
-    renderer.keyInput.off('keypress', onKey)
-  })
+
 
   const watch = new Watch()
   const capture = createCapture({

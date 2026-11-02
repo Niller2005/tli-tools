@@ -50,7 +50,7 @@ export class WardenApp {
   /** Does a key press. */
   key(key: KeyEvent): void {
     const char = key.sequence.length === 1 ? key.sequence : key.name.length === 1 ? key.name : ''
-    if (char === 'q' || (key.ctrl && key.name === 'c')) {
+    if (char === 'q') {
       this.hooks.onQuit()
       return
     }
