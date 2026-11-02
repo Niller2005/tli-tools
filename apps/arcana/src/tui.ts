@@ -19,7 +19,6 @@ import { Tracker, historyOf, load, save, type Saved, SCHEMA_VERSION } from '@tli
 import { MinigameTracker, findLog, scanBack } from '@tli/gamelog'
 import { ITEM_TABLE_PATH, ItemNames, LogReader, loadTracker, userItemsPath } from '@tli/tracker'
 import { startApp } from '@tli/tui'
-import type { KeyEvent } from '@opentui/core'
 import { ArcanaApp } from './app'
 import { freshView } from './view'
 
@@ -151,45 +150,27 @@ firstRead()
 
 const terminal = await startApp({
   onShutdown: () => saveState(),
+  onKey: (key) => {
+    app.key(key)
+  },
+  onTick: () => {
+    readLog()
+    app.draw()
+  },
+  onSave: () => saveState(),
 })
-const renderer = terminal.renderer
 
 /* ---------- the app ---------- */
 
-const app = new ArcanaApp(renderer, tracker, names, state, {
+const app = new ArcanaApp(terminal.renderer, tracker, names, state, {
   onQuit: () => {
-    void quit()
+    void terminal.quit()
   },
   onRead: () => {
     readLog()
   },
 })
 
-/* ---------- the keys ---------- */
-
-const onKey = (key: KeyEvent): void => {
-  app.key(key)
-}
-renderer.keyInput.on('keypress', onKey)
-renderer.on('destroy', () => {
-  renderer.keyInput.off('keypress', onKey)
-})
-
-/** Leaves, and puts the terminal back. */
-async function quit(): Promise<void> {
-  await terminal.stop()
-  process.exit(0)
-}
-
 app.draw()
-
-setInterval(() => {
-  readLog()
-  app.draw()
-}, 1000)
-
-setInterval(() => {
-  void saveState()
-}, 30_000)
 
 await terminal.done
