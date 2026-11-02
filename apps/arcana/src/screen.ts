@@ -18,14 +18,11 @@ import {
   backgroundColor,
   borderColor,
   brandChunks,
-  chip,
-  chunksWidth,
-  clip,
   color,
   colorEnabled,
   defaultBackground,
   defaultForeground,
-  hintChunks,
+  footerChunks,
   panelBorderStyle,
   panelTitle,
   rowChunks,
@@ -35,13 +32,13 @@ import {
   theme,
   titleColor,
   tone,
+  topBarChunks,
   visibleLength,
 } from '@tli/tui'
 import type { Tracker } from '@tli/arcana'
 import type { ItemNames } from '@tli/tracker'
 import {
   type ViewState,
-  cutChunks,
   detailRows,
   historyRows,
   nowChunks,
@@ -344,14 +341,14 @@ export class ArcanaScreen {
     if (title !== this.lastTitle) {
       this.lastTitle = title
       this.titleText.content = new StyledText(
-        cutChunks(
-          [
-            ...brandChunks('Arcana'),
-            tone('default', '   '),
-            chip(path.text, path.tone),
-            tone('default', '   '),
-            chip(state.taxed ? 'tax on' : 'no tax', state.taxed ? 'green' : 'dim'),
-          ],
+        topBarChunks(
+          {
+            name: 'Arcana',
+            chips: [
+              [path.text, path.tone],
+              [state.taxed ? 'tax on' : 'no tax', state.taxed ? 'green' : 'dim'],
+            ],
+          },
           width,
         ),
       )
@@ -447,20 +444,13 @@ export class ArcanaScreen {
 
   /** The keys at the bottom on their caps, or the message of the last key. */
   private drawFooter(state: ViewState, width: number): void {
-    let chunks: TextChunk[]
-    if (state.detail) {
-      chunks = hintChunks(HINTS_DETAIL)
-    } else if (state.message !== '') {
-      chunks = [tone('accent', clip(state.message, width))]
-    } else {
-      chunks = hintChunks(HINTS)
-    }
-    // the hints are dropped from the end when the terminal is too narrow for them all
-    if (state.message === '' || state.detail) {
-      const hints = [...(state.detail ? HINTS_DETAIL : HINTS)]
-      while (hints.length > 1 && chunksWidth(hintChunks(hints)) > width) hints.pop()
-      chunks = hintChunks(hints)
-    }
+    const chunks = footerChunks(
+      {
+        hints: state.detail ? HINTS_DETAIL : HINTS,
+        message: state.detail ? '' : state.message,
+      },
+      width,
+    )
     const key = chunks.map((chunk) => chunk.text).join('')
     if (key !== this.lastFooter) {
       this.lastFooter = key

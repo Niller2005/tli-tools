@@ -41,6 +41,10 @@ The keys:
 
 The mouse picks a row of the history, and the wheel scrolls the list that is open.
 
+On a narrow terminal the footer's keys are given up from the middle: the move key and the quit key
+are the last to go, and the message of the last key still replaces the keys. The bar along the top
+keeps the Arcana name and leaves chips out when they do not fit.
+
 ## The colours
 
 The colours are the ones every tool in this repo shares, and each one has a job, so the same kind

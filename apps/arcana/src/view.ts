@@ -16,7 +16,7 @@ import {
 } from '@tli/arcana'
 import type { MinigameState } from '@tli/gamelog'
 import { valueOf, type ItemNames, type Value } from '@tli/tracker'
-import { chunksWidth, clip, meter, stat, type Cell, type Row, type Tone, duration, fe, num, pad, padStart, tone, visibleLength } from '@tli/tui'
+import { cutChunks, meter, stat, type Cell, type Row, type Tone, duration, fe, num, pad, padStart, tone, visibleLength } from '@tli/tui'
 import { arcanaName, clock, stamp } from './format'
 
 /** The lists the player can move about in. */
@@ -199,24 +199,6 @@ function pieces(parts: readonly (readonly [string, Tone | undefined])[]): Row {
   return { cells: parts.map(([text, style]) => ({ text, tone: style, width: visibleLength(text) })) }
 }
 
-/** A line of pieces, cut to `inner` columns so it never runs past the panel it is drawn in. */
-export function cutChunks(parts: readonly TextChunk[], inner: number): TextChunk[] {
-  if (chunksWidth(parts) <= inner) return [...parts]
-  const out: TextChunk[] = []
-  let left = inner
-  for (const part of parts) {
-    if (left <= 0) break
-    const width = visibleLength(part.text)
-    if (width <= left) {
-      out.push(part)
-      left -= width
-    } else {
-      out.push({ ...part, text: clip(part.text, left) })
-      left = 0
-    }
-  }
-  return out
-}
 
 /** The chests as "Blue 4, Purple 2"; "none" when there are none. */
 export function chestText(sessions: Session[]): string {
@@ -240,7 +222,7 @@ export function pathText(tracker: Tracker, state: ViewState): { text: string; to
     : { text: 'Tarot Path: not seen in the log yet', tone: 'dim' }
 }
 
-/** The pieces of the panel that says what is going on now, each line cut to the panel's width. */
+/** The pieces of the panel that says what is going on now, each line cut to the panel's width by the shared cutter. */
 export function nowChunks(tracker: Tracker, state: ViewState, inner: number): TextChunk[] {
   const chunks: TextChunk[] = []
   const line = (parts: readonly TextChunk[]): void => {
