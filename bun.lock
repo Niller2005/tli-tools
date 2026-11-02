@@ -161,6 +161,7 @@
       "name": "@tli/tracker",
       "dependencies": {
         "@tli/gamelog": "workspace:*",
+        "@tli/store": "workspace:*",
       },
       "devDependencies": {
         "@types/bun": "latest",

@@ -20,30 +20,24 @@
 // database is not there and `state.json` is, the old state is brought in with one write and the
 // file is renamed to `state.json.imported`, so it is kept as a backup and never deleted.
 
-import { mkdir, readFile, rename } from 'node:fs/promises'
-import { existsSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { Database, SQLiteError } from 'bun:sqlite'
-import { dataPath } from './items'
+import { Database } from 'bun:sqlite'
+import { defineStore } from '@tli/store'
 import { migrateState, STATE_VERSION, type SavedRun, type SavedState } from './engine'
 import { UNKNOWN_CHARACTER, type ExchangeKind } from './character'
 
 /** The database the tracker saves itself in. */
 export const DB_FILE = 'tracker.db'
 
-/** Where the tracker saves itself. */
+/**
+ * Where the tracker saves itself.
+ *
+ * The life of the file — opening it, bringing its schema up to date, refusing a newer one,
+ * setting a bad one aside, bringing the old `state.json` in — is `@tli/store`'s; what is the
+ * tracker's own is the schema, the rows and the saved state below.
+ */
 export function dbPath(): string {
-  return dataPath(DB_FILE)
+  return store.dbPath
 }
-
-/** The file the tracker kept its state in before there was a database; read once, then renamed. */
-const LEGACY_STATE_FILE = 'state.json'
-
-/** What the old state file is renamed to once it was brought in: kept as a backup, never deleted. */
-const IMPORTED_SUFFIX = '.imported'
-
-/** What a file that is not a usable database is moved aside to. */
-const CORRUPT_SUFFIX = '.corrupt'
 
 /** What is saved: the tracker's state, and where it was in the log. */
 export interface SavedTracker {
@@ -252,12 +246,6 @@ const MIGRATIONS: string[] = [
 /** The version of the database schema this code writes and reads. */
 export const SCHEMA_VERSION = MIGRATIONS.length
 
-/** The database was written by a newer version of the tracker: it is left alone, nothing is written. */
-class FutureSchemaError extends Error {}
-
-/** The file is there but it is not the tracker's database: it is corrupt, or another tool's. */
-class NotTrackerDbError extends Error {}
-
 /** The rows the tables are read back as. */
 interface RunRow {
   id: number
@@ -349,50 +337,6 @@ interface AffixNameRow {
 
 /** The key of the character that was logged in last, in `meta`. */
 const ACTIVE_KEY = 'active_character'
-
-/**
- * Opens the database and brings its schema up to date; the caller closes it.
- *
- * A file that is not the tracker's database (corrupt, or another tool's tables) and a database of
- * a newer version are both refused: the one by `NotTrackerDbError`, so the caller can move it
- * aside, the other by `FutureSchemaError`, so the caller leaves it alone.
- */
-function openDb(path: string, create: boolean): Database {
-  const db = create ? new Database(path) : new Database(path, { create: false })
-  try {
-    db.exec('PRAGMA journal_mode = WAL')
-    db.exec('PRAGMA foreign_keys = ON')
-    db.exec('PRAGMA busy_timeout = 5000')
-    // the rows sqlite gives back are untyped; these are the tracker's own tables
-    const versionRow = db.query('PRAGMA user_version').get() as { user_version: number }
-    const version = versionRow.user_version
-    if (version > SCHEMA_VERSION) {
-      throw new FutureSchemaError(`the tracker database is of schema version ${version}; this tracker knows up to ${SCHEMA_VERSION}`)
-    }
-    if (version === 0) {
-      const countRow = db.query("select count(*) as n from sqlite_master where type = 'table' and name not like 'sqlite_%'").get() as { n: number }
-      if (countRow.n > 0) throw new NotTrackerDbError(`${path} has tables this tracker does not know`)
-    }
-    for (let from = version; from < SCHEMA_VERSION; from += 1) {
-      const apply = db.transaction(() => {
-        db.exec(MIGRATIONS[from])
-        db.exec(`PRAGMA user_version = ${from + 1}`)
-      })
-      apply()
-    }
-    return db
-  } catch (e) {
-    db.close()
-    if (e instanceof NotTrackerDbError || e instanceof FutureSchemaError) throw e
-    if (isUnusable(e)) throw new NotTrackerDbError(`${path} is not the tracker's database: ${(e as Error).message}`)
-    throw e
-  }
-}
-
-/** Whether the error says the file is not a usable database: not one at all, or broken inside. */
-function isUnusable(e: unknown): boolean {
-  return e instanceof SQLiteError && (e.code === 'SQLITE_NOTADB' || e.code === 'SQLITE_CORRUPT')
-}
 
 /* ---------- reading ---------- */
 
@@ -809,56 +753,30 @@ function parseLegacyState(raw: string): SavedTracker | null {
   }
 }
 
-/**
- * Brings the old state in: one write, then the file is renamed to `state.json.imported`.
- *
- * A state file that is truncated, corrupt or of a version this code does not know is left where
- * it is, and nothing is written: the same states the old loader turned away.
- */
-async function importLegacyState(dbFile: string): Promise<SavedTracker | null> {
-  const legacy = join(dirname(dbFile), LEGACY_STATE_FILE)
-  let saved: SavedTracker | null = null
-  try {
-    saved = parseLegacyState(await readFile(legacy, 'utf8'))
-  } catch {
-    return null
-  }
-  if (saved === null) return null
-  await mkdir(dirname(dbFile), { recursive: true })
-  const db = openDb(dbFile, true)
-  try {
-    writeTracker(db, saved, null)
-  } finally {
-    db.close()
-  }
-  await rename(legacy, `${legacy}${IMPORTED_SUFFIX}`)
-  return saved
-}
+/* ---------- the store ---------- */
+
+/** The tracker's own part of its store: the schema, the rows and the old state file. */
+const store = defineStore<SavedTracker>({
+  tool: 'the tracker',
+  dir: 'tli-tracker',
+  dbFile: DB_FILE,
+  migrations: MIGRATIONS,
+  parseLegacyState,
+  read: readTracker,
+  write: writeTracker,
+})
 
 /* ---------- the public face ---------- */
 
 /**
  * Reads what was saved; null when there is nothing saved, or it cannot be read.
  *
- * When the database is not there yet and the old `state.json` is, that state is brought in (see
- * `importLegacyState`) and read back. Nothing is created on disk when there is nothing to read:
- * a dashboard that only looks does not leave a database behind.
+ * When the database is not there yet and the old `state.json` is, that state is brought in and
+ * read back. Nothing is created on disk when there is nothing to read: a dashboard that only
+ * looks does not leave a database behind.
  */
 export async function loadTracker(path = dbPath()): Promise<SavedTracker | null> {
-  if (!existsSync(path)) return importLegacyState(path)
-  let db: Database
-  try {
-    db = openDb(path, false)
-  } catch {
-    return null
-  }
-  try {
-    return readTracker(db)
-  } catch {
-    return null
-  } finally {
-    db.close()
-  }
+  return store.load(path)
 }
 
 /**
@@ -870,42 +788,7 @@ export async function loadTracker(path = dbPath()): Promise<SavedTracker | null>
  * left entirely alone, and the write is refused.
  */
 export async function saveTracker(saved: SavedTracker, path = dbPath()): Promise<void> {
-  await mkdir(dirname(path), { recursive: true })
-  let db = await openForSave(path)
-  let written = false
-  try {
-    writeTracker(db, saved, readTracker(db))
-    written = true
-  } catch (e) {
-    // a database that was broken between the saves is set aside below, like one that never was one
-    if (!isUnusable(e)) throw e
-  } finally {
-    db.close()
-  }
-  if (written) return
-  await rename(path, `${path}${CORRUPT_SUFFIX}`)
-  db = await openForSave(path)
-  try {
-    writeTracker(db, saved, null)
-  } finally {
-    db.close()
-  }
-}
-
-/**
- * Opens the database to write to it, moving aside a file that is not the tracker's database.
- *
- * The file that was moved aside is kept as `<db>.corrupt`; a database of a newer version of the
- * tracker is not one of those, and the error it raises is passed on untouched.
- */
-async function openForSave(path: string): Promise<Database> {
-  try {
-    return openDb(path, true)
-  } catch (e) {
-    if (!(e instanceof NotTrackerDbError)) throw e
-    await rename(path, `${path}${CORRUPT_SUFFIX}`)
-    return openDb(path, true)
-  }
+  return store.save(saved, path)
 }
 
 /**
@@ -917,7 +800,7 @@ async function openForSave(path: string): Promise<Database> {
  * with the local midnight. Null when there is no database to read.
  */
 export function queryRuns(path = dbPath(), since?: number): SavedRun[] | null {
-  return withDb(path, (db) => {
+  return store.look(path, (db) => {
     const id = activeCharacter(db)
     const rows =
       since === undefined
@@ -931,7 +814,7 @@ export function queryRuns(path = dbPath(), since?: number): SavedRun[] | null {
 export function queryTotals(
   path = dbPath(),
 ): { runs: number; fe: number; firstAt: number | null; lastAt: number | null } | null {
-  return withDb(path, (db) => {
+  return store.look(path, (db) => {
     const row = db
       .query('select count(*) as runs, coalesce(sum(fe), 0) as fe, min(start_ms) as first, max(start_ms) as last from runs where character = ?')
       .get(activeCharacter(db)) as {
@@ -942,22 +825,4 @@ export function queryTotals(
     }
     return { runs: row.runs, fe: row.fe, firstAt: row.first, lastAt: row.last }
   })
-}
-
-/** Opens the database for a look; null when there is none, or it cannot be read. */
-function withDb<T>(path: string, look: (db: Database) => T): T | null {
-  if (!existsSync(path)) return null
-  let db: Database
-  try {
-    db = openDb(path, false)
-  } catch {
-    return null
-  }
-  try {
-    return look(db)
-  } catch {
-    return null
-  } finally {
-    db.close()
-  }
 }

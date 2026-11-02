@@ -6,6 +6,7 @@
 
 import { join } from 'node:path'
 import { readFile } from 'node:fs/promises'
+import { dataDir as storeDataDir } from '@tli/store'
 
 /** What one item is. */
 export interface ItemEntry {
@@ -122,11 +123,9 @@ export function configDir(): string {
   return join(process.env.HOME ?? '.', '.config', 'tli-tracker')
 }
 
-/** The directory the tracker's own files live in. */
+/** The directory the tracker's own files live in: the shared data home, under the tracker's name. */
 export function dataDir(): string {
-  const xdg = process.env.XDG_DATA_HOME
-  if (xdg !== undefined && xdg !== '') return join(xdg, 'tli-tracker')
-  return join(process.env.HOME ?? '.', '.local', 'share', 'tli-tracker')
+  return storeDataDir('tli-tracker')
 }
 
 /** Where the player's own item names are read from. */

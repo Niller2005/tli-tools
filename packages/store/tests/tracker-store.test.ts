@@ -38,6 +38,19 @@ const legacyState = {
   mapCosts: false,
 }
 
+/** A saved state that differs from the full one in what it keeps: the next save has something to do. */
+function changedState(): SavedTracker {
+  const state = richState()
+  state.runs[1]!.fe = 43
+  state.runs.pop() // the prison visit is gone
+  state.prices.push([4001, { price: 3, samples: 1, listings: 4, at: 6000 }])
+  state.slots = state.slots.filter((slot) => slot.key !== '102:5')
+  state.overrides = [[3010, 25]]
+  state.gear?.push([3020, 112152])
+  state.taxed = true
+  return around(state, 43)
+}
+
 /** Writes a database of the tracker's first schema, with rows in it, as that version left it. */
 function writeFirstSchema(path: string): void {
   const old = new Database(path)
@@ -74,6 +87,7 @@ describe('the tracker store', () => {
     load: loadTracker,
     save: saveTracker,
     full: around(richState()),
+    changed: changedState(),
     expectSame: (loaded, wanted) => expectState(loaded, wanted.tracker),
     legacy: JSON.stringify({ version: 1, log: { file: '/tmp/UE_game.log', offset: 7 }, tracker: legacyState }),
     expectImported: (loaded) => {
