@@ -38,10 +38,10 @@ export class Tracker {
 export function parseLine(line: string): Fact | null
 
 /** Reads what was saved; null when there is nothing saved, or it cannot be read. */
-export async function load(path?: string): Promise<Saved | null>
+export async function loadArcana(path?: string): Promise<SavedArcana | null>
 
 /** Writes what is saved, as the difference from what is there, in one transaction. */
-export async function save(saved: Saved, path?: string): Promise<void>
+export async function saveArcana(saved: SavedArcana, path?: string): Promise<void>
 
 /** The Arcana tool's status line, as the dashboard draws it (contract C1 of the dashboard plan). */
 export function arcanaStatus(history: History): ToolStatus
@@ -51,7 +51,7 @@ export function arcanaStatus(history: History): ToolStatus
 the Tarot Path is open (a visit that never ended is one that is still going on), the life of the
 visit that is going on, the chests of destiny still waiting for a Fateful Contest, and how many
 trials were fought. It reads the history alone — `tracker.state` of a live tracker, or
-`historyOf(await load())` of what was saved — so it costs nothing to call.
+`historyOf(await loadArcana())` of what was saved — so it costs nothing to call.
 
 ## What the log says, and what it does not
 
