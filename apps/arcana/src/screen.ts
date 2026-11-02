@@ -15,26 +15,36 @@ import {
   type TextChunk,
 } from '@opentui/core'
 import {
-  type Row,
+  backgroundColor,
   borderColor,
+  brandChunks,
+  chip,
+  chunksWidth,
   clip,
   color,
   colorEnabled,
   defaultBackground,
   defaultForeground,
+  hintChunks,
+  panelBorderStyle,
+  panelTitle,
   rowChunks,
+  type Row,
+  surfaceColor,
   textColor,
   theme,
   titleColor,
   tone,
+  visibleLength,
 } from '@tli/tui'
 import type { Tracker } from '@tli/arcana'
 import type { ItemNames } from '@tli/tracker'
 import {
   type ViewState,
-  currentRows,
+  cutChunks,
   detailRows,
   historyRows,
+  nowChunks,
   pathText,
   selectedEntry,
   totalsRows,
@@ -71,6 +81,24 @@ const HELP: [string, string][] = [
   ['r', 'read the log again now'],
   ['?', 'this help (any key goes back)'],
   ['q', 'quit; what was tracked is saved'],
+]
+
+/** The keys the footer shows on the lists. */
+const HINTS: readonly (readonly [string, string])[] = [
+  ['↑↓', 'move'],
+  ['enter', 'detail'],
+  ['tab', 'panel'],
+  ['t', 'tax'],
+  ['r', 'reread'],
+  ['?', 'help'],
+  ['q', 'quit'],
+]
+
+/** The keys the footer shows in the detail. */
+const HINTS_DETAIL: readonly (readonly [string, string])[] = [
+  ['↑↓', 'scroll'],
+  ['esc', 'back'],
+  ['q', 'quit'],
 ]
 
 /** The help, in the words the arcana README uses. */
@@ -113,7 +141,6 @@ export class ArcanaScreen {
   private lastTitle = ''
   private lastLog = ''
   private lastFooter = ''
-  private lastNow = ''
   private lastHistory = ''
   private lastTotals = ''
   private lastDetail = ''
@@ -154,6 +181,8 @@ export class ArcanaScreen {
     })
     this.header.add(this.titleText)
     this.header.add(this.logText)
+    // the bars along the top and the bottom sit on the surface colour of the theme
+    this.header.backgroundColor = surfaceColor()
 
     this.body = new BoxRenderable(renderer, {
       id: 'body',
@@ -202,6 +231,7 @@ export class ArcanaScreen {
       wrapMode: 'none',
     })
     this.footer.add(this.footerText)
+    this.footer.backgroundColor = surfaceColor()
 
     this.overlay = new BoxRenderable(renderer, {
       id: 'overlay',
@@ -218,7 +248,7 @@ export class ArcanaScreen {
       id: 'overlay-box',
       border: true,
       borderStyle: 'rounded',
-      title: 'Arcana',
+      title: 'Help',
       flexDirection: 'column',
       overflow: 'hidden',
     })
@@ -307,18 +337,24 @@ export class ArcanaScreen {
     this.drawOverlay(state, width, height)
   }
 
-  /** The title, the state of the Tarot Path and the log that is read. */
+  /** The name of the tool, the state of the Tarot Path and the tax as chips, and the log. */
   private drawHeader(state: ViewState, width: number): void {
     const path = pathText(this.tracker, state)
-    const title = `Arcana  ${path.text}${state.taxed ? '' : '  (no tax)'}`
+    const title = `${path.text}${state.taxed ? 'tax on' : 'no tax'}`
     if (title !== this.lastTitle) {
       this.lastTitle = title
-      this.titleText.content = new StyledText([
-        tone('bold', 'Arcana'),
-        tone('default', '  '),
-        tone(path.tone, path.text),
-        ...(state.taxed ? [] : [tone('default', '  (no tax)')]),
-      ])
+      this.titleText.content = new StyledText(
+        cutChunks(
+          [
+            ...brandChunks('Arcana'),
+            tone('default', '   '),
+            chip(path.text, path.tone),
+            tone('default', '   '),
+            chip(state.taxed ? 'tax on' : 'no tax', state.taxed ? 'green' : 'dim'),
+          ],
+          width,
+        ),
+      )
     }
     this.titleText.width = width
 
@@ -335,19 +371,26 @@ export class ArcanaScreen {
   /** The panel of what is going on now. */
   private drawNow(state: ViewState, inner: number): void {
     this.nowBox.visible = !state.detail
+    this.nowBox.borderStyle = panelBorderStyle(false)
     this.nowBox.borderColor = borderColor(false)
+    this.nowBox.title = panelTitle('Now')
     this.nowBox.titleColor = titleColor(false)
-    const rows = currentRows(this.tracker, state)
-    this.lastNow = this.drawRows(this.nowText, rows, inner, this.lastNow)
-    this.nowBox.height = rows.length + BORDER
+    // the visit that is going on keeps changing (its length grows), so it is drawn every time
+    const chunks = nowChunks(this.tracker, state, inner)
+    this.nowText.content = new StyledText(chunks)
+    this.nowText.width = inner
+    this.nowBox.height = chunks.filter((chunk) => chunk.text.includes('\n')).length + 1 + BORDER
   }
 
   /** The panel of the visits that were played. */
   private drawHistory(state: ViewState, inner: number): void {
-    const shown = !state.detail && state.focus === 'history'
+    const focused = state.focus === 'history'
+    const shown = !state.detail && focused
     this.history.box.visible = shown
-    this.history.box.borderColor = borderColor(state.focus === 'history')
-    this.history.box.titleColor = titleColor(state.focus === 'history')
+    this.history.box.borderStyle = panelBorderStyle(focused)
+    this.history.box.borderColor = borderColor(focused)
+    this.history.box.title = panelTitle('History', focused)
+    this.history.box.titleColor = titleColor(focused)
     if (!shown) return
     const rows = historyRows(this.tracker, state)
     this.lastHistory = this.drawRows(this.history.text, rows, inner, this.lastHistory)
@@ -356,10 +399,13 @@ export class ArcanaScreen {
 
   /** The panel of everything the player did. */
   private drawTotals(state: ViewState, inner: number): void {
-    const shown = !state.detail && state.focus === 'totals'
+    const focused = state.focus === 'totals'
+    const shown = !state.detail && focused
     this.totals.box.visible = shown
-    this.totals.box.borderColor = borderColor(state.focus === 'totals')
-    this.totals.box.titleColor = titleColor(state.focus === 'totals')
+    this.totals.box.borderStyle = panelBorderStyle(focused)
+    this.totals.box.borderColor = borderColor(focused)
+    this.totals.box.title = panelTitle('Lifetime totals', focused)
+    this.totals.box.titleColor = titleColor(focused)
     if (!shown) {
       this.totals.applied = -1
       return
@@ -373,7 +419,9 @@ export class ArcanaScreen {
   private drawDetail(state: ViewState, inner: number): void {
     const shown = state.detail
     this.detail.box.visible = shown
+    this.detail.box.borderStyle = panelBorderStyle(true)
     this.detail.box.borderColor = borderColor(true)
+    this.detail.box.title = panelTitle('Detail', true)
     this.detail.box.titleColor = titleColor(true)
     if (!shown) {
       this.detail.applied = -1
@@ -388,6 +436,7 @@ export class ArcanaScreen {
     this.place(this.detail, state.scroll)
   }
 
+
   /** Puts the rows on a text, when they changed; gives back the key they have now. */
   private drawRows(text: TextRenderable, rows: Row[], inner: number, last: string): string {
     const key = `${inner}\n${rowsKey(rows)}`
@@ -396,16 +445,26 @@ export class ArcanaScreen {
     return key
   }
 
-  /** The keys at the bottom, or the message of the last key. */
+  /** The keys at the bottom on their caps, or the message of the last key. */
   private drawFooter(state: ViewState, width: number): void {
-    const footer = state.detail
-      ? '↑↓ scroll  esc back  q quit'
-      : state.message !== ''
-        ? state.message
-        : '↑↓ move  enter detail  tab panel  t tax  r reread  ? help  q quit'
-    if (footer !== this.lastFooter) {
-      this.lastFooter = footer
-      this.footerText.content = new StyledText([tone('dim', clip(footer, width))])
+    let chunks: TextChunk[]
+    if (state.detail) {
+      chunks = hintChunks(HINTS_DETAIL)
+    } else if (state.message !== '') {
+      chunks = [tone('accent', clip(state.message, width))]
+    } else {
+      chunks = hintChunks(HINTS)
+    }
+    // the hints are dropped from the end when the terminal is too narrow for them all
+    if (state.message === '' || state.detail) {
+      const hints = [...(state.detail ? HINTS_DETAIL : HINTS)]
+      while (hints.length > 1 && chunksWidth(hintChunks(hints)) > width) hints.pop()
+      chunks = hintChunks(hints)
+    }
+    const key = chunks.map((chunk) => chunk.text).join('')
+    if (key !== this.lastFooter) {
+      this.lastFooter = key
+      this.footerText.content = new StyledText(chunks)
     }
     this.footerText.width = width
   }
@@ -418,8 +477,12 @@ export class ArcanaScreen {
     }
     // The overlay has to be filled: without a background of its own the panels behind the help
     // show through the gaps in its text.
-    this.overlay.backgroundColor = defaultBackground()
-    this.overlayBox.backgroundColor = defaultBackground()
+    this.overlay.backgroundColor = backgroundColor()
+    this.overlayBox.backgroundColor = backgroundColor()
+    this.overlayBox.borderStyle = panelBorderStyle(true)
+    this.overlayBox.borderColor = borderColor(true)
+    this.overlayBox.title = panelTitle('Help')
+    this.overlayBox.titleColor = titleColor(true)
     const boxWidth = Math.max(20, width - 4)
     const boxHeight = Math.max(4, height - 4)
     this.overlayBox.width = boxWidth
@@ -432,6 +495,9 @@ export class ArcanaScreen {
       this.overlayText.content = new StyledText(helpChunks())
     }
     this.overlayText.width = textWidth
+    // the box is only as tall as the help it holds: a full-screen box would be mostly empty
+    const lines = helpLineCount(this.overlayText.content, textWidth)
+    this.overlayBox.height = Math.min(boxHeight, Math.max(4, lines + BORDER))
     this.overlay.visible = true
   }
 
@@ -485,13 +551,25 @@ function helpChunks(): TextChunk[] {
     chunks.push(...parts)
     chunks.push(tone('default', '\n'))
   }
-  line([tone('accent', "Arcana: the Tarot Path and the Fateful Contest, from the game's log")])
+  line([
+    ...brandChunks('Arcana'),
+    tone('dim', ": the Tarot Path and the Fateful Contest, from the game's log"),
+  ])
   line([])
+  line([tone('accent', 'The keys')])
   for (const [key, label] of HELP) {
-    line([tone('accent', `${key.padEnd(16)}`), tone('dim', label)])
+    line([tone('key', ` ${key} `), tone('default', ' '.repeat(Math.max(1, 18 - visibleLength(key) - 2))), tone('dim', label)])
   }
   line([])
   for (const text of HELP_TEXT) line([tone('dim', text)])
   return chunks
+}
+
+/** How many lines a page of chunks takes once its long lines are wrapped to `width`. */
+function helpLineCount(content: StyledText, width: number): number {
+  const text = content.chunks.map((chunk) => chunk.text).join('')
+  return text
+    .split('\n')
+    .reduce((sum, part) => sum + Math.max(1, Math.ceil(part.length / Math.max(1, width))), 0)
 }
 

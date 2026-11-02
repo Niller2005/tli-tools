@@ -69,20 +69,49 @@ const history: History = {
   nextId: 3,
 }
 
+const view = process.argv[2] ?? 'history'
+const narrow = view === 'narrow'
+
+// a visit that is still going on, with its contest in the fight: what the Now panel shows
+if (view === 'open') {
+  history.sessions.push({
+    id: 3,
+    openedAt: Date.UTC(2026, 9, 30, 3, 0),
+    closedAt: null,
+    cells: 41,
+    moves: [],
+    chests: [
+      { slot: 1, rarity: 'Jin', at: Date.UTC(2026, 9, 30, 3, 1), upgrades: 1 },
+      { slot: 2, rarity: 'Cai', at: Date.UTC(2026, 9, 30, 3, 2), upgrades: 0 },
+    ],
+    notes: 9,
+    chestsSkipped: 2,
+    played: 7,
+    lifeLost: 2,
+    lifeWon: 1,
+  })
+  history.contests.push({
+    askedAt: Date.UTC(2026, 9, 30, 3, 4),
+    openedAt: Date.UTC(2026, 9, 30, 3, 5),
+    closedAt: null,
+    chests: [{ at: Date.UTC(2026, 9, 30, 3, 6), rewards: [{ item: 3902, qty: 4 }] }],
+  })
+  history.nextId = 4
+}
+
 const tracker = new Tracker(history)
 tracker.prices.setOverride(3902, 10)
 
-const view = process.argv[2] ?? 'history'
-
-const test = await createTestRenderer({ width: 120, height: 30, kittyKeyboard: true })
+const test = await createTestRenderer({ width: narrow ? 62 : 120, height: narrow ? 22 : 30, kittyKeyboard: true })
 const state = freshView('/home/niller/games/Torchlight Infinite/UE_game/TorchLight/Saved/Logs/UE_game.log')
-state.path = 'closed'
+state.path = view === 'open' ? 'open' : 'closed'
 if (view === 'totals') state.focus = 'totals'
 if (view === 'detail') {
   state.detail = true
   state.cursor = 1
 }
 if (view === 'help') state.help = true
+if (view === 'message') state.message = 'the log was read again: 2 visits, 1 contest'
 const app = new ArcanaApp(test.renderer, tracker, names, state, {
   onQuit: () => {},
   onRead: () => {},

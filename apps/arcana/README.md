@@ -20,8 +20,8 @@ bun src/tui.ts --no-color           # draw without colours
 
 | Panel | What is in it |
 |-------|---------------|
-| The top lines | the name of the app, whether the Tarot Path is open right now, and the log it is reading |
-| Now | the visit that is going on: how long, how many moves, the cells walked, the cards played, the notes gained, the life lost and won, the chests of destiny taken |
+| The top lines | the name of the app and the state of the Tarot Path and the trade tax as chips, on the bar along the top, and the log it is reading |
+| Now | the visit that is going on: how long, how many moves, the cells walked, the cards played, the notes gained, the life lost and won, the chests of destiny taken, with the chests carried as a bar out of the seven the game's bar holds |
 | History | every visit, newest first, with the Fateful Contest that followed it; `enter` opens the detail of one |
 | Lifetime totals | everything the player did: visits, moves, notes, cards, life, chests by rarity, trials fought, and what the contests' chests gave, valued |
 
@@ -40,6 +40,29 @@ The keys:
 | `q` | Quit |
 
 The mouse picks a row of the history, and the wheel scrolls the list that is open.
+
+## The colours
+
+The colours are the ones every tool in this repo shares, and each one has a job, so the same kind
+of number is the same colour everywhere:
+
+| Colour | What it marks here |
+|--------|--------------------|
+| orange (the brand) | the name of the tool in the bar along the top |
+| cyan | the focused panel, the picked row, the keys in the footer |
+| gold | FE: what the contests' rewards are worth |
+| green / red | life won and life lost, the Tarot Path open and the tax on |
+| blue | names: the visits' numbers, the rewards' names, the chests of a contest |
+| purple | rare things: the chests of destiny by rarity, the notes, the trials' arcana |
+| orange | effort: moves, cells, cards, chest counts, a contest in the fight |
+| teal | times: the stamps, the durations, the clocks |
+| dim | labels, the log's path, the quiet notes |
+
+The state of the Tarot Path and the trade tax are chips — short labels on a tinted background —
+and the keys in the footer sit on key caps. The panel that has the focus is told by its heavy
+border and the filled dot in its title, not by the colour alone. With `--no-color` (or
+`NO_COLOR`) the chips become `[Tarot Path: open]`, the keys plain words, the meter a plain bar
+and the focused panel keeps its heavy border: everything still reads.
 
 ## What the log really carries
 

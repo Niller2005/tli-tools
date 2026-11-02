@@ -3,6 +3,7 @@
 // Everything here is plain data in, plain data out, so it can be tested without a terminal: the
 // rows are the cells of a table, and the screen in `screen.ts` draws them.
 
+import type { TextChunk } from '@opentui/core'
 import {
   RARITIES,
   RARITY_NAMES,
@@ -15,7 +16,7 @@ import {
 } from '@tli/arcana'
 import type { MinigameState } from '@tli/gamelog'
 import { valueOf, type ItemNames, type Value } from '@tli/tracker'
-import { type Cell, type Row, type Tone, duration, fe, num, pad, padStart } from '@tli/tui'
+import { chunksWidth, clip, meter, stat, type Cell, type Row, type Tone, duration, fe, num, pad, padStart, tone, visibleLength } from '@tli/tui'
 import { arcanaName, clock, stamp } from './format'
 
 /** The lists the player can move about in. */
@@ -193,6 +194,30 @@ function line(text: string, style?: Tone): Row {
   return { cells: [{ text, tone: style }] }
 }
 
+/** A row built of pieces, each its own colour, with the row's own gap between them. */
+function pieces(parts: readonly (readonly [string, Tone | undefined])[]): Row {
+  return { cells: parts.map(([text, style]) => ({ text, tone: style, width: visibleLength(text) })) }
+}
+
+/** A line of pieces, cut to `inner` columns so it never runs past the panel it is drawn in. */
+export function cutChunks(parts: readonly TextChunk[], inner: number): TextChunk[] {
+  if (chunksWidth(parts) <= inner) return [...parts]
+  const out: TextChunk[] = []
+  let left = inner
+  for (const part of parts) {
+    if (left <= 0) break
+    const width = visibleLength(part.text)
+    if (width <= left) {
+      out.push(part)
+      left -= width
+    } else {
+      out.push({ ...part, text: clip(part.text, left) })
+      left = 0
+    }
+  }
+  return out
+}
+
 /** The chests as "Blue 4, Purple 2"; "none" when there are none. */
 export function chestText(sessions: Session[]): string {
   const counts = chestsByRarity(sessions)
@@ -215,73 +240,114 @@ export function pathText(tracker: Tracker, state: ViewState): { text: string; to
     : { text: 'Tarot Path: not seen in the log yet', tone: 'dim' }
 }
 
-/** The rows of the panel that says what is going on now. */
-export function currentRows(tracker: Tracker, state: ViewState): Row[] {
-  const rows: Row[] = []
+/** The pieces of the panel that says what is going on now, each line cut to the panel's width. */
+export function nowChunks(tracker: Tracker, state: ViewState, inner: number): TextChunk[] {
+  const chunks: TextChunk[] = []
+  const line = (parts: readonly TextChunk[]): void => {
+    if (chunks.length > 0) chunks.push(tone('default', '\n'))
+    chunks.push(...cutChunks(parts, inner))
+  }
   const session = tracker.current
   const contest = tracker.currentContest
   if (session !== null) {
-    const length = duration(tracker.at - session.openedAt)
-    rows.push(line(`Session #${session.id}  open ${length}  since ${clock(session.openedAt)}`, 'green'))
-    rows.push(
-      line(
-        `moves ${session.moves.length}  cells walked ${session.cells}  cards played ${session.played}  notes gained ${session.notes}  life -${session.lifeLost} +${session.lifeWon}`,
-      ),
-    )
-    rows.push(
-      line(
-        `chests of destiny: ${chestText([session])}  (${session.chests.length} taken${session.chestsSkipped > 0 ? `, ${session.chestsSkipped} left behind` : ''})`,
-      ),
-    )
+    line([
+      tone('blue', `Session #${session.id}`),
+      tone('dim', '  open '),
+      tone('teal', duration(tracker.at - session.openedAt)),
+      tone('dim', '  since '),
+      tone('teal', clock(session.openedAt)),
+    ])
+    line(effortChunks(session.moves.length, session.cells, session.played, session.notes, session.lifeLost, session.lifeWon))
+    line([
+      tone('dim', 'chests of destiny '),
+      tone('purple', chestText([session])),
+      tone('dim', '  ('),
+      tone('orange', `${session.chests.length} taken`),
+      ...(session.chestsSkipped > 0
+        ? [tone('dim', ', '), tone('yellow', `${session.chestsSkipped} left behind`)]
+        : []),
+      tone('dim', ')'),
+    ])
+    // the carried bar the game shows holds seven chests
+    line([
+      tone('dim', 'carried '),
+      ...meter(Math.min(1, session.chests.length / 7), Math.max(4, inner - 14), 'purple'),
+      tone('dim', ` ${session.chests.length}/7`),
+    ])
   } else if (state.path === 'open') {
-    rows.push(line('The Tarot Path is open, but the tracker started after it opened:', 'yellow'))
-    rows.push(line('what happens from now on is not counted until the next visit.', 'yellow'))
+    line([tone('yellow', 'The Tarot Path is open, but the tracker started after it opened:')])
+    line([tone('yellow', 'what happens from now on is not counted until the next visit.')])
   } else {
-    rows.push(line('Open the Tarot Path in the game to start a session.', 'dim'))
+    line([tone('dim', 'Open the Tarot Path in the game to start a session.')])
   }
   if (contest !== null) {
     const rewards = rewardsOf(contest)
     const value = valueOfRewards(rewards, (i) => tracker.prices.price(i), state.taxed)
     const fight = contest.openedAt === null ? 'asked' : `in the fight since ${clock(contest.openedAt)}`
-    rows.push(
-      line(
-        `Fateful Contest: ${fight}  chests opened ${contest.chests.length}  rewards ${fe(value.net)} (${rewards.size} kinds)`,
-        'yellow',
-      ),
-    )
+    line([
+      tone('orange', 'Fateful Contest'),
+      tone('dim', `: ${fight}  chests `),
+      tone('orange', String(contest.chests.length)),
+      tone('dim', '  rewards '),
+      tone('gold', fe(value.net)),
+      tone('dim', ' ('),
+      tone('purple', String(rewards.size)),
+      tone('dim', ' kinds)'),
+    ])
   }
-  return rows
+  return chunks
+}
+
+/** The effort of one visit: the counts in orange, the notes purple, the life lost and won. */
+function effortChunks(moves: number, cells: number, played: number, notes: number, lifeLost: number, lifeWon: number): TextChunk[] {
+  return [
+    ...stat('moves', String(moves), 'orange'),
+    tone('dim', '   '),
+    ...stat('cells', String(cells), 'orange'),
+    tone('dim', '   '),
+    ...stat('cards', String(played), 'orange'),
+    tone('dim', '   '),
+    ...stat('notes', String(notes), 'purple'),
+    tone('dim', '   life '),
+    tone('red', `-${lifeLost}`),
+    tone('default', ' '),
+    tone('green', `+${lifeWon}`),
+  ]
 }
 
 /** The cells of one row of the history. */
 function historyCells(entry: Entry, tracker: Tracker, state: ViewState): Cell[] {
   const { session, contest } = entry
-  let contestText = '-'
-  if (contest !== null) {
-    const value = valueOfRewards(rewardsOf(contest), (i) => tracker.prices.price(i), state.taxed)
-    contestText = `${contest.chests.length} chests, ${fe(value.net)}`
-  }
+  // the contest's chests are a count (orange) and its value is money (gold)
+  const contestCells: Cell[] =
+    contest === null
+      ? [{ text: '-', tone: 'dim' }]
+      : [
+          { text: `${contest.chests.length} chests,`, tone: 'orange', width: visibleLength(`${contest.chests.length} chests,`) },
+          { text: fe(valueOfRewards(rewardsOf(contest), (i) => tracker.prices.price(i), state.taxed).net), tone: 'gold' },
+        ]
   if (session === null) {
     return [
       { text: '-', tone: 'dim', width: 4, align: 'right' },
-      { text: stamp(entry.at), width: 11 },
+      { text: stamp(entry.at), tone: 'teal', width: 11 },
       { text: '-', tone: 'dim', width: 8, align: 'right' },
-      { text: '(the log began mid-contest)', width: 34 },
-      { text: contestText },
+      { text: '(the log began mid-contest)', tone: 'dim', width: 34 },
+      ...contestCells,
     ]
   }
   const length = duration((session.closedAt ?? tracker.at) - session.openedAt)
-  const life = `-${session.lifeLost}/+${session.lifeWon}`
   const chests = session.chestsSkipped > 0 ? `${session.chests.length}+${session.chestsSkipped}` : String(session.chests.length)
   return [
-    { text: `#${session.id}`, tone: 'dim', width: 4, align: 'right' },
-    { text: stamp(session.openedAt), width: 11 },
-    { text: length, tone: 'dim', width: 8, align: 'right' },
-    { text: `moves ${padStart(String(session.moves.length), 3)}`, width: 9 },
-    { text: `notes ${padStart(String(session.notes), 3)}`, width: 9 },
-    { text: pad(`chests ${padStart(chests, 3)}`, 10), width: 10 },
-    { text: `life ${padStart(life, 6)}`, width: 11 },
-    { text: contestText },
+    { text: `#${session.id}`, tone: 'blue', width: 4, align: 'right' },
+    { text: stamp(session.openedAt), tone: 'teal', width: 11 },
+    { text: length, tone: 'teal', width: 8, align: 'right' },
+    { text: `moves ${padStart(String(session.moves.length), 3)}`, tone: 'orange', width: 9 },
+    { text: `notes ${padStart(String(session.notes), 3)}`, tone: 'orange', width: 9 },
+    { text: pad(`chests ${padStart(chests, 3)}`, 10), tone: 'orange', width: 10 },
+    { text: 'life', tone: 'dim', width: 5 },
+    { text: `-${session.lifeLost}`, tone: 'red', width: 4, align: 'right' },
+    { text: `+${session.lifeWon}`, tone: 'green', width: 4, align: 'right' },
+    ...contestCells,
   ]
 }
 
@@ -303,21 +369,56 @@ export function totalsRows(tracker: Tracker, state: ViewState, names: ItemNames)
   const price = (i: number): number => tracker.prices.price(i)
   const t = totalsOf(tracker.state, price, state.taxed)
   const rows: Row[] = [
-    line(
-      `visits ${t.sessions}   moves ${num(t.moves)}   cells walked ${num(t.cells)}   cards played ${num(t.played)}   notes gained ${num(t.notes)}`,
-    ),
-    line(`life lost ${t.lifeLost}   life won ${t.lifeWon}`),
-    line(
-      `chests of destiny taken: ${chestText(tracker.state.sessions)}   (rarity raised ${t.upgrades} times${t.chestsSkipped > 0 ? `, ${t.chestsSkipped} left on the board` : ''})`,
-    ),
-    line(
-      `trials fought ${tracker.state.trials.length}${t.trials.length === 0 ? '' : `: ${t.trials.map(([a, n]) => `${arcanaName(a)} ${n}`).join(', ')}`}`,
-    ),
-    line(`Fateful Contests ${t.contests}   chests opened ${t.opened}`),
-    line(
-      `rewards worth ${fe(t.value.net)}${state.taxed ? ` after the ${num(t.value.tax)} FE trade tax (${fe(t.value.gross)} before)` : ' (no tax)'}`,
-      'bold',
-    ),
+    pieces([
+      ['visits', 'dim'],
+      [String(t.sessions), 'orange'],
+      ['moves', 'dim'],
+      [num(t.moves), 'orange'],
+      ['cells walked', 'dim'],
+      [num(t.cells), 'orange'],
+      ['cards played', 'dim'],
+      [num(t.played), 'orange'],
+      ['notes gained', 'dim'],
+      [num(t.notes), 'purple'],
+    ]),
+    pieces([
+      ['life lost', 'dim'],
+      [String(t.lifeLost), 'red'],
+      ['life won', 'dim'],
+      [String(t.lifeWon), 'green'],
+    ]),
+    pieces([
+      ['chests of destiny taken:', 'dim'],
+      [chestText(tracker.state.sessions), 'purple'],
+      [
+        `(rarity raised ${t.upgrades} times${t.chestsSkipped > 0 ? `, ${t.chestsSkipped} left on the board` : ''})`,
+        'dim',
+      ],
+    ]),
+    pieces([
+      ['trials fought', 'dim'],
+      [String(tracker.state.trials.length), 'orange'],
+      ...t.trials.map(([a, n]): readonly [string, Tone | undefined] => [`${arcanaName(a)} ${n}`, 'purple']),
+    ]),
+    pieces([
+      ['Fateful Contests', 'dim'],
+      [String(t.contests), 'orange'],
+      ['chests opened', 'dim'],
+      [String(t.opened), 'orange'],
+    ]),
+    pieces([
+      ['rewards worth', 'dim'],
+      [fe(t.value.net), 'gold'],
+      ...(state.taxed
+        ? ([
+            ['after the', 'dim'],
+            [`${num(t.value.tax)} FE trade tax`, 'dim'],
+            ['(', 'dim'],
+            [fe(t.value.gross), 'gold'],
+            ['before)', 'dim'],
+          ] as const)
+        : ([['(no tax)', 'dim']] as const)),
+    ]),
   ]
   const unpriced = [...t.rewards.keys()].filter((i) => price(i) <= 0).length
   if (unpriced > 0) {
@@ -332,8 +433,8 @@ export function totalsRows(tracker: Tracker, state: ViewState, names: ItemNames)
     const worth = price(item) * qty
     rows.push({
       cells: [
-        { text: num(qty), width: 9, align: 'right' },
-        { text: pad(names.name(item), 40), width: 40 },
+        { text: num(qty), tone: 'orange', width: 9, align: 'right' },
+        { text: pad(names.name(item), 40), tone: 'blue', width: 40 },
         { text: worth > 0 ? fe(worth) : 'no price', tone: worth > 0 ? 'gold' : 'dim' },
       ],
     })
@@ -367,24 +468,36 @@ function contestRows(contest: Contest, tracker: Tracker, names: ItemNames, taxed
   const rows: Row[] = [line('Fateful Contest', 'bold')]
   const when = (ms: number | null): string => (ms === null ? '-' : clock(ms))
   rows.push(
-    line(
-      `asked ${when(contest.askedAt)}   page opened ${when(contest.openedAt)}   fight ended ${contest.closedAt === null ? 'not yet' : clock(contest.closedAt)}`,
-    ),
+    pieces([
+      ['asked', 'dim'],
+      [when(contest.askedAt), 'teal'],
+      ['page opened', 'dim'],
+      [when(contest.openedAt), 'teal'],
+      ['fight ended', 'dim'],
+      [contest.closedAt === null ? 'not yet' : clock(contest.closedAt), contest.closedAt === null ? 'yellow' : 'teal'],
+    ]),
   )
   const total = valueOfRewards(rewardsOf(contest), price, taxed)
   rows.push(
-    line(`${contest.chests.length} chests opened, worth ${fe(total.net)}${taxed ? ` after tax (${fe(total.gross)} before)` : ''}`),
+    pieces([
+      [String(contest.chests.length), 'orange'],
+      ['chests opened, worth', 'dim'],
+      [fe(total.net), 'gold'],
+      ...(taxed
+        ? ([['after tax', 'dim'], ['(', 'dim'], [fe(total.gross), 'gold'], ['before)', 'dim']] as const)
+        : ([] as const)),
+    ]),
   )
   contest.chests.forEach((chest, index) => {
     const value = valueOfRewards(new Map(chest.rewards.map((r) => [r.item, r.qty])), price, taxed)
-    rows.push(line(`  chest ${index + 1}  opened ${clock(chest.at)}  ${fe(value.net)}`, 'bold'))
+    rows.push(pieces([[`  chest ${index + 1}`, 'blue'], ['opened', 'dim'], [clock(chest.at), 'teal'], [fe(value.net), 'gold']]))
     if (chest.rewards.length === 0) rows.push(line('    the log shows nothing picked up', 'dim'))
     for (const reward of chest.rewards) {
       const worth = price(reward.item) * reward.qty
       rows.push({
         cells: [
-          { text: `    ${padStart(num(reward.qty), 7)}`, width: 11 },
-          { text: pad(names.name(reward.item), 38), width: 38 },
+          { text: `    ${padStart(num(reward.qty), 7)}`, tone: 'orange', width: 11 },
+          { text: pad(names.name(reward.item), 38), tone: 'blue', width: 38 },
           { text: worth > 0 ? fe(worth) : 'no price', tone: worth > 0 ? 'gold' : 'dim' },
         ],
       })
@@ -400,26 +513,44 @@ export function detailRows(entry: Entry, tracker: Tracker, names: ItemNames, tax
   if (session !== null) {
     const length = duration((session.closedAt ?? tracker.at) - session.openedAt)
     rows.push(
-      line(
-        `Session #${session.id}  ${stamp(session.openedAt)}  ${session.closedAt === null ? 'still open' : `closed ${clock(session.closedAt)}`}  (${length})`,
-        'bold',
-      ),
+      pieces([
+        [`Session #${session.id}`, 'blue'],
+        [stamp(session.openedAt), 'teal'],
+        [session.closedAt === null ? 'still open' : `closed ${clock(session.closedAt)}`, session.closedAt === null ? 'green' : 'teal'],
+        [`(${length})`, 'dim'],
+      ]),
     )
     rows.push(
-      line(
-        `moves ${session.moves.length}   cells walked ${session.cells}   cards played ${session.played}   notes gained ${session.notes}   life -${session.lifeLost} +${session.lifeWon}`,
-      ),
+      pieces([
+        ['moves', 'dim'],
+        [String(session.moves.length), 'orange'],
+        ['cells walked', 'dim'],
+        [String(session.cells), 'orange'],
+        ['cards played', 'dim'],
+        [String(session.played), 'orange'],
+        ['notes gained', 'dim'],
+        [String(session.notes), 'purple'],
+        ['life', 'dim'],
+        [`-${session.lifeLost}`, 'red'],
+        [`+${session.lifeWon}`, 'green'],
+      ]),
     )
     rows.push(
-      line(
-        `chests of destiny: ${chestText([session])}${session.chestsSkipped > 0 ? `   (${session.chestsSkipped} left behind: a cell held a chest that was not taken)` : ''}`,
-      ),
+      pieces([
+        ['chests of destiny:', 'dim'],
+        [chestText([session]), 'purple'],
+        ...(session.chestsSkipped > 0
+          ? ([[`(${session.chestsSkipped} left behind: a cell held a chest that was not taken)`, 'dim']] as const)
+          : ([] as const)),
+      ]),
     )
     for (const chest of session.chests) {
       rows.push(
-        line(
-          `  ${clock(chest.at)}  ${chest.rarity === null ? 'unknown rarity' : RARITY_NAMES[chest.rarity]}${chest.upgrades > 0 ? `, raised ${chest.upgrades}x` : ''}`,
-        ),
+        pieces([
+          ['  ' + clock(chest.at), 'teal'],
+          [chest.rarity === null ? 'unknown rarity' : RARITY_NAMES[chest.rarity], 'purple'],
+          ...(chest.upgrades > 0 ? ([[`, raised ${chest.upgrades}x`, 'dim']] as const) : ([] as const)),
+        ]),
       )
     }
   }
@@ -433,7 +564,13 @@ export function detailRows(entry: Entry, tracker: Tracker, names: ItemNames, tax
     if (rows.length > 0) rows.push(line(''))
     rows.push(line('Moves (what the log shows; the board itself is not in the log)', 'bold'))
     session.moves.forEach((move, index) => {
-      rows.push(line(`${padStart(String(index + 1), 3)}  ${clock(move.at)}  ${moveText(move)}`))
+      rows.push({
+        cells: [
+          { text: padStart(String(index + 1), 3), tone: 'dim', width: 3, align: 'right' },
+          { text: clock(move.at), tone: 'teal', width: 8 },
+          { text: moveText(move) },
+        ],
+      })
     })
     if (session.moves.length === 0) rows.push(line('no moves were made', 'dim'))
   }
