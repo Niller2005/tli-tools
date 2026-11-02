@@ -53,8 +53,8 @@ log, so they read the same there and on the screen.
 
 | Panel | What is in it |
 |-------|---------------|
-| The top line | whether the Tarot Path is open right now, and the log that is being read |
-| Now | the visit that is going on: how long, how many moves, the cells walked, the cards played, the notes gained, the life lost and won, the chests taken |
+| The top line | the name of the app and the state of the Tarot Path and the trade tax as chips, on the bar along the top, and the log that is being read |
+| Now | the visit that is going on: how long, how many moves, the cells walked, the cards played, the notes gained, the life lost and won, the chests taken, with the chests carried as a bar out of the seven the game's bar holds |
 | History | every visit, newest first, with the Fateful Contest that followed it; `enter` opens the detail of one |
 | Lifetime totals | everything you did: visits, moves, notes, cards, life, chests by rarity, trials fought, and what the contests' chests gave, valued |
 
@@ -69,6 +69,17 @@ The keys:
 | `r` | Read the log again |
 | `?` | The help |
 | `q` | Quit |
+
+## The colours
+
+Every number keeps the colour of its kind, the same as the other tools in this repo: money (what
+the chests gave) is gold, life won and lost are green and red, the visits and the rewards' names
+are blue, the chests of destiny and the trials' arcana are purple, the effort (moves, cells,
+cards, chest counts, a contest in the fight) is orange, and the times are teal. The state of the
+Tarot Path and the trade tax are chips in the bar along the top, the keys in the footer sit on
+key caps, and the panel that has the focus is told by its heavy border and the filled dot in its
+title. With `--no-color` all of it still reads: the chips become bracketed words and the meter a
+plain bar.
 
 ## The chests and the notes
 
