@@ -22,13 +22,22 @@ import { missing, toolSettings, TOOLS, type RunningEntry, type Tool } from '@tli
 import type { SessionSummary } from '@tli/tracker'
 import {
   backgroundColor,
+  borderColor,
+  brandChunks,
+  chip,
+  chunksWidth,
   duration,
   fe,
   fit,
+  hintChunks,
   num,
   pad,
-  tone,
+  panelBorderStyle,
+  panelTitle,
+  surfaceColor,
   textColor,
+  titleColor,
+  tone,
   toneOn,
   theme,
   visibleLength,
@@ -106,10 +115,12 @@ export function toolRows(state: DashboardState): ToolRow[] {
 export interface PanelRow {
   /** what the value is about; '' for a blank line */
   label: string
-  /** the value itself */
-  value: string
-  /** how the value is drawn */
+  /** the value itself: one string, or pieces that each carry their own colour */
+  value: string | TextChunk[]
+  /** how a value written as one string is drawn */
   tone?: Tone
+  /** how the label is drawn; dim unless the label is itself a name */
+  labelTone?: Tone
 }
 
 /** A size in bytes, as a person reads it: "412 MB". */
@@ -127,31 +138,44 @@ export function bytes(size: number): string {
 
 /** What the player has been doing, as the session panel shows it. */
 export function sessionRows(summary: SessionSummary): PanelRow[] {
-  const run = (r: SessionSummary['bestRun']): string =>
-    r === null ? '—' : `${r.name}${r.endedAt === null ? ' (going)' : ''} · ${fe(r.worth)}`
+  // a run is a name (blue), a run still going (orange) and what it was worth (gold)
+  const run = (r: SessionSummary['bestRun']): TextChunk[] =>
+    r === null
+      ? [tone('dim', '—')]
+      : [
+          tone('blue', r.name),
+          ...(r.endedAt === null ? [tone('orange', ' (going)')] : []),
+          tone('dim', ' · '),
+          tone('gold', fe(r.worth)),
+        ]
   return [
-    { label: 'runs today', value: num(summary.runsToday) },
-    { label: 'FE today', value: fe(summary.feToday) },
-    { label: 'FE per hour', value: `${summary.fePerHour.toFixed(1)} FE/h` },
+    { label: 'runs today', value: num(summary.runsToday), tone: 'orange' },
+    { label: 'FE today', value: fe(summary.feToday), tone: 'gold' },
+    { label: 'FE per hour', value: `${summary.fePerHour.toFixed(1)} FE/h`, tone: 'gold' },
     { label: 'best run', value: run(summary.bestRun) },
     { label: 'last run', value: run(summary.lastRun) },
-    { label: 'FE total', value: fe(summary.feTotal) },
+    { label: 'FE total', value: fe(summary.feTotal), tone: 'gold' },
   ]
 }
 
 /** The log's health, as the log panel shows it. */
 export function healthRows(health: LogHealth, now: number): PanelRow[] {
-  let log: PanelRow['value']
+  let log: string | TextChunk[]
   if (health.detail === 'missing') {
     log = health.path === null ? 'missing (the game is not installed)' : 'missing'
   } else if (health.detail === 'no-detail') {
     log = 'no game lines (Esc → Account Related → Enable Log)'
   } else {
-    const age = health.modifiedAt === null ? '' : ` · written ${duration(Math.max(0, now - health.modifiedAt))} ago`
-    log = `ok · ${bytes(health.size)}${age}`
+    const age = health.modifiedAt === null ? null : duration(Math.max(0, now - health.modifiedAt))
+    log = [
+      tone('green', 'ok'),
+      tone('dim', ' · '),
+      tone('default', bytes(health.size)),
+      ...(age === null ? [] : [tone('teal', ` · written ${age} ago`)]),
+    ]
   }
   return [
-    { label: 'log', value: log, tone: health.detail === 'ok' ? 'green' : 'yellow' },
+    { label: 'log', value: log, tone: health.detail === 'ok' ? undefined : 'yellow' },
     { label: 'log file', value: health.path ?? '—', tone: 'dim' },
   ]
 }
@@ -166,34 +190,55 @@ export function captureRows(capture: CaptureStatus): PanelRow[] {
         command: 'the given command',
         none: 'none: install grim',
       }[capture.path]
-  const tools = capture.tools.map(t => `${t.name} ${t.found ? '✓' : '✗'}`).join('  ')
+  const tools: TextChunk[] = []
+  capture.tools.forEach((tool, index) => {
+    if (index > 0) tools.push(tone('dim', '  '))
+    tools.push(tone('default', tool.name), tone(tool.found ? 'green' : 'red', tool.found ? ' ✓' : ' ✗'))
+  })
   return [
     { label: 'capture', value: way, tone: capture.noCapture || capture.path === 'none' ? 'yellow' : 'green' },
-    { label: 'tools', value: tools, tone: 'dim' },
+    { label: 'tools', value: tools },
   ]
 }
 
 /** The tools the launcher has opened, as the running panel shows them. */
 export function runningRows(running: RunningEntry[], now: number): PanelRow[] {
   if (running.length === 0) return [{ label: 'running', value: 'nothing is running', tone: 'dim' }]
-  return running.map(entry => ({
-    label: entry.id,
-    value: `${entry.via} · ${duration(Math.max(0, now - entry.since))} · ${
-      entry.running ? 'running' : entry.exitCode === null ? 'gone' : `exited ${entry.exitCode}`
-    }`,
-    tone: entry.running ? 'green' : 'dim',
-  }))
+  return running.map(entry => {
+    const state: TextChunk[] = entry.running
+      ? [tone('green', 'running')]
+      : entry.exitCode === null
+        ? [tone('dim', 'gone')]
+        : [tone(entry.exitCode === 0 ? 'dim' : 'red', `exited ${entry.exitCode}`)]
+    return {
+      label: entry.id,
+      labelTone: 'blue',
+      value: [
+        tone('dim', entry.via),
+        tone('dim', ' · '),
+        tone('teal', duration(Math.max(0, now - entry.since))),
+        tone('dim', ' · '),
+        ...state,
+      ],
+    }
+  })
 }
 
 /** How old the data the tools read is, as the freshness rows show it. */
 export function freshnessRows(status: StatusData): PanelRow[] {
+  const age = (ms: number | null): TextChunk[] =>
+    ms === null ? [] : [tone('teal', duration(Math.max(0, ms))), tone('dim', ' old')]
   return [
     {
       label: 'prices',
-      value: status.baselineAge === null ? 'not on disk yet' : `${duration(Math.max(0, status.baselineAge))} old`,
-      tone: 'dim',
+      value: status.baselineAge === null ? 'not on disk yet' : age(status.baselineAge),
+      tone: status.baselineAge === null ? 'yellow' : undefined,
     },
-    { label: 'item names', value: status.itemAge === null ? 'unknown' : `${duration(status.itemAge)} old`, tone: 'dim' },
+    {
+      label: 'item names',
+      value: status.itemAge === null ? 'unknown' : age(status.itemAge),
+      tone: status.itemAge === null ? 'dim' : undefined,
+    },
   ]
 }
 
@@ -238,8 +283,21 @@ const HELP: [string, string][] = [
 ]
 
 /** The keys the footer lists. */
-const HINTS =
-  '↑/↓ move  space select  A all  ⏎ run  w window  o options  a auto  x close  f focus  b prices  tab pane  ? help  q quit'
+const HINTS: [string, string][] = [
+  ['↑/↓', 'move'],
+  ['space', 'select'],
+  ['A', 'all'],
+  ['⏎', 'run'],
+  ['w', 'window'],
+  ['o', 'options'],
+  ['a', 'auto'],
+  ['x', 'close'],
+  ['f', 'front'],
+  ['b', 'prices'],
+  ['tab', 'pane'],
+  ['?', 'help'],
+  ['q', 'quit'],
+]
 
 /** What the screen needs from the program around it. */
 export interface ScreenHooks {
@@ -268,8 +326,13 @@ export class DashboardScreen {
   private readonly hooks: ScreenHooks
   private readonly lines = new Map<string, ToolLine>()
   private readonly messageText: TextRenderable
+  private readonly titleBar: BoxRenderable
+  private readonly titleText: TextRenderable
+  private readonly footerBar: BoxRenderable
+  private readonly footerText: TextRenderable
 
   private readonly body: BoxRenderable
+  private readonly listPanel: BoxRenderable
   private readonly listColumn: BoxRenderable
   private readonly rightColumn: BoxRenderable
   private readonly session: Panel
@@ -300,16 +363,25 @@ export class DashboardScreen {
       overflow: 'hidden',
     })
 
-    const title = new TextRenderable(renderer, {
+    // the bar along the top: the name of the tool in the brand colour, on a surface of its own
+    this.titleBar = new BoxRenderable(renderer, {
+      id: 'title-bar',
+      width: '100%',
+      height: 1,
+      flexShrink: 0,
+      backgroundColor: surfaceColor(),
+      overflow: 'hidden',
+    })
+    this.titleText = new TextRenderable(renderer, {
       id: 'title',
-      content: new StyledText([tone('bold', 'Torchlight: Infinite tools')]),
+      content: new StyledText([]),
       selectable: false,
       fg: textColor(),
       wrapMode: 'none',
       width: '100%',
-      flexShrink: 0,
     })
-    this.root.add(title)
+    this.titleBar.add(this.titleText)
+    this.root.add(this.titleBar)
     this.root.add(this.spacer('title-gap'))
 
     this.body = new BoxRenderable(renderer, {
@@ -320,13 +392,27 @@ export class DashboardScreen {
       flexBasis: 0,
     })
 
+    // the list has the keys, so it is drawn as the panel that has the focus
+    this.listPanel = new BoxRenderable(renderer, {
+      id: 'list-panel',
+      border: true,
+      borderStyle: panelBorderStyle(true),
+      title: panelTitle('Tools', true),
+      flexDirection: 'column',
+      overflow: 'hidden',
+      flexShrink: 0,
+    })
+    this.listPanel.borderColor = borderColor(true)
+    this.listPanel.titleColor = titleColor(true)
     this.listColumn = new BoxRenderable(renderer, {
       id: 'list',
       flexDirection: 'column',
       flexShrink: 0,
+      width: '100%',
     })
     for (const tool of TOOLS) this.listColumn.add(this.toolLine(tool))
-    this.body.add(this.listColumn)
+    this.listPanel.add(this.listColumn)
+    this.body.add(this.listPanel)
 
     this.rightColumn = new BoxRenderable(renderer, {
       id: 'panels',
@@ -343,16 +429,25 @@ export class DashboardScreen {
     this.body.add(this.rightColumn)
     this.root.add(this.body)
 
-    const footer = new TextRenderable(renderer, {
+    // the bar along the bottom: the keys on caps, on a surface of their own
+    this.footerBar = new BoxRenderable(renderer, {
+      id: 'footer-bar',
+      width: '100%',
+      height: 1,
+      flexShrink: 0,
+      backgroundColor: surfaceColor(),
+      overflow: 'hidden',
+    })
+    this.footerText = new TextRenderable(renderer, {
       id: 'footer',
-      content: new StyledText([tone('dim', HINTS)]),
+      content: new StyledText([]),
       selectable: false,
       fg: textColor(),
       wrapMode: 'none',
       width: '100%',
-      flexShrink: 0,
     })
-    this.root.add(footer)
+    this.footerBar.add(this.footerText)
+    this.root.add(this.footerBar)
     this.root.add(this.spacer('footer-gap'))
 
     this.messageText = new TextRenderable(renderer, {
@@ -471,18 +566,20 @@ export class DashboardScreen {
     return group
   }
 
-  /** One of the panels on the right. */
+  /** One of the panels on the right: a quiet border and a plain title, for it never has the keys. */
   private panel(id: string, title: string): Panel {
     const box = new BoxRenderable(this.renderer, {
       id,
       border: true,
-      borderStyle: 'rounded',
-      title,
+      borderStyle: panelBorderStyle(false),
+      title: panelTitle(title),
       flexDirection: 'column',
       flexGrow: 1,
       flexBasis: 0,
       overflow: 'hidden',
     })
+    box.borderColor = borderColor(false)
+    box.titleColor = titleColor(false)
     const text = new TextRenderable(this.renderer, {
       id: `${id}-text`,
       content: '',
@@ -497,10 +594,41 @@ export class DashboardScreen {
   /** Draws the state. */
   draw(state: DashboardState): void {
     this.layout(this.renderer.width, state)
+    this.drawTitle(state)
     this.drawList(state)
     this.drawPanels(state)
+    this.drawFooter()
     this.drawMessage(state)
     this.drawOverlay(state)
+  }
+
+  /** The bar along the top: the name in the brand colour, the state of things as chips. */
+  private drawTitle(state: DashboardState): void {
+    const chunks = brandChunks('Dashboard', 'Torchlight: Infinite tools')
+
+    // the chips say how the machine is: green when a thing is on, yellow when it is not
+    const flags: [string, Tone][] = []
+    if (state.status.health.detail === 'ok') flags.push(['log ok', 'green'])
+    else if (state.status.health.detail === 'missing') flags.push(['log missing', 'yellow'])
+    else flags.push(['no game lines', 'yellow'])
+    if (state.status.capture.noCapture) flags.push(['capture off', 'yellow'])
+    else if (state.status.capture.path === 'none') flags.push(['no capture', 'yellow'])
+    else flags.push([`capture ${state.status.capture.path}`, 'green'])
+    const running = state.status.running.filter(entry => entry.running).length
+    if (running > 0) flags.push([`${running} running`, 'orange'])
+    const auto = TOOLS.filter(
+      tool => tool.game !== undefined && toolSettings(state.settings, tool.id).autoLaunch,
+    ).length
+    if (auto > 0) flags.push([`${auto} auto`, 'purple'])
+
+    // a chip that does not fit is left out, so the bar never spills over the edge
+    for (const [text, style] of flags) {
+      const gap = tone('default', '  ')
+      const flagged = chip(text, style)
+      if (chunksWidth(chunks) + visibleLength(gap.text) + visibleLength(flagged.text) > this.renderer.width) break
+      chunks.push(gap, flagged)
+    }
+    this.titleText.content = new StyledText(chunks)
   }
 
   /** Works out how the list and the panels are put on the screen. */
@@ -510,7 +638,7 @@ export class DashboardScreen {
     this.panelWidth = this.narrow ? width : width - this.listWidth
 
     this.body.flexDirection = this.narrow ? 'column' : 'row'
-    this.listColumn.width = this.listWidth
+    this.listPanel.width = this.listWidth
     this.rightColumn.width = this.panelWidth
     // a narrow screen gives the rest to the one pane that is shown; a wide one shares it out
     this.rightColumn.flexGrow = 1
@@ -526,7 +654,7 @@ export class DashboardScreen {
     for (const row of toolRows(state)) {
       const line = this.lines.get(row.tool.id)
       if (line === undefined) continue
-      line.row.content = new StyledText(this.rowChunks(row, this.listWidth))
+      line.row.content = new StyledText(this.rowChunks(row, this.listWidth - 2))
       line.description.visible = row.current
     }
   }
@@ -547,15 +675,28 @@ export class DashboardScreen {
     )
   }
 
-  /** The message under the list. */
+  /** The message under the list: accent, or red when it says something went wrong. */
   private drawMessage(state: DashboardState): void {
     if (state.message === '') {
       this.messageText.visible = false
       this.messageText.content = new StyledText([])
-    } else {
-      this.messageText.visible = true
-      this.messageText.content = new StyledText([tone('yellow', state.message)])
+      return
     }
+    const message = typeof state.message === 'string' ? { text: state.message, tone: 'accent' as const } : state.message
+    this.messageText.visible = true
+    this.messageText.content = new StyledText([tone(message.tone, message.text)])
+  }
+
+  /** The bar along the bottom: as many key hints as fit, the keys on caps. */
+  private drawFooter(): void {
+    let hints = HINTS
+    let chunks = hintChunks(hints)
+    // the first hint (move) and the last (quit) are kept; the ones between go until it fits
+    while (hints.length > 2 && chunksWidth(chunks) > this.renderer.width) {
+      hints = hints.filter((_, index) => index !== 1)
+      chunks = hintChunks(hints)
+    }
+    this.footerText.content = new StyledText(chunks)
   }
 
   /** The options dialog, or the help, over the whole screen. */
@@ -582,31 +723,44 @@ export class DashboardScreen {
     const settings = state.settings.tools[tool.id] ?? {}
 
     const chunks: TextChunk[] = [
-      tone('dim', '↑↓ move · space toggles · ⏎ edit · esc close'),
+      ...hintChunks([
+        ['↑↓', 'move'],
+        ['space', 'toggle'],
+        ['⏎', 'edit'],
+        ['esc', 'close'],
+      ]),
       tone('default', '\n'),
     ]
     rows.forEach((row, index) => {
       const at = state.options?.at ?? 0
       const picked = index === at
-      let text: string
+      // the row the cursor is on is drawn on the selection colour, checkbox and label and all
+      const cell = (style: Tone, text: string) =>
+        picked ? toneOn(style, text, theme.selection) : tone(style, text)
+      chunks.push(cell(picked ? 'accent' : 'default', picked ? '▸' : ' '))
       if (row.key === 'captureCmd') {
         const value = settings.captureCmd
-        text = ` capture command: ${value === null || value === undefined ? 'none' : value}`
+        chunks.push(
+          cell('default', ' capture command: '),
+          cell('dim', value === null || value === undefined ? 'none' : value),
+        )
       } else {
         const on = settings[row.key] === true
-        text = ` ${on ? '[x]' : '[ ]'} ${row.label}`
+        chunks.push(cell('default', ' '), cell(on ? 'green' : 'dim', on ? '[x]' : '[ ]'), cell('default', ` ${row.label}`))
       }
-      chunks.push(
-        picked ? toneOn('accent', `▸${text}`, theme.selection) : tone('default', ` ${text}`),
-        tone('default', '\n'),
-      )
+      chunks.push(tone('default', '\n'))
     })
 
+    // a dialog has the focus while it is open, so it takes the heavy border and the accent title
     const inner = Math.max(30, ...rows.map(row => visibleLength(row.label) + 24))
+    this.overlayBox.borderStyle = panelBorderStyle(true)
+    this.overlayBox.borderColor = borderColor(true)
+    this.overlayBox.titleColor = titleColor(true)
     this.overlayBox.title = `${tool.name} · options`
     this.overlayBox.width = Math.min(this.renderer.width - 2, inner + 2)
     this.overlayBox.height = rows.length + 3 + (state.editing ? 1 : 0)
     this.overlayText.content = new StyledText(chunks)
+    this.overlayBox.title = panelTitle(`${tool.name} · options`)
     this.overlayText.width = inner
     this.overlay.visible = true
 
@@ -616,12 +770,20 @@ export class DashboardScreen {
 
   /** The help. */
   private drawHelp(): void {
-    const chunks: TextChunk[] = [tone('accent', 'Keys'), tone('default', '\n')]
+    const chunks: TextChunk[] = [tone('brand', 'Keys'), tone('default', '\n')]
     for (const [key, label] of HELP) {
-      chunks.push(tone('accent', pad(key, 12)), tone('dim', label), tone('default', '\n'))
+      chunks.push(
+        tone('key', ` ${key} `),
+        tone('default', ' '.repeat(Math.max(1, 14 - visibleLength(key) - 2))),
+        tone('dim', label),
+        tone('default', '\n'),
+      )
     }
-    const inner = Math.max(36, ...HELP.map(([key, label]) => visibleLength(key) + 2 + visibleLength(label)))
-    this.overlayBox.title = 'Help'
+    const inner = Math.max(36, ...HELP.map(([, label]) => 14 + visibleLength(label)))
+    this.overlayBox.borderStyle = panelBorderStyle(true)
+    this.overlayBox.borderColor = borderColor(true)
+    this.overlayBox.titleColor = titleColor(true)
+    this.overlayBox.title = panelTitle('Help')
     this.overlayBox.width = Math.min(this.renderer.width - 2, inner + 4)
     this.overlayBox.height = HELP.length + 3
     this.overlayText.content = new StyledText(chunks)
@@ -645,38 +807,62 @@ export class DashboardScreen {
 
   /** The pieces of one tool's line. */
   private rowChunks(row: ToolRow, width: number): TextChunk[] {
+    // the cursor is told in the accent colour, the picked tools by their green checkbox, the
+    // names in blue; the badge and the auto mark are chips, and what does not fit is left out
     const chunks = [
-      tone(row.current ? 'cyan' : 'default', row.current ? '>' : ' '),
+      tone(row.current ? 'accent' : 'default', row.current ? '>' : ' '),
       tone('default', ' '),
-      tone(row.selected ? 'green' : 'default', row.selected ? '[x]' : '[ ]'),
+      tone(row.selected ? 'green' : 'dim', row.selected ? '[x]' : '[ ]'),
       tone('default', ' '),
-      tone('bold', row.tool.name),
+      tone('blue', row.tool.name),
     ]
+    // what is left of the row, after what has been drawn already
+    const room = () => width - chunksWidth(chunks)
+    // a group of chunks with the two columns of quiet space that separate it from the last
+    const fits = (...group: TextChunk[]) => 2 + chunksWidth(group) <= room()
 
     if (row.missing.length > 0) {
-      chunks.push(tone('red', `  needs ${row.missing.join(', ')}`))
+      const text = fit(`needs ${row.missing.join(', ')}`, Math.max(0, room() - 2))
+      if (text !== '') chunks.push(tone('default', '  '), tone('red', text))
     }
-
+    // the badge, the log's hint, the auto mark and the tool's own line. When they do not all
+    // fit, the line is kept ahead of the hint and the auto mark: the bar and the log panel say
+    // the hint's news, and the options and the message say the auto mark's.
+    let badge: TextChunk | null = null
+    let hint: TextChunk | null = null
     if (row.badge !== null) {
-      const [state, hint] = row.badge
-      const badge = BADGE[state]
-      chunks.push(tone('default', '  '), tone(badge[1], badge[0]))
-      if (hint !== null) chunks.push(tone('dim', `  ${hint}`))
+      const [state, logHint] = row.badge
+      const [text, style] = BADGE[state]
+      badge = chip(text, style)
+      if (logHint !== null) hint = tone('dim', `  ${logHint}`)
     }
+    const auto = row.auto ? chip('⟳ auto', 'purple') : null
+    const line = row.line
 
-    if (row.auto) {
-      chunks.push(tone('default', '  '), tone('cyan', '⟳ auto'))
-    }
+    if (badge !== null && fits(badge)) chunks.push(tone('default', '  '), badge)
 
-    if (row.line !== null) {
-      const used = chunks.reduce((sum, chunk) => sum + visibleLength(chunk.text), 0)
-      chunks.push(tone('default', '  '), tone(row.line.tone, fit(row.line.text, Math.max(0, width - used - 2))))
+    const hintWidth = hint === null ? 0 : chunksWidth([hint])
+    const autoWidth = auto === null ? 0 : 2 + chunksWidth([auto])
+    const lineWidth = line === null ? 0 : 2 + visibleLength(line.text)
+    const spare = room()
+    const hintIn = hint !== null && (line === null ? hintWidth <= spare : hintWidth + autoWidth + lineWidth <= spare)
+    const autoIn =
+      auto !== null &&
+      (line === null
+        ? autoWidth <= spare - (hintIn ? hintWidth : 0)
+        : autoWidth + lineWidth <= spare - (hintIn ? hintWidth : 0))
+    if (hintIn && hint !== null) chunks.push(hint)
+    if (autoIn && auto !== null) chunks.push(tone('default', '  '), auto)
+
+    if (line !== null) {
+      const text = fit(line.text, Math.max(0, room() - 2))
+      if (text !== '') chunks.push(tone('default', '  '), tone(line.tone, text))
     }
 
     return chunks
   }
 
-  /** The lines of one panel. */
+  /** The lines of one panel: a quiet label, and a value in the colour of what it says. */
   private panelChunks(rows: PanelRow[], width: number): TextChunk[] {
     const labelWidth = Math.min(14, Math.max(0, ...rows.map(row => visibleLength(row.label))))
     const chunks: TextChunk[] = []
@@ -685,11 +871,16 @@ export class DashboardScreen {
         chunks.push(tone('default', '\n'))
         continue
       }
-      chunks.push(
-        tone('dim', pad(row.label, labelWidth + 2)),
-        tone(row.tone ?? 'default', fit(row.value, Math.max(0, width - labelWidth - 2))),
-        tone('default', '\n'),
-      )
+      const room = Math.max(0, width - labelWidth - 2)
+      // a value of pieces keeps its colours while it fits; one that does not becomes a plain
+      // line, cut to the room the panel has
+      const value =
+        typeof row.value === 'string'
+          ? [tone(row.tone ?? 'default', fit(row.value, room))]
+          : chunksWidth(row.value) <= room
+            ? row.value
+            : [tone(row.tone ?? 'default', fit(row.value.map(chunk => chunk.text).join(''), room))]
+      chunks.push(tone(row.labelTone ?? 'dim', pad(row.label, labelWidth + 2)), ...value, tone('default', '\n'))
     }
     return chunks
   }
