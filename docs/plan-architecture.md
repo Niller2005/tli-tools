@@ -339,7 +339,7 @@ commits, delete what is dead, run `bun run test` and `bun run typecheck`, update
 | # | Item | State |
 |---|---|---|
 | 3 | Warning identity | done |
-| 2 | Run-tracking module | open |
+| 2 | Run-tracking module | done |
 | 1 | Persistence module | done |
 | 4 | App runtime | done |
 | 6 | Tracker screen draws only | done |
