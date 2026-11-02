@@ -41,3 +41,8 @@ to click for the advised move.
 - `warden-cli read|solve|capture|bench` work on Linux too. The `capture` command also accepts `--niri-screenshot`.
 - `TLI_NO_CAPTURE=1` turns every picture off: the tool says `capture disabled` and neither niri nor grim is run. The
   tests run with it, so they never touch the player's own desktop.
+
+The bars are the shared chrome: on a narrow terminal the header cuts its "Tartarus prison board,
+Linux terminal" note from the front (the name stays) and leaves its state chips out, and the
+footer gives up the legend of the board's marks before the keys; of the keys, the read key and the
+quit key are the last to go.
