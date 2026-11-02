@@ -7,7 +7,7 @@ import { expect, test } from 'bun:test'
 
 import { Session, type Reading } from '@/app/session'
 import { IRON_LAW, TOOLS, toolFromKey, type Tool } from '@/engine/data'
-import { loadPng } from '@/reader/mod'
+import { loadPng, warningText } from '@/reader/mod'
 import { frame, framePath, have, readAll } from './session-common'
 
 /** The labels of the session's ranking. */
@@ -48,7 +48,7 @@ test('the advised instrument is held after the pick', async () => {
   const s = (await readAll([], ['~rec1-t087.png', 'rec1-t031.png', '~rec1-t087.png'])) as Session
   expect(s.tools).toEqual([t])
   const r = s.reading as Reading
-  expect(r.warnings.every((w) => !w.text.includes('held instruments'))).toBe(true)
+  expect(r.warnings.every((w) => !warningText(w).includes('held instruments'))).toBe(true)
   expect(s.takeToolsChanged()).toBe(true)
   expect(s.takeToolsChanged()).toBe(false)
   const held = (await readAll([t], ['~rec1-t087.png'])) as Session
@@ -124,7 +124,7 @@ test('a new run keeps the instrument picked at its start', async () => {
   const r = s.reading as Reading
   expect(r.daysLeft).toBe(19)
   expect(s.tools).toEqual([t])
-  expect(r.warnings.some((w) => w.text === 'A new run: the held instruments were cleared.')).toBe(true)
+  expect(r.warnings.some((w) => warningText(w) === 'A new run: the held instruments were cleared.')).toBe(true)
 })
 
 /** Held instruments saved at a days count (an app restart) are cleared by a
@@ -191,7 +191,7 @@ test('a new run clears the held instruments', async () => {
   await s.wait()
   expect(s.tools).toEqual([])
   const r = s.reading as Reading
-  expect(r.warnings.some((w) => w.text === 'A new run: the held instruments were cleared.')).toBe(true)
+  expect(r.warnings.some((w) => warningText(w) === 'A new run: the held instruments were cleared.')).toBe(true)
   expect(s.takeToolsChanged()).toBe(true)
 })
 

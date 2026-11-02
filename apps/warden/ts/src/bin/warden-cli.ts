@@ -18,7 +18,7 @@ import { createCapture } from '@tli/capture'
 import { asBytes } from '@tli/png'
 import { buildState, modelFromJson, type Model } from '@/board/board'
 import { toolFromKey, type Tool } from '@/engine/data'
-import { Rgba, readModel, savePng } from '@/reader/mod'
+import { Rgba, readModel, savePng, warningText } from '@/reader/mod'
 import { LOW, bench, isLow, meanSe, spread, strategyBench, summarize, type Game, type Solo } from '@/solver/bench'
 import { cloneParams, setWeight, TUNED, type Params } from '@/solver/mod'
 import { instant, solve } from '@/solver/solve'
@@ -484,7 +484,7 @@ async function runRead(args: string[]): Promise<number> {
   }
   if (file === null) throw new Error(USAGE)
   const [model, warnings] = await readModel(file, held)
-  for (const w of warnings) process.stderr.write(`${w.text}\n`)
+  for (const w of warnings) process.stderr.write(`${warningText(w)}\n`)
   out(JSON.stringify(model.toJSON(), null, 2))
   return 0
 }
@@ -521,7 +521,7 @@ async function runSolve(args: string[]): Promise<number> {
   let model: Model
   if (isPng(file)) {
     const [read, warnings] = await readModel(file, held)
-    for (const w of warnings) out(w.text)
+    for (const w of warnings) out(warningText(w))
     if (warnings.length > 0) out()
     model = read
   } else {

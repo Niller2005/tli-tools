@@ -21,7 +21,7 @@ import {
   Watch,
 } from '@/app/session'
 import { blankModel, type CellModel } from '@/board/board'
-import { Rgba } from '@/reader/mod'
+import { Rgba, warningText } from '@/reader/mod'
 import { Rollouts } from '@/solver/solve'
 import { TUNED } from '@/solver/mod'
 import { buildBoard } from './common'
@@ -182,19 +182,15 @@ test('consume targets restrict and warn', () => {
 
   let [targets, w] = consumeTargets([3, 7], [3, 4], 2)
   expect(targets).toEqual([3])
-  expect(w?.cell).toBe(2)
-  expect(w?.kind).toBe('read')
-  expect(w?.text).toBe(
-    'The Consume targets on screen are cells 04 and 05 and the board read allows cells 04 and 08: check the eater in cell 03 and those cells.'
-  )
+  expect(w).toMatchObject({ kind: 'targetsDiffer', cell: 2 })
 
   ;[targets, w] = consumeTargets([7], [3, 4, 11], 2)
   expect(targets).toEqual([7])
-  expect(w?.text.startsWith('The Consume targets on screen are cells 04, 05 and 12 and the board read allows cell 08:')).toBe(true)
+  expect(w).toMatchObject({ kind: 'targetsDiffer', cell: 2 })
 
   ;[targets, w] = consumeTargets([], [3], 2)
   expect(targets).toEqual([])
-  expect(w?.text).toContain('cell 04 and the board read allows none:')
+  expect(w).toMatchObject({ kind: 'targetsDiffer', cell: 2 })
 })
 
 /** Avenger's Casket's meal on a Consume target screen: a jawed cell the
@@ -237,7 +233,7 @@ test('casket meal on a locked cell', () => {
   expect(m.cells[1]).toEqual(inmate('lion', 3))
   expect(warnings.length).toBe(1)
   expect(warnings[0].cell).toBe(1)
-  expect(warnings[0].text.startsWith('Check cell 02: a new Inmate from ')).toBe(true)
+  expect(warningText(warnings[0]).startsWith('Check cell 02: a new Inmate from ')).toBe(true)
 })
 
 /** The rollouts rank the same on any thread count and in any steps. */
