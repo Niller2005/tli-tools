@@ -171,6 +171,8 @@ real.
 - Bag and price rows are the same domain fact in both stores (`SlotRecord`, `InstanceRecord`, `PriceRecord` in arcana's
   session; the tracker's first migration). Mapping them once is a follow-on inside this item only if the diff stays
   small; otherwise it is recorded here as the next item, not done half-way.
+  Not done: the write logic around those rows differs too much between the two stores (the tracker's tables are keyed
+  per character, Arcana's are not), so mapping them once is the next item, not done half-way here.
 
 **Steps.**
 1. Write a contract suite for the persistence module's behaviour (new file, an old file, a corrupt file, a newer
@@ -338,7 +340,7 @@ commits, delete what is dead, run `bun run test` and `bun run typecheck`, update
 |---|---|---|
 | 3 | Warning identity | open |
 | 2 | Run-tracking module | open |
-| 1 | Persistence module | open |
+| 1 | Persistence module | done |
 | 4 | App runtime | done |
 | 6 | Tracker screen draws only | open |
 | 7 | Capture retry policy | open |
