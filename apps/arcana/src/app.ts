@@ -52,11 +52,6 @@ export class ArcanaApp {
 
   /** Does a key press. */
   key(key: KeyEvent): void {
-    if (key.ctrl && key.name === 'c') {
-      this.hooks.onQuit()
-      return
-    }
-
     const char = this.typed(key)
     if (char === 'q') {
       this.hooks.onQuit()
