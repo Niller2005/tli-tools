@@ -18,13 +18,16 @@ import {
   MAX_RECHECK,
   RECHECK,
   SETTLE,
+  Session,
   Watch,
 } from '@/app/session'
+import type { Reading } from '@/app/session'
 import { blankModel, type CellModel } from '@/board/board'
 import { Rgba, warningText } from '@/reader/mod'
 import { Rollouts } from '@/solver/solve'
 import { TUNED } from '@/solver/mod'
 import { buildBoard } from './common'
+import { syntheticPanels, syntheticScene } from './session-common'
 
 /** The auto read fingerprint: the same frame matches, a changed region or
  * another grid size differs. */
@@ -297,4 +300,21 @@ test('watch ignores blocks that keep flipping', () => {
   expect(reads).toBeLessThanOrEqual(2)
 
   expect(upTo(SETTLE + 3).filter(() => w.sample(print(90, 0))).length).toBe(1)
+})
+
+/** A low-confidence cell read warns on the reads that give it until the
+ * same read has come twice before the one on show; the count keys on what
+ * was read, so a different confidence on the same cell does not start it
+ * over (see [`steadyKey`]). */
+test('a steady read keys on identity, not the confidence', async () => {
+  const s = new Session(20, [], null, null)
+  const read = (lockedConf: number): number => {
+    s.readSynthetic(syntheticScene(2, { 3: { lockedConf } }), syntheticPanels('manage', 20))
+    const r = s.reading as Reading
+    return r.warnings.filter((w) => w.kind === 'cellRead' && w.cell === 2 && w.detail === 'lock').length
+  }
+  expect(read(0.2)).toBe(1)
+  expect(read(0.1)).toBe(1) // the same read at another confidence still counts
+  expect(read(0.1)).toBe(0) // the third in a row is steady
+  await s.wait()
 })

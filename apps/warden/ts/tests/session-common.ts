@@ -1,5 +1,6 @@
 //! Helpers of the session tests: the saved frames read into a session, with
-//! the `~` and `_` variants that spoil the instrument panel's first slot.
+//! the `~` and `_` variants that spoil the instrument panel's first slot,
+//! and the synthetic scene and panels a read is made of without a frame.
 
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -7,6 +8,8 @@ import { join } from 'node:path'
 import { Session, type Reading } from '@/app/session'
 import type { Tool } from '@/engine/data'
 import { loadPng, Rgba } from '@/reader/mod'
+import { Scene, type CellRead } from '@/reader/scene'
+import type { Panels, Screen } from '@/reader/panels'
 import { frames } from './common'
 
 /** Rounds of the full solves the session tests wait for. */
@@ -70,6 +73,57 @@ export async function pollUntil(s: Session, done: (s: Session) => boolean): Prom
   while (!done(s)) {
     if (Date.now() >= until) throw new Error('no read finished in 60 s')
     await new Promise((resolve) => setTimeout(resolve, 20))
+  }
+}
+
+/** A sure read of a plain cell: locked, no marker, nothing doubtful. */
+export function sureCell(over: Partial<CellRead> = {}): CellRead {
+  return {
+    locked: true,
+    lockedConf: 1,
+    glow: null,
+    glowConf: 1,
+    inmate: null,
+    beastConf: 1,
+    tierConf: 1,
+    halo: 1,
+    event: false,
+    eventConf: 1,
+    jaws: false,
+    jawsConf: 1,
+    target: false,
+    tusk: false,
+    prey: false,
+    covered: false,
+    ...over,
+  }
+}
+
+/** A scene that reads every cell (screen cells 2-16) as locked and sure,
+ * with the warden's arrow on screen cell `warden`, unless `cells` overrides
+ * some reads: the run rules' input, which needs no frame. */
+export function syntheticScene(warden: number, cells: Record<number, Partial<CellRead>> = {}): Scene {
+  const reads = Array.from({ length: 15 }, (_, k) => sureCell(cells[k + 2]))
+  return new Scene(reads, warden, 1)
+}
+
+/** The panels of a board screen: every decision button on offer, the days
+ * counter at `days`, nothing else read, unless `over` overrides it. */
+export function syntheticPanels(screen: Screen, days: number | null, over: Partial<Panels> = {}): Panels {
+  return {
+    screen,
+    days,
+    doors: [],
+    decision: ['Consume', 'Replace', 'Hunt', 'End'],
+    instruments: [],
+    rerolls: 0,
+    vault: [],
+    toolIcons: false,
+    theme: null,
+    objective: null,
+    held: null,
+    spots: [],
+    ...over,
   }
 }
 
