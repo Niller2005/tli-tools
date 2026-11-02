@@ -2,7 +2,7 @@
 //
 // The dashboard plan (docs/plan-dashboard.md) asks each package for a plain object instead of a
 // screen — contract C1. This one is worked out from the tracker's own history (the `state` a live
-// tracker gives, or the `history` of what `load` reads back), so nothing here reads the log.
+// tracker gives, or the `history` of what `loadArcana` reads back), so nothing here reads the log.
 
 import type { ToolStatus } from '@tli/gamelog'
 import type { Contest, History, Session } from './session'

@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync, truncateSync, writeFileSync, appendFileSync } from
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { LogReader } from '@tli/tracker'
-import { Tracker, load, parseLine, save, statePath, SCHEMA_VERSION, REWARD_WINDOW_MS } from '../src/index'
+import { Tracker, loadArcana, parseLine, saveArcana, arcanaDbPath, SCHEMA_VERSION, REWARD_WINDOW_MS } from '../src/index'
 
 import { FE_UUID, GOLD_UUID, T, add, chestMove, game, level, ms, pick, proto, sound, trapMove, update } from './helpers'
 
@@ -295,7 +295,7 @@ describe('saving and resuming', () => {
   })
 
   test('the state lives under XDG_DATA_HOME/tli-arcana', () => {
-    expect(statePath()).toBe(join(dir, 'tli-arcana', 'arcana.db'))
+    expect(arcanaDbPath()).toBe(join(dir, 'tli-arcana', 'arcana.db'))
   })
 
   test('a saved tracker carries on: the open session, the open contest and the bag', async () => {
@@ -309,9 +309,9 @@ describe('saving and resuming', () => {
       sound('01.35.25:933', 'Play_Obj_S9_SMTL_BaoXiang_Open_01'),
     ])
     const path = join(dir, 'resume', 'arcana.db')
-    await save({ version: SCHEMA_VERSION, log: { file: 'UE_game.log', offset: 1234 }, history: first.state, snapshot: first.snapshot() }, path)
+    await saveArcana({ version: SCHEMA_VERSION, log: { file: 'UE_game.log', offset: 1234 }, history: first.state, snapshot: first.snapshot() }, path)
 
-    const saved = await load(path)
+    const saved = await loadArcana(path)
     expect(saved?.log).toEqual({ file: 'UE_game.log', offset: 1234 })
     if (saved === null) throw new Error('not saved')
     const second = new Tracker(saved.history)

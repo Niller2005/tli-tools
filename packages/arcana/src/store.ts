@@ -41,7 +41,7 @@ const DB_FILE = 'arcana.db'
  * loot tracker; what is the Arcana tracker's own is the schema, the rows and the saved state
  * below.
  */
-export function statePath(): string {
+export function arcanaDbPath(): string {
   return store.dbPath
 }
 
@@ -49,7 +49,7 @@ export function statePath(): string {
 const LEGACY_STATE_VERSION = 2
 
 /** What is saved: the tracker's history, its bag and prices, and where it was in the log. */
-export interface Saved {
+export interface SavedArcana {
   version: number
   /** the log that was being read, and how far */
   log: { file: string; offset: number }
@@ -293,7 +293,7 @@ function push<T>(map: Map<number, T[]>, visitId: number, entry: T): void {
 }
 
 /** Reads everything that was saved; null when the database holds nothing yet. */
-function readArcana(db: Database): Saved | null {
+function readArcana(db: Database): SavedArcana | null {
   const log = db.query('select file, offset from log_position where id = 1').get() as LogRow | null
   if (log === null) return null
   const settingRows = db.query('select key, value from settings').all() as SettingRow[]
@@ -496,7 +496,7 @@ function setSetting(db: Database, key: string, value: number, before: number | u
  * in place. `before` null writes everything, which is what the first save and the one-time
  * import use.
  */
-function writeArcana(db: Database, saved: Saved, before: Saved | null): void {
+function writeArcana(db: Database, saved: SavedArcana, before: SavedArcana | null): void {
   const history = saved.history
   const write = db.transaction(() => {
     // where the tracker was in the log
@@ -663,9 +663,9 @@ function writeArcana(db: Database, saved: Saved, before: Saved | null): void {
 /* ---------- the old state file ---------- */
 
 /** Reads the state the tracker kept in one JSON file; null when it is not one this code reads. */
-function parseLegacyState(raw: string): Saved | null {
+function parseLegacyState(raw: string): SavedArcana | null {
   try {
-    const saved = JSON.parse(raw) as Saved
+    const saved = JSON.parse(raw) as SavedArcana
     if (saved?.version !== LEGACY_STATE_VERSION) return null
     if (saved.history === undefined || saved.snapshot === undefined || saved.log === undefined) return null
     return saved
@@ -677,7 +677,7 @@ function parseLegacyState(raw: string): Saved | null {
 /* ---------- the store ---------- */
 
 /** The Arcana tracker's own part of its store: the schema, the rows and the old state file. */
-const store = defineStore<Saved>({
+const store = defineStore<SavedArcana>({
   tool: 'the Arcana tracker',
   dir: 'tli-arcana',
   dbFile: DB_FILE,
@@ -696,7 +696,7 @@ const store = defineStore<Saved>({
  * read back. Nothing is created on disk when there is nothing to read: a dashboard that only
  * looks does not leave a database behind.
  */
-export async function load(path = statePath()): Promise<Saved | null> {
+export async function loadArcana(path = arcanaDbPath()): Promise<SavedArcana | null> {
   return store.load(path)
 }
 
@@ -708,11 +708,11 @@ export async function load(path = statePath()): Promise<Saved | null> {
  * that broke between the saves, is moved aside (to `<db>.corrupt`) rather than deleted; a
  * database of a newer version of the tracker is left entirely alone, and the write is refused.
  */
-export async function save(saved: Saved, path = statePath()): Promise<void> {
+export async function saveArcana(saved: SavedArcana, path = arcanaDbPath()): Promise<void> {
   return store.save(saved, path)
 }
 
 /** A history with nothing in it, for when nothing usable was saved. */
-export function historyOf(saved: Saved | null): History {
+export function historyOf(saved: SavedArcana | null): History {
   return saved === null ? emptyHistory() : saved.history
 }

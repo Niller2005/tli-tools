@@ -7,13 +7,13 @@
 
 import { describe } from 'bun:test'
 
-import { SCHEMA_VERSION, emptyHistory, load, save, type Saved } from '@tli/arcana'
+import { SCHEMA_VERSION, emptyHistory, loadArcana, saveArcana, type SavedArcana } from '@tli/arcana'
 
 import { expectSameSaved, theRest, trackerPartway } from '../../arcana/tests/helpers'
 import { theStoreContract } from './contract'
 
 /** A saved state of everything the tracker keeps, with nothing left open. */
-function fullState(): Saved {
+function fullState(): SavedArcana {
   const tracker = trackerPartway()
   tracker.feed(theRest())
   return { version: SCHEMA_VERSION, log: { file: 'UE_game.log', offset: 4321 }, history: tracker.state, snapshot: tracker.snapshot() }
@@ -21,7 +21,7 @@ function fullState(): Saved {
 
 /** The same state before the rest of it: the visit and the contest are still open, so the next
  * save has something to do. */
-function partwayState(): Saved {
+function partwayState(): SavedArcana {
   const tracker = trackerPartway()
   return { version: SCHEMA_VERSION, log: { file: 'UE_game.log', offset: 100 }, history: tracker.state, snapshot: tracker.snapshot() }
 }
@@ -30,14 +30,14 @@ function partwayState(): Saved {
 const replayed = fullState()
 const legacyState = JSON.parse(
   JSON.stringify({ version: 2, log: { file: 'UE_game.log', offset: 9999 }, history: replayed.history, snapshot: replayed.snapshot }),
-)
+) as SavedArcana
 
 describe('the Arcana store', () => {
-  theStoreContract<Saved>({
+  theStoreContract<SavedArcana>({
     name: 'the Arcana tracker',
     schemaVersion: SCHEMA_VERSION,
-    load,
-    save,
+    load: loadArcana,
+    save: saveArcana,
     full: replayed,
     changed: partwayState(),
     expectSame: expectSameSaved,

@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Database } from 'bun:sqlite'
 
-import { SCHEMA_VERSION, Tracker, emptyHistory, load, save, type Saved } from '../src/index'
+import { SCHEMA_VERSION, Tracker, emptyHistory, loadArcana, saveArcana, type SavedArcana } from '../src/index'
 
 import { arcanaStatus } from '../src/status'
 import { expectSameSaved, ms, theRest, trackerPartway } from './helpers'
@@ -43,7 +43,7 @@ describe('the store', () => {
     const tracker = trackerPartway()
     tracker.feed(theRest())
     const path = join(dir, 'schema', 'arcana.db')
-    await save({ version: SCHEMA_VERSION, log: { file: 'UE_game.log', offset: 1234 }, history: tracker.state, snapshot: tracker.snapshot() }, path)
+    await saveArcana({ version: SCHEMA_VERSION, log: { file: 'UE_game.log', offset: 1234 }, history: tracker.state, snapshot: tracker.snapshot() }, path)
 
     expect(look(path, 'PRAGMA user_version')).toEqual([{ user_version: SCHEMA_VERSION }])
     expect(look(path, 'PRAGMA journal_mode')).toEqual([{ journal_mode: 'wal' }])
@@ -83,7 +83,7 @@ describe('the store', () => {
   test('the second save writes only what changed: the visit that was over is not written again', async () => {
     const tracker = trackerPartway()
     const path = join(dir, 'incremental', 'arcana.db')
-    await save({ version: SCHEMA_VERSION, log: { file: 'UE_game.log', offset: 100 }, history: tracker.state, snapshot: tracker.snapshot() }, path)
+    await saveArcana({ version: SCHEMA_VERSION, log: { file: 'UE_game.log', offset: 100 }, history: tracker.state, snapshot: tracker.snapshot() }, path)
 
     // where the rows of the finished visit and the unnamed trial sit
     const moveRowids = look<{ rowid: number }>(path, 'select rowid from moves where visit_id = 1 order by rowid').map((row) => row.rowid)
@@ -95,9 +95,9 @@ describe('the store', () => {
     // the rest of it: the trial is named, the open visit moves and takes a chest that is raised,
     // and the contest's second chest is opened and the fight ends
     tracker.feed(theRest())
-    await save({ version: SCHEMA_VERSION, log: { file: 'UE_game.log', offset: 200 }, history: tracker.state, snapshot: tracker.snapshot() }, path)
+    await saveArcana({ version: SCHEMA_VERSION, log: { file: 'UE_game.log', offset: 200 }, history: tracker.state, snapshot: tracker.snapshot() }, path)
 
-    expectSameSaved(await load(path), { version: SCHEMA_VERSION, log: { file: 'UE_game.log', offset: 200 }, history: tracker.state, snapshot: tracker.snapshot() })
+    expectSameSaved(await loadArcana(path), { version: SCHEMA_VERSION, log: { file: 'UE_game.log', offset: 200 }, history: tracker.state, snapshot: tracker.snapshot() })
     // the finished visit was not written again, and neither was the trial's place
     expect(look<{ rowid: number }>(path, 'select rowid from moves where visit_id = 1 order by rowid').map((row) => row.rowid)).toEqual(moveRowids)
     expect(look<{ rowid: number }>(path, 'select rowid from chests where visit_id = 1 order by rowid').map((row) => row.rowid)).toEqual(chestRowids)
@@ -114,10 +114,10 @@ describe('the store', () => {
   test('a save with nothing in it forgets everything: the reset', async () => {
     const tracker = trackerPartway()
     const path = join(dir, 'reset', 'arcana.db')
-    await save({ version: SCHEMA_VERSION, log: { file: 'UE_game.log', offset: 0 }, history: tracker.state, snapshot: tracker.snapshot() }, path)
-    await save({ version: SCHEMA_VERSION, log: { file: 'UE_game.log', offset: 50 }, history: emptyHistory(), snapshot: new Tracker().snapshot() }, path)
+    await saveArcana({ version: SCHEMA_VERSION, log: { file: 'UE_game.log', offset: 0 }, history: tracker.state, snapshot: tracker.snapshot() }, path)
+    await saveArcana({ version: SCHEMA_VERSION, log: { file: 'UE_game.log', offset: 50 }, history: emptyHistory(), snapshot: new Tracker().snapshot() }, path)
 
-    const saved = await load(path)
+    const saved = await loadArcana(path)
     expect(saved?.history).toEqual(emptyHistory())
     expect(look(path, 'select count(*) as n from visits')).toEqual([{ n: 0 }])
     expect(look(path, "select value from settings where key = 'next_id'")).toEqual([{ value: 1 }])
@@ -137,13 +137,13 @@ describe('the old state file', () => {
     // the JSON the old tracker would have written for what this one replayed
     const legacy = JSON.parse(
       JSON.stringify({ version: 2, log: { file: 'UE_game.log', offset: 9999 }, history: tracker.state, snapshot: tracker.snapshot() }),
-    ) as Saved
+    ) as SavedArcana
     const home = join(dir, 'fuller')
     mkdirSync(home, { recursive: true })
     const db = join(home, 'arcana.db')
     writeFileSync(join(home, 'state.json'), `${JSON.stringify(legacy)}\n`)
 
-    const saved = await load(db)
+    const saved = await loadArcana(db)
     expectSameSaved(saved, { ...legacy, version: SCHEMA_VERSION })
     if (saved === null) throw new Error('not imported')
     // what was brought in carries on, the way the JSON state did
@@ -166,11 +166,11 @@ describe('the database and the JSON state say the same', () => {
       // the JSON path: what the old store wrote and read back
       const asJson = JSON.parse(
         JSON.stringify({ version: 2, log: { file: 'UE_game.log', offset: 10 }, history: straight.state, snapshot: straight.snapshot() }),
-      ) as Saved
+      ) as SavedArcana
       // the database path
       const path = join(dir, 'arcana.db')
-      await save({ version: SCHEMA_VERSION, log: { file: 'UE_game.log', offset: 10 }, history: straight.state, snapshot: straight.snapshot() }, path)
-      const fromDb = await load(path)
+      await saveArcana({ version: SCHEMA_VERSION, log: { file: 'UE_game.log', offset: 10 }, history: straight.state, snapshot: straight.snapshot() }, path)
+      const fromDb = await loadArcana(path)
       if (fromDb === null) throw new Error('not saved')
 
       const byJson = new Tracker(asJson.history)

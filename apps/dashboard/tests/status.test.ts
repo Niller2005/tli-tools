@@ -3,7 +3,7 @@ import { chmodSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import type { RunningEntry } from '@tli/launch'
-import { save, SCHEMA_VERSION } from '@tli/arcana'
+import { saveArcana, SCHEMA_VERSION } from '@tli/arcana'
 import { saveTracker } from '@tli/tracker'
 import { readStatus } from '../src/status'
 
@@ -53,34 +53,32 @@ async function writeTrackerState(path: string, now: number): Promise<void> {
 
 /** An Arcana database with one visit to the Tarot Path, still going on. */
 async function writeArcanaState(path: string, now: number): Promise<void> {
-  await save(
-    {
-      version: SCHEMA_VERSION,
-      log: { file: '/game/UE_game.log', offset: 0 },
-      history: {
-        sessions: [
-          {
-            id: 1,
-            openedAt: now - 60_000,
-            closedAt: null,
-            cells: 3,
-            moves: [],
-            chests: [],
-            chestsSkipped: 0,
-            notes: 0,
-            played: 0,
-            lifeLost: 2,
-            lifeWon: 1,
-          },
-        ],
-        contests: [],
-        trials: [],
-        nextId: 2,
-      },
-      snapshot: { bag: { slots: [], instances: [] }, prices: [], overrides: [] },
+  await saveArcana({
+    version: SCHEMA_VERSION,
+    log: { file: '/game/UE_game.log', offset: 0 },
+    history: {
+      sessions: [
+        {
+          id: 1,
+          openedAt: now - 60_000,
+          closedAt: null,
+          cells: 3,
+          moves: [],
+          chests: [],
+          chestsSkipped: 0,
+          notes: 0,
+          played: 0,
+          lifeLost: 2,
+          lifeWon: 1,
+        },
+      ],
+      contests: [],
+      trials: [],
+      nextId: 2,
     },
-    path,
-  )
+    snapshot: { bag: { slots: [], instances: [] }, prices: [], overrides: [] },
+  },
+  path,)
 }
 
 /** A launcher that has one tool open in a tmux pane. */

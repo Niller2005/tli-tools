@@ -15,7 +15,7 @@
 // the help, q quits.
 
 import { statSync } from 'node:fs'
-import { Tracker, historyOf, load, save, type Saved, SCHEMA_VERSION } from '@tli/arcana'
+import { Tracker, historyOf, loadArcana, saveArcana, type SavedArcana, SCHEMA_VERSION } from '@tli/arcana'
 import { MinigameTracker, findLog, scanBack } from '@tli/gamelog'
 import { ITEM_TABLE_PATH, ItemNames, LogReader, loadTracker, userItemsPath } from '@tli/tracker'
 import { startApp } from '@tli/tui'
@@ -46,7 +46,7 @@ const state = freshView(logFile)
 
 /* ---------- what was saved ---------- */
 
-const saved = flag('reset') ? null : await load()
+const saved = flag('reset') ? null : await loadArcana()
 const usable = saved !== null && saved.log.file === logFile ? saved : null
 const tracker = new Tracker(historyOf(usable))
 if (usable !== null) tracker.restore(usable.snapshot)
@@ -134,13 +134,13 @@ function firstRead(): void {
 
 /** Saves what the tracker knows. */
 async function saveState(): Promise<void> {
-  const out: Saved = {
+  const out: SavedArcana = {
     version: SCHEMA_VERSION,
     log: { file: logFile, offset: reader.position },
     history: tracker.state,
     snapshot: tracker.snapshot(),
   }
-  await save(out).catch(() => undefined)
+  await saveArcana(out).catch(() => undefined)
 }
 
 // the first read comes before the screen does, so that progress can be shown on a plain terminal

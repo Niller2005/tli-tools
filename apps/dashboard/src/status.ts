@@ -6,7 +6,7 @@
 // and the saved states are small (the tracker's is a SQLite database, read without getting in the
 // tracker's way), and a read that is slow only delays the next tick, never a frame.
 
-import { historyOf, load, arcanaStatus } from '@tli/arcana'
+import { historyOf, loadArcana, arcanaStatus } from '@tli/arcana'
 import { logHealth, minigameStatus, type LogHealth, type MinigameView, type ToolStatus } from '@tli/gamelog'
 import { captureStatus, type CaptureStatus, type CaptureStatusOptions } from '@tli/capture'
 import { TOOLS, type RunningEntry } from '@tli/launch'
@@ -82,7 +82,7 @@ export interface StatusInputs {
 export async function readStatus(inputs: StatusInputs, now = Date.now()): Promise<StatusData> {
   const saved = await loadTracker(inputs.paths?.tracker)
   const trackerState = saved?.tracker ?? new Tracker().snapshot()
-  const history = historyOf(await load(inputs.paths?.arcana))
+  const history = historyOf(await loadArcana(inputs.paths?.arcana))
   const baseline = await readBaseline(inputs.paths?.baseline)
 
   const lines: Record<string, ToolStatus> = {

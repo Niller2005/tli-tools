@@ -1,7 +1,7 @@
 // Lines of the game's log, written the way the game writes them: the shapes the parser's and the
 // store's tests feed the tracker with — and the saved states those shapes add up to.
 import { expect } from 'bun:test'
-import { Tracker, type Saved, type Snapshot } from '../src/index'
+import { Tracker, type SavedArcana, type Snapshot } from '../src/index'
 
 /** The time of a line: "01.32.11:444" on the day the real log was written. */
 export const stamp = (time: string): string => `[2026.10.30-${time}][162]`
@@ -142,7 +142,7 @@ export function theRest(): string[] {
 
 /** Two saved states, compared the way the store keeps them: the history exactly, the bag and the
  * prices by what is in them rather than by the order the tables give them back in. */
-export function expectSameSaved(read: Saved | null, wanted: Saved): void {
+export function expectSameSaved(read: SavedArcana | null, wanted: SavedArcana): void {
   expect(read).not.toBeNull()
   if (read === null) throw new Error('nothing was saved')
   expect(read.version).toBe(wanted.version)
