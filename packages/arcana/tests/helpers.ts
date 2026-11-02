@@ -1,5 +1,7 @@
 // Lines of the game's log, written the way the game writes them: the shapes the parser's and the
-// store's tests feed the tracker with.
+// store's tests feed the tracker with — and the saved states those shapes add up to.
+import { expect } from 'bun:test'
+import { Tracker, type Saved, type Snapshot } from '../src/index'
 
 /** The time of a line: "01.32.11:444" on the day the real log was written. */
 export const stamp = (time: string): string => `[2026.10.30-${time}][162]`
@@ -84,6 +86,75 @@ export const pick = (time: string, item: number, uuid: string, to: number, slot:
   update(time, item, uuid, to, slot),
   proto(time, 'PickItems', false),
 ]
-
 export const FE_UUID = '00000000-0000-0000-0000-000000000001'
 export const GOLD_UUID = '00000000-0000-0000-0000-000000000002'
+
+/* ---------- the saved states the store keeps ---------- */
+
+/** One move that raises the rarity of the chest the visit before it took. */
+export function upgradeMove(): string[] {
+  return [
+    game('01.33.00:000', 'S9Taro HandleOrderAni Start Step=1 Type=CardDraw'),
+    game('01.33.00:100', '71366_S9Reward Anim_Taro_RewardUpgrade Start'),
+    game('01.33.00:900', 'S9Taro HandleOrderAni All done'),
+  ]
+}
+
+/** A tracker that has seen a whole visit, an unnamed trial, a visit that is still going on and a
+ * Fateful Contest with one chest opened and rewarded: everything the store keeps, while there is
+ * still something open, so the next save has something to do. */
+export function trackerPartway(): Tracker {
+  const t = new Tracker()
+  t.feed([
+    // the bag, so a chest's loot is measured against what was already there
+    update('01.00.00:000', 100300, FE_UUID, 5, 0),
+    add('01.00.00:001', 100200, GOLD_UUID, 1, 102, 10),
+    game(T.open, 'S9Taro Run'),
+    ...chestMove(),
+    ...upgradeMove(),
+    game(T.hide, 'S9Taro Hide'),
+    // a trial that has shown itself but not told its story yet
+    sound('01.31.37:582', 'Play_Obj_S9_SMTL_KaPai_Turn_Slow'),
+    // a second visit, still going on
+    game('02.00.00:000', 'S9Taro Run'),
+    ...trapMove(),
+    // the Fateful Contest, with one chest opened and its rewards picked up
+    game('02.35.07:875', 'Start Fateful Contest with collected Chests of Destiny?\\n'),
+    level('02.35.10:000', 19),
+    sound('02.35.25:933', 'Play_Obj_S9_SMTL_BaoXiang_Open_01'),
+    ...pick('02.35.26:100', 100200, GOLD_UUID, 16, 1),
+  ])
+  return t
+}
+
+/** What the tracker saw after the rest of it: the trial named, the visit moved on and took a
+ * chest, the contest's second chest opened and the fight ended. */
+export function theRest(): string[] {
+  return [
+    sound('01.31.38:296', 'Play_VO_Story_S9_3_11_TheHangedMan'),
+    ...chestMove(),
+    ...upgradeMove(),
+    sound('02.35.31:964', 'Play_Obj_S9_SMTL_BaoXiang_Open_01'),
+    ...pick('02.35.32:100', 100300, FE_UUID, 8, 0),
+    level('02.41.55:700', 3),
+  ]
+}
+
+/** Two saved states, compared the way the store keeps them: the history exactly, the bag and the
+ * prices by what is in them rather than by the order the tables give them back in. */
+export function expectSameSaved(read: Saved | null, wanted: Saved): void {
+  expect(read).not.toBeNull()
+  if (read === null) throw new Error('nothing was saved')
+  expect(read.version).toBe(wanted.version)
+  expect(read.log).toEqual(wanted.log)
+  expect(read.history).toEqual(wanted.history)
+  const orderless = (snapshot: Snapshot) => ({
+    bag: {
+      slots: [...snapshot.bag.slots].sort((a, b) => (a.key < b.key ? -1 : 1)),
+      instances: [...snapshot.bag.instances].sort((a, b) => (a.uuid < b.uuid ? -1 : 1)),
+    },
+    prices: [...snapshot.prices].sort(([a], [b]) => a - b),
+    overrides: [...snapshot.overrides].sort(([a], [b]) => a - b),
+  })
+  expect(orderless(read.snapshot)).toEqual(orderless(wanted.snapshot))
+}

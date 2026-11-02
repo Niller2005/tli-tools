@@ -14,10 +14,8 @@
 // database is not there and `state.json` is, the old state is brought in with one write and the
 // file is renamed to `state.json.imported`, so it is kept as a backup and never deleted.
 
-import { mkdir, readFile, rename, rm } from 'node:fs/promises'
-import { existsSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { Database, SQLiteError } from 'bun:sqlite'
+import { Database } from 'bun:sqlite'
+import { defineStore } from '@tli/store'
 
 import {
   emptyHistory,
@@ -33,31 +31,22 @@ import {
 } from './session'
 
 /** The database the tracker saves itself in. */
-export const DB_FILE = 'arcana.db'
+const DB_FILE = 'arcana.db'
 
-/** The directory the tracker keeps its files in. */
-export function dataDir(): string {
-  const xdg = process.env.XDG_DATA_HOME
-  if (xdg !== undefined && xdg !== '') return join(xdg, 'tli-arcana')
-  return join(process.env.HOME ?? '.', '.local', 'share', 'tli-arcana')
-}
-
-/** Where the tracker saves itself. */
+/**
+ * Where the tracker saves itself.
+ *
+ * The life of the file — opening it, bringing its schema up to date, refusing a newer one,
+ * setting a bad one aside, bringing the old `state.json` in — is `@tli/store`'s, shared with the
+ * loot tracker; what is the Arcana tracker's own is the schema, the rows and the saved state
+ * below.
+ */
 export function statePath(): string {
-  return join(dataDir(), DB_FILE)
+  return store.dbPath
 }
-
-/** The file the tracker kept its state in before there was a database; read once, then renamed. */
-const LEGACY_STATE_FILE = 'state.json'
 
 /** The version of the old state file, the only one this code reads back. */
 const LEGACY_STATE_VERSION = 2
-
-/** What the old state file is renamed to once it was brought in: kept as a backup, never deleted. */
-const IMPORTED_SUFFIX = '.imported'
-
-/** What a file that is not a usable database is moved aside to. */
-const CORRUPT_SUFFIX = '.corrupt'
 
 /** What is saved: the tracker's history, its bag and prices, and where it was in the log. */
 export interface Saved {
@@ -191,12 +180,6 @@ const MIGRATIONS: string[] = [
 /** The version of the database schema this code writes and reads. */
 export const SCHEMA_VERSION = MIGRATIONS.length
 
-/** The database was written by a newer version of the tracker: it is left alone, nothing is written. */
-class FutureSchemaError extends Error {}
-
-/** The file is there but it is not the tracker's database: it is corrupt, or another tool's. */
-class NotArcanaDbError extends Error {}
-
 /* ---------- the rows ---------- */
 
 interface LogRow {
@@ -298,51 +281,6 @@ interface PriceRow {
 interface PairRow {
   item: number
   price: number
-}
-
-/* ---------- opening ---------- */
-
-/** Whether an error is sqlite saying the database cannot be read or is not one at all. */
-function isUnusable(e: unknown): boolean {
-  return e instanceof SQLiteError && (e.code === 'SQLITE_NOTADB' || e.code === 'SQLITE_CORRUPT')
-}
-
-/**
- * Opens the database and brings its schema up to date; the caller closes it.
- *
- * A file that is not the tracker's database (corrupt, or another tool's tables) and a database of
- * a newer version are both refused: the one by `NotArcanaDbError`, so the caller can move it
- * aside, the other by `FutureSchemaError`, so the caller leaves it alone.
- */
-function openDb(path: string, create: boolean): Database {
-  const db = create ? new Database(path) : new Database(path, { create: false })
-  try {
-    db.exec('PRAGMA journal_mode = WAL')
-    db.exec('PRAGMA foreign_keys = ON')
-    db.exec('PRAGMA busy_timeout = 5000')
-    // the rows sqlite gives back are untyped; these are the tracker's own tables
-    const versionRow = db.query('PRAGMA user_version').get() as { user_version: number }
-    const version = versionRow.user_version
-    if (version > SCHEMA_VERSION) {
-      throw new FutureSchemaError(`the tracker database is of schema version ${version}; this tracker knows up to ${SCHEMA_VERSION}`)
-    }
-    if (version === 0) {
-      const countRow = db.query("select count(*) as n from sqlite_master where type = 'table' and name not like 'sqlite_%'").get() as { n: number }
-      if (countRow.n > 0) throw new NotArcanaDbError(`${path} has tables this tracker does not know`)
-    }
-    for (let from = version; from < SCHEMA_VERSION; from += 1) {
-      const apply = db.transaction(() => {
-        db.exec(MIGRATIONS[from])
-        db.exec(`PRAGMA user_version = ${from + 1}`)
-      })
-      apply()
-    }
-    return db
-  } catch (e) {
-    db.close()
-    if (isUnusable(e)) throw new NotArcanaDbError(`${path} is not a database`)
-    throw e
-  }
 }
 
 /* ---------- reading ---------- */
@@ -736,70 +674,30 @@ function parseLegacyState(raw: string): Saved | null {
   }
 }
 
-/**
- * Brings the old state in: one write, then the file is renamed to `state.json.imported`.
- *
- * A state file that is truncated, corrupt or of a version this code does not know is left where
- * it is, and nothing is written: the same states the old loader turned away.
- */
-async function importLegacyState(dbFile: string): Promise<Saved | null> {
-  const legacy = join(dirname(dbFile), LEGACY_STATE_FILE)
-  let saved: Saved | null = null
-  try {
-    saved = parseLegacyState(await readFile(legacy, 'utf8'))
-  } catch {
-    return null
-  }
-  if (saved === null) return null
-  await mkdir(dirname(dbFile), { recursive: true })
-  const db = openDb(dbFile, true)
-  let read: Saved | null = null
-  let failed = false
-  try {
-    writeArcana(db, saved, null)
-    read = readArcana(db)
-  } catch {
-    failed = true
-  } finally {
-    db.close()
-  }
-  if (failed) {
-    // nothing of it was written; the database this attempt made is empty, so it goes and the
-    // state file stays, as it was, for the next attempt
-    await rm(dbFile, { force: true })
-    await rm(`${dbFile}-wal`, { force: true })
-    await rm(`${dbFile}-shm`, { force: true })
-    return null
-  }
-  if (read === null) return null
-  await rename(legacy, `${legacy}${IMPORTED_SUFFIX}`)
-  return read
-}
+/* ---------- the store ---------- */
+
+/** The Arcana tracker's own part of its store: the schema, the rows and the old state file. */
+const store = defineStore<Saved>({
+  tool: 'the Arcana tracker',
+  dir: 'tli-arcana',
+  dbFile: DB_FILE,
+  migrations: MIGRATIONS,
+  parseLegacyState,
+  read: readArcana,
+  write: writeArcana,
+})
 
 /* ---------- the public face ---------- */
 
 /**
  * Reads what was saved; null when there is nothing saved, or it cannot be read.
  *
- * When the database is not there yet and the old `state.json` is, that state is brought in (see
- * `importLegacyState`) and read back. Nothing is created on disk when there is nothing to read:
- * a dashboard that only looks does not leave a database behind.
+ * When the database is not there yet and the old `state.json` is, that state is brought in and
+ * read back. Nothing is created on disk when there is nothing to read: a dashboard that only
+ * looks does not leave a database behind.
  */
 export async function load(path = statePath()): Promise<Saved | null> {
-  if (!existsSync(path)) return importLegacyState(path)
-  let db: Database
-  try {
-    db = openDb(path, false)
-  } catch {
-    return null
-  }
-  try {
-    return readArcana(db)
-  } catch {
-    return null
-  } finally {
-    db.close()
-  }
+  return store.load(path)
 }
 
 /**
@@ -811,42 +709,7 @@ export async function load(path = statePath()): Promise<Saved | null> {
  * database of a newer version of the tracker is left entirely alone, and the write is refused.
  */
 export async function save(saved: Saved, path = statePath()): Promise<void> {
-  await mkdir(dirname(path), { recursive: true })
-  let db = await openForSave(path)
-  let written = false
-  try {
-    writeArcana(db, saved, readArcana(db))
-    written = true
-  } catch (e) {
-    // a database that was broken between the saves is set aside below, like one that never was one
-    if (!isUnusable(e)) throw e
-  } finally {
-    db.close()
-  }
-  if (written) return
-  await rename(path, `${path}${CORRUPT_SUFFIX}`)
-  db = await openForSave(path)
-  try {
-    writeArcana(db, saved, null)
-  } finally {
-    db.close()
-  }
-}
-
-/**
- * Opens the database to write to it, moving aside a file that is not the tracker's database.
- *
- * The file that is moved aside is kept as `<db>.corrupt`; a database of a newer version of the
- * tracker is not one of those, and the error it raises is passed on untouched.
- */
-async function openForSave(path: string): Promise<Database> {
-  try {
-    return openDb(path, true)
-  } catch (e) {
-    if (!(e instanceof NotArcanaDbError)) throw e
-    await rename(path, `${path}${CORRUPT_SUFFIX}`)
-    return openDb(path, true)
-  }
+  return store.save(saved, path)
 }
 
 /** A history with nothing in it, for when nothing usable was saved. */

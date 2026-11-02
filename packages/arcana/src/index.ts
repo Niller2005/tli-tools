@@ -42,6 +42,6 @@ export {
   type PriceRecord,
 } from './session'
 
-export { load, save, statePath, dataDir, historyOf, DB_FILE, SCHEMA_VERSION, type Saved } from './store'
+export { load, save, statePath, historyOf, SCHEMA_VERSION, type Saved } from './store'
 
 export { arcanaStatus } from './status'

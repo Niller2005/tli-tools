@@ -91,7 +91,10 @@ can read it while the tracker writes it. Its schema is versioned (the sqlite `us
 brought up to date when it is opened.
 
 A save writes only what changed since the last one, in one transaction; the backfill of a log
-hundreds of megabytes long saves as it goes. The state the tracker kept before the database — a
+hundreds of megabytes long saves as it goes. The life of the file itself — opening it, the schema
+version, setting a bad one aside, the old `state.json` — is `@tli/store`'s, shared with the loot
+tracker and proved the same for both by one contract suite; what is this tracker's own is the
+schema and the rows. The state the tracker kept before the database — a
 `state.json` in the same folder, of the version the old loader read — is brought in by itself the
 first time the database is not there, and the file is renamed to `state.json.imported` and kept.
 A file that is not the tracker's database is moved aside as `arcana.db.corrupt` (kept, never
