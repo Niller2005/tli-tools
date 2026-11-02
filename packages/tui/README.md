@@ -14,7 +14,7 @@ terminal.
 | `theme.ts` | the palette, the tones, and the switch that turns the colours off |
 | `format.ts` | the numbers (`num`, `fe`, `duration`, `clock`) and the width of plain text |
 | `rows.ts` | the cells of a row of a table and how they are laid out |
-| `app.ts` | `startApp`: a renderer, and a way out that always puts the terminal back |
+| `app.ts` | `startApp`: a renderer, the keys (ctrl+c quits), the tick, the save, and a way out that always puts the terminal back |
 
 ## The colours
 
@@ -126,27 +126,41 @@ import { startApp } from '@tli/tui'
 
 const app = await startApp({
   onShutdown: () => save(),
+  onKey: (key) => appKeys(key),
+  onQuit: () => {
+    void app.quit()
+  },
+  onTick: () => {
+    readWhatChanged()
+    draw()
+  },
+  onSave: () => save(),
 })
 
 app.renderer.root.add(screen.root)
-
-app.renderer.keyInput.on('keypress', (key) => {
-  if (key.name === 'q') {
-    void app.stop()
-    return
-  }
-  key.preventDefault()
-})
 
 await app.done
 ```
 
 `startApp` makes the renderer, turns the colours off when `--no-color` or `NO_COLOR` is there, and
-puts the terminal back on every way out: the key that quits, `SIGINT`, `SIGTERM` and `SIGHUP`. It
-also handles `ctrl+c`, so the app does not have to.
+puts the terminal back on every way out: the key that quits, `SIGINT`, `SIGTERM` and `SIGHUP`.
+
+It also owns what every tool once wired for itself:
+
+- **The keys.** `onKey` gets every key press. `ctrl+c` never reaches it: the runtime quits, by
+  calling `onQuit` when the app says what leaving does, and by `quit()` — stop, then end the
+  process — when it does not.
+- **The tick.** `onTick` is the app's part of the once-a-second cadence: read what changed and
+  draw it. What is the app's own policy (vorax's capture watch, warden's sampling loop) stays in
+  the app, on intervals of its own.
+- **The save.** `onSave` is what a save is, done every 30 s; `onShutdown` is the save on the way
+  out. Arcana's chunked saves during a long backfill happen before the screen does, so they are
+  not the runtime's.
 
 `stop()` runs `onShutdown` first, so the app can save what it knows before the terminal is put
-back. `done` resolves when the app has stopped.
+back, and waits for the terminal to be back; `quit()` is the same plus `exit(0)`. `done` resolves
+when the app has stopped. A renderer that is already made (the tests make one with
+`createTestRenderer`) can be passed as `renderer` instead of having one made for the terminal.
 
 ## The conventions
 
