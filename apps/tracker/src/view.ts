@@ -52,6 +52,12 @@ export const MENU: MenuItem[] = [
   { section: 'Other', key: 'q', label: 'Quit' },
 ]
 
+/** The input box that is open at the footer: what it asks for, and what is typed in it so far. */
+export type OpenBox =
+  | { kind: 'price'; item: number; name: string; text: string }
+  | { kind: 'name'; text: string }
+  | { kind: 'search'; panel: SearchPanel; text: string }
+
 /** What the screen is showing. */
 export interface ViewState {
   /** the panel the keys move in */
@@ -70,20 +76,16 @@ export interface ViewState {
   inventoryFilter: string
   /** the words the rows of the prices have to match */
   pricesFilter: string
-  /** the panel whose search box is open, or null */
-  searching: SearchPanel | null
   /** the run whose detail is open, or null */
   detail: number | null
   /** the page that covers the screen, or null */
   page: Page | null
-  /** whether the name of a session is being typed in */
-  naming: boolean
+  /** the input box that is open at the footer, or null when none is */
+  box: OpenBox | null
   /** the entry that is picked out in the menu, or null when it is closed */
   menu: number | null
   /** whether the help is open */
   help: boolean
-  /** the price that is being typed in, or null */
-  editing: { item: number; text: string } | null
   /** whether the clock is stopped */
   paused: boolean
   /** what the tracker says at the bottom of the screen */
@@ -111,13 +113,11 @@ export function freshView(logFile: string, now: number): ViewState {
     pricesSort: 'value',
     inventoryFilter: '',
     pricesFilter: '',
-    searching: null,
+    box: null,
     detail: null,
     page: null,
-    naming: false,
     help: false,
     menu: null,
-    editing: null,
     paused: false,
     message: '',
     baselineAt: null,
