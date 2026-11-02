@@ -20,6 +20,9 @@ import {
   type Row,
   backgroundColor,
   borderColor,
+  brandChunks,
+  chip,
+  chunksWidth,
   clock,
   color,
   colorEnabled,
@@ -29,8 +32,16 @@ import {
   fe,
   fit,
   fitEnd,
+  hintChunks,
+  keyHint,
+  meter,
   num,
+  panelBorderStyle,
+  panelTitle,
   price,
+  stat,
+  surfaceColor,
+  signTone,
   toneOn,
   rowChunks,
   theme,
@@ -74,8 +85,8 @@ const TITLE_FILTER = 20
 /** The width of the column that says what kind of run it is. */
 const KIND_WIDTH = 7
 
-/** The title of a panel: its name, the filter and how many rows there are. */
-function panelTitle(name: string, count: number, total: number, filter: string): string {
+/** The name of a list panel: its name, the filter and how many rows there are. */
+function listTitle(name: string, count: number, total: number, filter: string): string {
   if (filter.trim() === '') return `${name} (${total})`
   return `${name} /${fit(filter, TITLE_FILTER)} (${count}/${total})`
 }
@@ -229,6 +240,7 @@ export class TrackerScreen {
       justifyContent: 'space-between',
       alignItems: 'center',
       flexShrink: 0,
+      backgroundColor: surfaceColor(),
     })
     this.titleText = new TextRenderable(renderer, {
       id: 'title',
@@ -299,15 +311,15 @@ export class TrackerScreen {
       flexDirection: 'column',
       flexShrink: 0,
     })
-    this.current = this.makePanel('current', 'Current run', null)
-    this.bag = this.makePanel('bag', 'Bag', 'inventory')
-    this.runs = this.makePanel('runs', 'Recent runs', 'runs')
-    this.best = this.makePanel('best', 'Best run', null)
+    this.current = this.makePanel('current', panelTitle('Current run'), null)
+    this.bag = this.makePanel('bag', panelTitle('Bag'), 'inventory')
+    this.runs = this.makePanel('runs', panelTitle('Recent runs'), 'runs')
+    this.best = this.makePanel('best', panelTitle('Best run'), null)
     this.best.box.flexGrow = 0
     this.best.box.flexShrink = 0
     this.best.box.height = 3
     this.best.box.flexBasis = 3
-    this.prices = this.makePanel('prices', 'Prices (* set)', 'prices')
+    this.prices = this.makePanel('prices', panelTitle('Prices (* set)'), 'prices')
     this.leftColumn.add(this.current.box)
     this.leftColumn.add(this.bag.box)
     this.rightColumn.add(this.best.box)
@@ -322,6 +334,7 @@ export class TrackerScreen {
       flexDirection: 'row',
       alignItems: 'center',
       flexShrink: 0,
+      backgroundColor: surfaceColor(),
     })
     this.hintText = new TextRenderable(renderer, {
       id: 'hints',
@@ -497,8 +510,8 @@ export class TrackerScreen {
     this.priceInput.width = 12
     this.priceInput.value = value
     this.priceLabel.content = new StyledText([
-      tone('accent', 'price '),
-      tone('bold', name),
+      tone('dim', 'price '),
+      tone('blue', name),
       tone('dim', ' (FE)  '),
     ])
     this.priceInput.visible = true
@@ -513,7 +526,7 @@ export class TrackerScreen {
     this.editingItem = null
     this.priceInput.value = value
     this.priceInput.width = 28
-    this.priceLabel.content = new StyledText([tone('accent', 'session '), tone('dim', 'name  ')])
+    this.priceLabel.content = new StyledText([tone('purple', 'session '), tone('dim', 'name  ')])
     this.priceInput.visible = true
     this.priceLabel.visible = true
     this.priceHint.visible = true
@@ -540,7 +553,7 @@ export class TrackerScreen {
   /** Starts typing in the search box. */
   beginSearch(text: string): void {
     this.searchInput.value = text
-    this.searchLabel.content = new StyledText([tone('accent', 'search ')])
+    this.searchLabel.content = new StyledText([tone('dim', 'search ')])
     this.searchInput.visible = true
     this.searchLabel.visible = true
     this.searchHint.visible = true
@@ -595,13 +608,16 @@ export class TrackerScreen {
     this.rightColumn.visible = this.runs.box.visible || this.prices.box.visible
 
     this.borders(this.current, false)
+    this.borders(this.best, false)
     this.borders(this.bag, state.focus === 'inventory')
     this.borders(this.runs, state.focus === 'runs')
     this.borders(this.prices, state.focus === 'prices')
+    this.runs.box.title = panelTitle('Recent runs', state.focus === 'runs')
   }
 
   /** The border and the title of a panel, in the colour of the focus. */
   private borders(panel: ListPanel, focused: boolean): void {
+    panel.box.borderStyle = panelBorderStyle(focused)
     panel.box.borderColor = borderColor(focused)
     panel.box.titleColor = titleColor(focused)
   }
@@ -614,10 +630,10 @@ export class TrackerScreen {
 
   /** The title, the numbers and the switches along the top. */
   private drawHeader(state: ViewState, width: number): void {
-    const title = 'TLI Loot Tracker'
-    const room = Math.max(0, width - visibleLength(title) - 2)
-    this.titleText.width = visibleLength(title)
-    this.titleText.content = new StyledText([tone('accent', title)])
+    const brand = brandChunks('TLI Loot Tracker')
+    const room = Math.max(0, width - chunksWidth(brand) - 2)
+    this.titleText.width = chunksWidth(brand)
+    this.titleText.content = new StyledText(brand)
     this.pathText.width = room
     this.pathText.content = new StyledText([tone('dim', fitEnd(state.logFile, room))])
 
@@ -629,8 +645,12 @@ export class TrackerScreen {
       } else {
         const worth = this.tracker.valueOfRun(run).gross
         this.currentText.content = new StyledText([
-          tone('accent', run.name),
-          tone('dim', ` · ${duration(state.now - run.start)} · ${run.loot.size} kinds · `),
+          tone('blue', run.name),
+          tone('dim', ' · '),
+          tone('teal', duration(state.now - run.start)),
+          tone('dim', ' · '),
+          tone('orange', `${run.loot.size} kinds`),
+          tone('dim', ' · '),
           tone(worth > 0 ? 'gold' : 'dim', fe(worth)),
         ])
       }
@@ -638,33 +658,39 @@ export class TrackerScreen {
     }
 
     const stats = this.tracker.stats(state.now)
-    const amount = (value: number): 'gold' | 'dim' => (value > 0 ? 'gold' : 'dim')
+    const money = (value: number): 'gold' | 'dim' => (value > 0 ? 'gold' : 'dim')
     const segments: TextChunk[][] = [
-      [tone('dim', 'net worth '), tone(amount(stats.netWorth), fe(stats.netWorth))],
-      [tone('dim', 'FE/h '), tone(amount(stats.fePerHour), num(stats.fePerHour))],
-      [tone('dim', 'FE/run '), tone(amount(stats.fePerRun), num(stats.fePerRun))],
-      [tone('dim', 'runs '), tone('accent', String(stats.runs))],
-      [tone('dim', 'time '), tone('accent', duration(stats.totalTime))],
-      [tone('dim', 'avg '), tone('accent', duration(stats.avgRunTime))],
+      stat('net worth', fe(stats.netWorth), money(stats.netWorth)),
+      stat('FE/h', num(stats.fePerHour), money(stats.fePerHour)),
+      stat('FE/run', num(stats.fePerRun), money(stats.fePerRun)),
+      stat('runs', String(stats.runs), 'orange'),
+      stat('time', duration(stats.totalTime), 'teal'),
+      stat('avg', duration(stats.avgRunTime), 'teal'),
     ]
     if (stats.level !== null) {
-      const progress = stats.levelProgress === null ? '' : ` ${(stats.levelProgress * 100).toFixed(1)}%`
-      segments.push([tone('dim', 'level '), tone('accent', `${stats.level}${progress}`)])
-      segments.push([tone('dim', 'XP/h '), tone(amount(stats.xpPerHour), compact(stats.xpPerHour))])
-      if (stats.levelEta !== null) segments.push([tone('dim', 'next level in '), tone('accent', duration(stats.levelEta))])
+      const level: TextChunk[] = stat('level', String(stats.level), 'purple')
+      if (stats.levelProgress !== null) {
+        level.push(...meter(stats.levelProgress, 10, 'purple'))
+        level.push(tone('dim', ` ${(stats.levelProgress * 100).toFixed(1)}%`))
+      }
+      segments.push(level)
+      segments.push(stat('XP/h', compact(stats.xpPerHour), stats.xpPerHour > 0 ? 'purple' : 'dim'))
+      if (stats.levelEta !== null) segments.push(stat('next level in', duration(stats.levelEta), 'teal'))
     }
     this.statsText.content = new StyledText(this.pack(segments, width))
     this.statsText.width = width
 
-    const tax = this.tracker.taxed ? tone('green', '[tax on]') : tone('dim', '[tax off]')
-    const map = this.tracker.mapCosts ? tone('green', '[map cost on]') : tone('dim', '[map cost off]')
-    const paused = state.paused ? [tone('default', '  '), tone('paused', '[PAUSED]')] : []
-    const chips: TextChunk[] = [tax, tone('default', '  '), map, ...paused]
+    const chips: TextChunk[] = [
+      chip(this.tracker.taxed ? 'tax on' : 'tax off', this.tracker.taxed ? 'green' : 'dim'),
+      tone('default', '  '),
+      chip(this.tracker.mapCosts ? 'map cost on' : 'map cost off', this.tracker.mapCosts ? 'green' : 'dim'),
+    ]
+    if (state.paused) chips.push(tone('default', '  '), chip('PAUSED', 'yellow'))
     const session = this.tracker.session
-    if (session !== null) chips.push(tone('default', '  '), tone('green', `[session ${fit(session.name, 24)}]`))
+    if (session !== null) chips.push(tone('default', '  '), chip(`session ${fit(session.name, 24)}`, 'purple'))
     const character = this.tracker.character
     if (character !== '') {
-      chips.push(tone('default', '  '), tone('dim', `[character …${character.slice(-6)}${this.tracker.characterIds.length > 1 ? ` of ${this.tracker.characterIds.length}` : ''}]`))
+      chips.push(tone('default', '  '), chip(`character …${character.slice(-6)}${this.tracker.characterIds.length > 1 ? ` of ${this.tracker.characterIds.length}` : ''}`, 'dim'))
     }
     this.flagsText.content = new StyledText(chips)
     this.flagsText.width = width
@@ -676,8 +702,8 @@ export class TrackerScreen {
       const problem =
         state.logNote !== '' || /could not|cannot|can not|failed|missing|not there|no longer/i.test(message)
       this.messageText.content = new StyledText([
-        tone(problem ? 'red' : 'cyan', '› '),
-        tone(problem ? 'red' : 'cyan', message),
+        tone(problem ? 'red' : 'accent', '› '),
+        tone(problem ? 'red' : 'accent', message),
       ])
     }
     this.messageText.width = width
@@ -730,22 +756,22 @@ export class TrackerScreen {
       const valueWidth = Math.max(13, ...loot.map((item) => visibleLength(fe(item.worth))))
       rows.push({
         cells: [
-          { text: run.name, tone: 'accent' },
-          { text: run.kind === 'prison' ? 'prison' : '', tone: 'cyan', width: KIND_WIDTH },
+          { text: run.name, tone: 'blue' },
+          { text: run.kind === 'prison' ? 'prison' : '', tone: 'purple', width: KIND_WIDTH },
         ],
       })
       rows.push({
         cells: [
-          { text: duration(state.now - run.start), tone: 'cyan', width: 9 },
-          { text: `${run.loot.size} kinds` },
+          { text: duration(state.now - run.start), tone: 'teal', width: 9 },
+          { text: `${run.loot.size} kinds`, tone: 'orange' },
           { text: fe(worth), tone: worth > 0 ? 'gold' : 'dim', width: valueWidth, align: 'right' },
         ],
       })
       for (const item of loot) {
         rows.push({
           cells: [
-            { text: item.name },
-            { text: num(item.qty), width: qtyWidth, align: 'right' },
+            { text: item.name, tone: 'blue' },
+            { text: num(item.qty), tone: 'orange', width: qtyWidth, align: 'right' },
             { text: fe(item.worth), tone: item.worth > 0 ? 'gold' : 'dim', width: valueWidth, align: 'right' },
           ],
         })
@@ -763,22 +789,17 @@ export class TrackerScreen {
     }
     const durationWidth = Math.max(8, ...runs.map((run) => visibleLength(duration(run.took))))
     const valueWidth = Math.max(13, ...runs.map((run) => visibleLength(fe(run.worth))))
-    const maxWorth = Math.max(0, ...runs.map((run) => run.worth))
-    const rows: Row[] = runs.map((run, index) => {
-      const worth = run.worth
-      const valueTone =
-        worth <= 0 ? 'dim' : worth >= maxWorth * 0.5 ? 'green' : worth >= maxWorth * 0.1 ? 'gold' : 'dim'
-      return {
-        selected: state.focus === 'runs' && index === state.runsAt,
-        cells: [
-          { text: `#${run.id}`, tone: 'dim', width: 5, align: 'right' },
-          { text: run.kind === 'prison' ? 'prison' : '', tone: 'cyan', width: KIND_WIDTH },
-          { text: run.name },
-          { text: duration(run.took), tone: 'dim', width: durationWidth, align: 'right' },
-          { text: fe(worth), tone: valueTone, width: valueWidth, align: 'right' },
-        ],
-      }
-    })
+
+    const rows: Row[] = runs.map((run, index) => ({
+      selected: state.focus === 'runs' && index === state.runsAt,
+      cells: [
+        { text: `#${run.id}`, tone: 'dim', width: 5, align: 'right' },
+        { text: run.kind === 'prison' ? 'prison' : '', tone: 'purple', width: KIND_WIDTH },
+        { text: run.name, tone: 'blue' },
+        { text: duration(run.took), tone: 'teal', width: durationWidth, align: 'right' },
+        { text: fe(run.worth), tone: run.worth > 0 ? 'gold' : 'dim', width: valueWidth, align: 'right' },
+      ],
+    }))
     this.drawList(this.runs, rows)
     this.keepVisible(this.runs, state.focus === 'runs' ? state.runsAt : -1)
   }
@@ -794,9 +815,9 @@ export class TrackerScreen {
       {
         cells: [
           { text: `#${best.id}`, tone: 'dim', width: 5, align: 'right' },
-          { text: best.kind === 'prison' ? 'prison' : '', tone: 'cyan', width: KIND_WIDTH },
-          { text: best.name },
-          { text: duration(best.took), tone: 'dim', width: 8, align: 'right' },
+          { text: best.kind === 'prison' ? 'prison' : '', tone: 'purple', width: KIND_WIDTH },
+          { text: best.name, tone: 'blue' },
+          { text: duration(best.took), tone: 'teal', width: 8, align: 'right' },
           { text: fe(best.worth), tone: 'green', width: 13, align: 'right' },
         ],
       },
@@ -805,7 +826,7 @@ export class TrackerScreen {
 
   /** The panel of what the player has. */
   private drawBag(state: ViewState, bag: Rows<BagRow>): void {
-    this.bag.box.title = panelTitle('Bag', bag.rows.length, bag.total, state.inventoryFilter)
+    this.bag.box.title = panelTitle(listTitle('Bag', bag.rows.length, bag.total, state.inventoryFilter), state.focus === 'inventory')
     if (bag.rows.length === 0) {
       const empty =
         state.inventoryFilter === ''
@@ -819,8 +840,8 @@ export class TrackerScreen {
     const rows: Row[] = bag.rows.map((row, index) => ({
       selected: state.focus === 'inventory' && index === state.inventoryAt,
       cells: [
-        { text: row.name },
-        { text: num(row.qty), width: qtyWidth, align: 'right' },
+        { text: row.name, tone: 'blue' },
+        { text: num(row.qty), tone: 'orange', width: qtyWidth, align: 'right' },
         { text: fe(row.worth), tone: row.worth > 0 ? 'gold' : 'dim', width: valueWidth, align: 'right' },
       ],
     }))
@@ -830,7 +851,7 @@ export class TrackerScreen {
 
   /** The panel of the prices the tracker knows. */
   private drawPrices(state: ViewState, prices: Rows<PriceRow>): void {
-    this.prices.box.title = panelTitle('Prices (* set)', prices.rows.length, prices.total, state.pricesFilter)
+    this.prices.box.title = panelTitle(listTitle('Prices (* set)', prices.rows.length, prices.total, state.pricesFilter), state.focus === 'prices')
     if (prices.rows.length === 0) {
       const empty =
         state.pricesFilter === ''
@@ -843,7 +864,7 @@ export class TrackerScreen {
     const rows: Row[] = prices.rows.map((row, index) => ({
       selected: state.focus === 'prices' && index === state.pricesAt,
       cells: [
-        { text: row.name },
+        { text: row.name, tone: 'blue' },
         { text: price(row.price), tone: row.price > 0 ? 'gold' : 'dim', width: valueWidth, align: 'right' },
         {
           text: row.source === 'set' ? '*' : row.source === 'baseline' ? '~' : '·',
@@ -899,19 +920,20 @@ export class TrackerScreen {
       ['?', 'help'],
       ['q', 'quit'],
     ]
-    const segments: TextChunk[][] = hints.map(([key, label]) => [
-      tone('accent', key),
-      tone('dim', ` ${label}`),
-    ])
-    segments.unshift(...this.filterChips(state))
+    const segments: TextChunk[][] = [...this.filterChips(state)]
+    for (const [key, label] of hints) segments.push(keyHint(key, label))
     segments.push(...this.baselineChip(state))
     this.hintText.content = new StyledText(this.pack(segments, width))
     this.hintText.width = width
     this.hintText.visible = state.editing === null && state.searching === null && !state.naming
-    this.priceHint.content = new StyledText([
-      tone('dim', state.naming ? 'enter starts it · esc leaves it' : 'enter keeps it · empty enter resets · esc leaves it'),
-    ])
-    this.searchHint.content = new StyledText([tone('dim', 'enter keeps it · esc takes it away')])
+    this.priceHint.content = new StyledText(
+      hintChunks(
+        state.naming
+          ? [['enter', 'starts it'], ['esc', 'leaves it']]
+          : [['enter', 'keeps it · empty enter resets'], ['esc', 'leaves it']],
+      ),
+    )
+    this.searchHint.content = new StyledText(hintChunks([['enter', 'keeps it'], ['esc', 'takes it away']]))
   }
 
   /** The filters of the panels, as the footer shows them. */
@@ -921,13 +943,13 @@ export class TrackerScreen {
     const prices = state.pricesFilter
     const focused = state.focus === 'inventory' ? bag : state.focus === 'prices' ? prices : ''
     if (focused !== '') {
-      chips.push([tone('accent', `/${fit(focused, 16)}`), tone('dim', ' filter, esc takes it away')])
+      chips.push([chip(`/${fit(focused, 16)}`, 'accent'), tone('dim', ' filter, esc takes it away')])
     }
     if (state.focus !== 'inventory' && bag !== '') {
-      chips.push([tone('dim', `bag /${fit(bag, 16)}`)])
+      chips.push([chip(`bag /${fit(bag, 14)}`, 'dim')])
     }
     if (state.focus !== 'prices' && prices !== '') {
-      chips.push([tone('dim', `prices /${fit(prices, 16)}`)])
+      chips.push([chip(`prices /${fit(prices, 14)}`, 'dim')])
     }
     return chips
   }
@@ -967,15 +989,17 @@ export class TrackerScreen {
       const page = this.pageChunks(state.page, textWidth, state.now)
       this.overlayText.content = new StyledText(page)
     } else if (run !== null) {
-      const title = `Run #${run.id}: ${run.name}`
       this.overlayText.content = new StyledText([
-        tone('accent', title),
+        tone('brand', `Run #${run.id}`),
+        tone('dim', ': '),
+        tone('blue', run.name),
         tone('default', '\n'),
         ...this.detailChunks(run, textWidth, state.now),
       ])
     } else {
       this.overlayText.content = new StyledText([
-        tone('accent', 'TLI Loot Tracker · Help'),
+        ...brandChunks('TLI Loot Tracker'),
+        tone('dim', ' · Help'),
         tone('default', '\n'),
         ...this.helpChunks(),
       ])
@@ -986,7 +1010,12 @@ export class TrackerScreen {
 
   /** The menu: a small dialog with the entries by section, the picked one on the selection. */
   private drawMenu(at: number, width: number, height: number): void {
-    const chunks: TextChunk[] = [tone('accent', 'Menu'), tone('dim', '  ↑↓ pick · ⏎ do it · esc close'), tone('default', '\n')]
+    const chunks: TextChunk[] = [
+      tone('brand', 'Menu'),
+      tone('default', '  '),
+      ...hintChunks([['↑↓', 'pick'], ['⏎', 'do it'], ['esc', 'close']]),
+      tone('default', '\n'),
+    ]
     let section = ''
     let line = 1
     let pickedLine = 1
@@ -995,13 +1024,16 @@ export class TrackerScreen {
     MENU.forEach((item, index) => {
       if (item.section !== section) {
         section = item.section
-        chunks.push(tone('default', '\n'), tone('yellow', section), tone('default', '\n'))
+        chunks.push(tone('default', '\n'), tone('accent', section), tone('default', '\n'))
         line += 2
       }
       if (index === at) pickedLine = line
-      const text = ` ${item.key.padEnd(2)}${item.label}`.padEnd(inner)
+      const key = ` ${item.key.padEnd(2)}`
+      const label = item.label.padEnd(inner - 3)
       chunks.push(
-        index === at ? toneOn('accent', `▸${text}`, theme.selection) : tone('default', ` ${text}`),
+        ...(index === at
+          ? [toneOn('accent', `▸${key}${label}`, theme.selection)]
+          : [tone('key', key), tone('default', label)]),
         tone('default', '\n'),
       )
       line += 1
@@ -1024,21 +1056,23 @@ export class TrackerScreen {
       chunks.push(...parts, tone('default', '\n'))
     }
 
-    line([tone('dim', 'started    '), tone('default', clock(run.start))])
-    line([tone('dim', 'ended      '), tone('default', clock(end))])
-    line([tone('dim', 'duration   '), tone('accent', duration(end - run.start))])
-    line([tone('dim', 'kind       '), tone('accent', run.kind)])
+    line([tone('dim', 'started    '), tone('teal', clock(run.start))])
+    line([tone('dim', 'ended      '), tone('teal', clock(end))])
+    line([tone('dim', 'duration   '), tone('teal', duration(end - run.start))])
+    line([tone('dim', 'kind       '), tone(run.kind === 'prison' ? 'purple' : 'default', run.kind)])
     line([tone('dim', 'loot value '), tone(worth.gross > 0 ? 'gold' : 'dim', fe(worth.gross))])
-    if (run.xp > 0) line([tone('dim', 'experience '), tone('accent', num(run.xp))])
+    if (run.xp > 0) line([tone('dim', 'experience '), tone('purple', num(run.xp))])
     line([])
-    line([tone('accent', 'Loot')])
+    line([tone('brand', 'Loot')])
 
     const loot = lootRows(this.tracker, run.loot)
     if (loot.length === 0) line([tone('dim', 'nothing was picked up')])
     for (const item of loot) {
       line([
-        tone('default', `${num(item.qty)} × ${item.name}`),
-        ...this.valueChunks(fe(item.worth), width, item.worth > 0 ? 'gold' : 'dim'),
+        tone('orange', num(item.qty)),
+        tone('dim', ' × '),
+        tone('blue', item.name),
+        ...this.valueChunks(fe(item.worth), width - visibleLength(`${num(item.qty)} × ${item.name}`), item.worth > 0 ? 'gold' : 'dim'),
       ])
     }
 
@@ -1047,8 +1081,10 @@ export class TrackerScreen {
       line([tone('yellow', 'Map cost')])
       for (const item of lootRows(this.tracker, run.cost)) {
         line([
-          tone('default', `${num(item.qty)} × ${item.name}`),
-          ...this.valueChunks(fe(item.worth), width, item.worth > 0 ? 'gold' : 'dim'),
+          tone('orange', num(item.qty)),
+          tone('dim', ' × '),
+          tone('blue', item.name),
+          ...this.valueChunks(fe(item.worth), width - visibleLength(`${num(item.qty)} × ${item.name}`), item.worth > 0 ? 'gold' : 'dim'),
         ])
       }
     }
@@ -1056,19 +1092,19 @@ export class TrackerScreen {
     const named = run.affixes.filter((id) => this.tracker.affixNames.has(id))
     if (run.affixes.length > 0) {
       line([])
-      line([tone('accent', 'Map modifiers')])
+      line([tone('brand', 'Map modifiers')])
       for (const id of named) line([tone('default', fit(this.tracker.affixNames.get(id) ?? '', width))])
       const plain = run.affixes.length - named.length
       if (plain > 0) line([tone('dim', `${plain} more the game does not say in words`)])
     }
 
     line([])
-    line([tone('accent', '⏎'), tone('dim', ' back')])
+    line(keyHint('⏎', 'back'))
     return chunks
   }
 
   /** The value of a line, at the right of it. */
-  private valueChunks(value: string, width: number, style: 'gold' | 'dim'): TextChunk[] {
+  private valueChunks(value: string, width: number, style: 'gold' | 'dim' | 'red'): TextChunk[] {
     const gap = Math.max(1, width - visibleLength(value))
     return [tone('default', ' '.repeat(gap)), tone(style, value)]
   }
@@ -1079,10 +1115,12 @@ export class TrackerScreen {
     const line = (parts: TextChunk[]): void => {
       chunks.push(...parts, tone('default', '\n'))
     }
-    line([tone('accent', 'Keys')])
+    line([tone('brand', 'Keys')])
     line([])
     for (const [key, label] of HELP) {
-      line([tone('accent', `${key.padEnd(10)}`), tone('dim', label)])
+      const cap = ` ${key} `
+      const pad = ' '.repeat(Math.max(1, 11 - visibleLength(cap)))
+      line([tone('key', cap), tone('dim', `${pad}${label}`)])
     }
     line([])
     line([tone('dim', 'The tracker only reads the log. It never touches the game.')])
@@ -1097,12 +1135,12 @@ export class TrackerScreen {
     }
     const close = (): void => {
       line([])
-      line([tone('accent', 'esc'), tone('dim', ' or the key of the page closes it · ↑↓ scroll · f h g switch page')])
+      line(hintChunks([['esc', 'or the key of the page closes it'], ['↑↓', 'scroll'], ['f h g', 'switch page']]))
     }
     const signed = (value: number): string => `${value > 0 ? '+' : ''}${num(value)}`
 
     if (page === 'affixes') {
-      line([tone('accent', 'Which map modifiers paid')])
+      line([tone('brand', 'Which map modifiers paid')])
       const rows = affixRows(this.tracker)
       if (rows.length === 0) {
         line([tone('dim', 'Nothing to compare yet: a modifier needs three finished maps that had it.')])
@@ -1111,9 +1149,14 @@ export class TrackerScreen {
         line([tone('dim', `Maps with the modifier, against the average map (${fe(average)}). A comparison, not a cause.`)])
         line([])
         for (const row of rows) {
-          const stat = `${signed(row.versus).padStart(10)} FE ${String(row.runs).padStart(4)} maps ${num(row.avgWorth).padStart(10)} FE avg  `
+          const versus = `${signed(row.versus).padStart(10)} FE `
+          const maps = `${String(row.runs).padStart(4)} maps `
+          const averageWorth = `${num(row.avgWorth).padStart(10)} FE avg  `
+          const stat = versus + maps + averageWorth
           line([
-            tone(row.versus > 0 ? 'green' : row.versus < 0 ? 'red' : 'dim', stat),
+            tone(signTone(row.versus), versus),
+            tone('orange', maps),
+            tone('gold', averageWorth),
             tone('default', fit(row.text, Math.max(8, width - stat.length))),
           ])
         }
@@ -1124,7 +1167,7 @@ export class TrackerScreen {
 
     if (page === 'exchange') {
       const totals = tradeTotals(this.tracker)
-      line([tone('accent', 'The exchange')])
+      line([tone('brand', 'The exchange')])
       line([
         tone('dim', 'FE paid '),
         tone('gold', num(totals.spent)),
@@ -1144,28 +1187,28 @@ export class TrackerScreen {
         line([
           tone('dim', head),
           tone('default', shown),
-          ...(money === '' ? [] : this.valueChunks(money, width - head.length - visibleLength(shown), row.fe < 0 ? 'dim' : 'gold')),
+          ...(money === '' ? [] : this.valueChunks(money, width - head.length - visibleLength(shown), row.fe < 0 ? 'red' : 'gold')),
         ])
       }
       close()
       return chunks
     }
 
-    line([tone('accent', 'Sessions')])
+    line([tone('brand', 'Sessions')])
     const rows = sessionRows(this.tracker, now)
     if (rows.length === 0) line([tone('dim', 'None yet. n starts one: the runs that begin after it are its, N ends it.')])
     for (const row of rows) {
       const { session, totals } = row
       line([])
       line([
-        tone(row.active ? 'green' : 'accent', `${row.active ? '▸ ' : '  '}${session.name}`),
+        tone(row.active ? 'green' : 'blue', `${row.active ? '▸ ' : '  '}${session.name}`),
         tone('dim', `  ${stamp(session.start)}${session.end === null ? ' · going on' : ` → ${stamp(session.end)}`}`),
       ])
       line([
         tone('dim', '    runs '),
-        tone('accent', String(totals.runs)),
+        tone('orange', String(totals.runs)),
         tone('dim', '  time '),
-        tone('accent', duration(totals.totalTime)),
+        tone('teal', duration(totals.totalTime)),
         tone('dim', '  FE '),
         tone(totals.fe > 0 ? 'gold' : 'dim', num(totals.fe)),
         tone('dim', '  FE/h '),
@@ -1173,7 +1216,7 @@ export class TrackerScreen {
         tone('dim', '  loot '),
         tone(totals.lootValue > 0 ? 'gold' : 'dim', fe(totals.lootValue)),
         tone('dim', '  XP/h '),
-        tone(totals.xpPerHour > 0 ? 'gold' : 'dim', compact(totals.xpPerHour)),
+        tone(totals.xpPerHour > 0 ? 'purple' : 'dim', compact(totals.xpPerHour)),
       ])
     }
     close()

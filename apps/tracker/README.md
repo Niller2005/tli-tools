@@ -19,7 +19,7 @@ bun src/tui.ts --no-baseline        # do not use the community prices
 
 | Panel | What is in it |
 |-------|---------------|
-| The header | the app name and log path, then net worth, FE per hour, FE per run, how many runs, how long in maps, the average run, your level with how far through it you are, the experience per hour and the time to the next level, and the tax, map-cost, pause, session and character switches |
+| The header | the tool name on a bar of its own and the log path, then net worth, FE per hour, FE per run, how many runs, how long in maps, the average run, your level with a progress bar of how far through it you are, the experience per hour and the time to the next level, and the switches as chips: tax, map cost, PAUSED, the session and the character |
 | Current run | the map you are in, how long you have been in it, and what you have picked up, the most valuable first |
 | Best run | the run worth the most, in one line above the recent runs (hidden until a run has value) |
 | Recent runs | the last runs, with how long each took and what it was worth; the runs that are visits to the Tartarus prison say so; `enter` opens the detail of one |
@@ -28,16 +28,25 @@ bun src/tui.ts --no-baseline        # do not use the community prices
 
 The panels use the whole width of the terminal on a normal screen: the current run is above the
 bag on the left, recent runs are above the prices on the right, and the two columns line up. The
-panel with the keyboard focus has a bright border, and the selected row is marked and highlighted.
-The three lists scroll, and each one has a scrollbar. On a narrow terminal (less than 80 columns)
-the panels are stacked instead, and the run that is going on is shown in the header. FE amounts
-are yellow, positive values are green, and hints are cyan.
+panel with the keyboard focus has a heavy border and a `●` in its title, the others a rounded
+border and a `○`, and the selected row is marked with `▸` and highlighted. The three lists scroll,
+and each one has a scrollbar. On a narrow terminal (less than 80 columns) the panels are stacked
+instead, and the run that is going on is shown in the header.
+
+Every colour has a job, the same as in the other tools: the name of the tool is ember orange, the
+focus and the keys are cyan, FE amounts are gold, item and map names are blue, experience and the
+level are purple, run counts are orange, times and durations are teal, and a loss is red. The
+switches along the top are chips — small labels on a tinted ground — green when they are on, quiet
+when they are off, yellow for PAUSED, purple for the session. The keys at the bottom sit on caps,
+so they stand out from what they do.
 
 The mouse works too: clicking a panel gives it the focus, clicking a row picks it out, and the
 wheel scrolls the list under the pointer.
 
 Colours can be turned off with `--no-color`. The `NO_COLOR` environment variable has the same
-effect. The layout and all the text stay exactly the same when colour is off.
+effect. The layout stays exactly the same when colour is off: the chips become `[tax on]`-style
+brackets, the key caps become plain `key label` pairs, and the focus is still told by the heavy
+border and the `●` marker, never by the colour alone.
 
 The screen is drawn with [OpenTUI](https://opentui.com/docs), so the terminal is put back the way
 it was on every way out, and the layout follows the size of the window. The parts the other tools
