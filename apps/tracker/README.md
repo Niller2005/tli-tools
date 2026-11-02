@@ -38,7 +38,10 @@ focus and the keys are cyan, FE amounts are gold, item and map names are blue, e
 level are purple, run counts are orange, times and durations are teal, and a loss is red. The
 switches along the top are chips — small labels on a tinted ground — green when they are on, quiet
 when they are off, yellow for PAUSED, purple for the session. The keys at the bottom sit on caps,
-so they stand out from what they do.
+so they stand out from what they do. A filter being typed replaces them with its own line; on a
+narrow terminal they are given up from the middle, the move key and the quit key last, and the
+prices' attribution is the first thing to go. The bar along the top cuts the log's path from the
+front (its end, the file's name, is the part worth reading) before anything else gives way.
 
 The mouse works too: clicking a panel gives it the focus, clicking a row picks it out, and the
 wheel scrolls the list under the pointer.

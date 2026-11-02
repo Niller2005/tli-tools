@@ -22,7 +22,6 @@ import {
   borderColor,
   brandChunks,
   chip,
-  chunksWidth,
   clock,
   color,
   colorEnabled,
@@ -31,9 +30,7 @@ import {
   duration,
   fe,
   fit,
-  fitEnd,
-  hintChunks,
-  keyHint,
+  footerChunks,
   meter,
   num,
   panelBorderStyle,
@@ -42,6 +39,9 @@ import {
   stat,
   surfaceColor,
   signTone,
+  topBarChunks,
+  keyHint,
+  type Tone,
   toneOn,
   rowChunks,
   theme,
@@ -171,7 +171,6 @@ export class TrackerScreen {
 
   private readonly header: BoxRenderable
   private readonly titleText: TextRenderable
-  private readonly pathText: TextRenderable
   private readonly currentText: TextRenderable
   private readonly statsText: TextRenderable
   private readonly flagsText: TextRenderable
@@ -243,15 +242,7 @@ export class TrackerScreen {
       fg: textColor(),
       wrapMode: 'none',
     })
-    this.pathText = new TextRenderable(renderer, {
-      id: 'path',
-      content: '',
-      selectable: false,
-      fg: textColor(),
-      wrapMode: 'none',
-    })
     titleRow.add(this.titleText)
-    titleRow.add(this.pathText)
     this.header.add(titleRow)
 
     this.currentText = new TextRenderable(renderer, {
@@ -603,12 +594,8 @@ export class TrackerScreen {
 
   /** The title, the numbers and the switches along the top. */
   private drawHeader(state: ViewState, width: number): void {
-    const brand = brandChunks('TLI Loot Tracker')
-    const room = Math.max(0, width - chunksWidth(brand) - 2)
-    this.titleText.width = chunksWidth(brand)
-    this.titleText.content = new StyledText(brand)
-    this.pathText.width = room
-    this.pathText.content = new StyledText([tone('dim', fitEnd(state.logFile, room))])
+    this.titleText.width = width
+    this.titleText.content = new StyledText(topBarChunks({ name: 'TLI Loot Tracker', sub: state.logFile }, width))
 
     this.currentText.visible = this.narrow
     if (this.narrow) {
@@ -893,38 +880,36 @@ export class TrackerScreen {
       ['?', 'help'],
       ['q', 'quit'],
     ]
-    const segments: TextChunk[][] = [...this.filterChips(state)]
-    for (const [key, label] of hints) segments.push(keyHint(key, label))
-    segments.push(...this.baselineChip(state))
-    this.hintText.content = new StyledText(this.pack(segments, width))
+    // a filter being typed replaces the keys, as a message does in every tool; the other filters
+    // are chips before them, and the prices' attribution is the quiet piece after them
+    const focused = state.focus === 'inventory' ? state.inventoryFilter : state.focus === 'prices' ? state.pricesFilter : ''
+    const message = focused === '' ? '' : `/${fit(focused, 16)} filter, esc takes it away`
+    const chips: [string, Tone][] = []
+    if (state.focus !== 'inventory' && state.inventoryFilter !== '') {
+      chips.push([`bag /${fit(state.inventoryFilter, 14)}`, 'dim'])
+    }
+    if (state.focus !== 'prices' && state.pricesFilter !== '') {
+      chips.push([`prices /${fit(state.pricesFilter, 14)}`, 'dim'])
+    }
+    this.hintText.content = new StyledText(
+      footerChunks({ hints, message, chips, after: this.baselineChip(state) }, width),
+    )
     this.hintText.width = width
     this.hintText.visible = state.box === null
     this.priceHint.content = new StyledText(
-      hintChunks(
-        state.box?.kind === 'name'
-          ? [['enter', 'starts it'], ['esc', 'leaves it']]
-          : [['enter', 'keeps it · empty enter resets'], ['esc', 'leaves it']],
+      footerChunks(
+        {
+          hints:
+            state.box?.kind === 'name'
+              ? [['enter', 'starts it'], ['esc', 'leaves it']]
+              : [['enter', 'keeps it · empty enter resets'], ['esc', 'leaves it']],
+        },
+        this.renderer.width,
       ),
     )
-    this.searchHint.content = new StyledText(hintChunks([['enter', 'keeps it'], ['esc', 'takes it away']]))
-  }
-
-  /** The filters of the panels, as the footer shows them. */
-  private filterChips(state: ViewState): TextChunk[][] {
-    const chips: TextChunk[][] = []
-    const bag = state.inventoryFilter
-    const prices = state.pricesFilter
-    const focused = state.focus === 'inventory' ? bag : state.focus === 'prices' ? prices : ''
-    if (focused !== '') {
-      chips.push([chip(`/${fit(focused, 16)}`, 'accent'), tone('dim', ' filter, esc takes it away')])
-    }
-    if (state.focus !== 'inventory' && bag !== '') {
-      chips.push([chip(`bag /${fit(bag, 14)}`, 'dim')])
-    }
-    if (state.focus !== 'prices' && prices !== '') {
-      chips.push([chip(`prices /${fit(prices, 14)}`, 'dim')])
-    }
-    return chips
+    this.searchHint.content = new StyledText(
+      footerChunks({ hints: [['enter', 'keeps it'], ['esc', 'takes it away']] }, this.renderer.width),
+    )
   }
 
   /** Where the community prices came from and how old they are, as the footer shows it. */
@@ -983,17 +968,17 @@ export class TrackerScreen {
 
   /** The menu: a small dialog with the entries by section, the picked one on the selection. */
   private drawMenu(at: number, width: number, height: number): void {
+    const longest = MENU.reduce((n, item) => Math.max(n, item.label.length), 0)
+    const inner = longest + 6
     const chunks: TextChunk[] = [
       tone('brand', 'Menu'),
       tone('default', '  '),
-      ...hintChunks([['↑↓', 'pick'], ['⏎', 'do it'], ['esc', 'close']]),
+      ...footerChunks({ hints: [['↑↓', 'pick'], ['⏎', 'do it'], ['esc', 'close']] }, inner),
       tone('default', '\n'),
     ]
     let section = ''
     let line = 1
     let pickedLine = 1
-    const longest = MENU.reduce((n, item) => Math.max(n, item.label.length), 0)
-    const inner = longest + 6
     MENU.forEach((item, index) => {
       if (item.section !== section) {
         section = item.section
@@ -1108,7 +1093,7 @@ export class TrackerScreen {
     }
     const close = (): void => {
       line([])
-      line(hintChunks([['esc', 'or the key of the page closes it'], ['↑↓', 'scroll'], ['f h g', 'switch page']]))
+      line(footerChunks({ hints: [['esc', 'or the key of the page closes it'], ['↑↓', 'scroll'], ['f h g', 'switch page']] }, width))
     }
     const signed = (value: number): string => `${value > 0 ? '+' : ''}${num(value)}`
 
