@@ -19,7 +19,7 @@
 //! `app/niri.rs` logic.
 
 import { createCapture } from '@tli/capture'
-import { captureMinigame, logHint, minigameCaptureGate, watchMinigames } from '@tli/gamelog'
+import { captureMinigame, logHint, minigameCaptureGate, retryCapture, watchMinigames } from '@tli/gamelog'
 import { asBytes } from '@tli/png'
 import { startApp } from '@tli/tui'
 import { Session, Watch, fingerprint } from '@/app/session'
@@ -174,8 +174,8 @@ async function run(): Promise<void> {
   const log = a.noLog ? null : watchMinigames(a.logPath === null ? {} : { log: a.logPath })
   let wasClosed = false
   let next = performance.now()
-  let retryAt = 0
-  let lastCaptureError = ''
+  // the capture's back-off window: a failed grab holds the next automatic one back for 2 s
+  const shots = retryCapture(capture)
   try {
     app.draw('looking for the game window…')
     while (!quitting) {
@@ -186,14 +186,13 @@ async function run(): Promise<void> {
       wasClosed = closed
 
       let captureNote: string
-      if (closed && !readNow) {
-        captureNote = gate.status
-      } else if (!readNow && performance.now() < retryAt) {
-        captureNote = lastCaptureError
+      const held = shots.heldUp(gate, readNow)
+      if (held !== '') {
+        captureNote = held
       } else {
         try {
           const started = performance.now()
-          const attempt = await captureMinigame(capture, view, 'warden', readNow)
+          const attempt = await captureMinigame(shots, view, 'warden', readNow)
           timed('capture', performance.now() - started)
           if (attempt.image === null) {
             captureNote = attempt.status
@@ -210,12 +209,8 @@ async function run(): Promise<void> {
               session.readLive(frame)
             }
           }
-          retryAt = 0
-          lastCaptureError = ''
         } catch (e) {
           captureNote = e instanceof Error ? e.message : String(e)
-          lastCaptureError = captureNote
-          retryAt = performance.now() + 2000
         }
       }
       if (quitting) break
