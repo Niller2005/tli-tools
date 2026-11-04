@@ -39,6 +39,8 @@ window.tli { background: transparent; }
 .card .head { font-size: %(head)spx; font-weight: 700; }
 .card .basis { font-size: %(basis)spx; color: #aeb2c4; }
 .card .line { font-size: %(line)spx; }
+.card.loot { background: alpha(#101018, %(loot)s); border: none; padding: 6px 10px; }
+.card.loot label { text-shadow: 0 1px 3px alpha(#000000, 0.95); }
 """
 
 
@@ -71,6 +73,40 @@ def read_cards(directory):
             except OSError:
                 pass
     return cards
+
+
+def running(pid):
+    """Whether pid is an overlay process."""
+    try:
+        with open(f"/proc/{pid}/cmdline", "rb") as f:
+            return b"overlay.py" in f.read()
+    except OSError:
+        return False
+
+
+def has_users(directory):
+    """Whether a tool that wants the overlay is still running (users/<tool> holds its pid)."""
+    users = os.path.join(directory, "users")
+    try:
+        names = os.listdir(users)
+    except OSError:
+        return False
+    found = False
+    for name in names:
+        path = os.path.join(users, name)
+        try:
+            with open(path) as f:
+                pid = int(f.read().strip())
+        except (OSError, ValueError):
+            continue
+        if alive(pid):
+            found = True
+        else:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+    return found
 
 
 def game_output(title):
@@ -118,13 +154,15 @@ class Overlay(Gtk.Application):
         self.shown = None
         self.monitor_name = None
         self.last_rect = None
+        self.loot = {}  # corner -> (window, box) of the cards that ask for a corner of the screen
         self.ticks = 0
+        self.idle = 0
 
     def do_activate(self):
         css = Gtk.CssProvider()
         z = self.args.size
-        css.load_from_string(CSS % {"opacity": self.args.opacity, "size": z, "title": round(z * 0.8), "head": round(z * 1.35),
-                                    "basis": round(z * 0.9), "line": round(z * 0.95)})
+        css.load_from_string(CSS % {"opacity": self.args.opacity, "loot": self.args.loot_opacity, "size": z, "title": round(z * 0.8),
+                                    "head": round(z * 1.35), "basis": round(z * 0.9), "line": round(z * 0.95)})
         Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         self.win = Gtk.Window(application=self)
         self.win.add_css_class("tli")
@@ -139,6 +177,23 @@ class Overlay(Gtk.Application):
         LS.set_margin(self.win, edges[1], self.args.left)
         self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         self.win.set_child(self.box)
+        # cards that ask for a bottom corner: one transparent surface per corner
+        for corner, edge in (("bottom-left", LS.Edge.LEFT), ("bottom-right", LS.Edge.RIGHT)):
+            win = Gtk.Window(application=self)
+            win.add_css_class("tli")
+            LS.init_for_window(win)
+            LS.set_layer(win, LS.Layer.OVERLAY)
+            LS.set_namespace(win, f"tli-overlay-{corner}")
+            LS.set_keyboard_mode(win, LS.KeyboardMode.NONE)
+            LS.set_anchor(win, LS.Edge.BOTTOM, True)
+            LS.set_anchor(win, edge, True)
+            LS.set_margin(win, LS.Edge.BOTTOM, self.args.margin)
+            LS.set_margin(win, edge, self.args.margin_left if corner == "bottom-left" else self.args.margin)
+            box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+            win.set_child(box)
+            win.connect("map", lambda *_, w=win: self.click_through(w))
+            win.connect("unmap", lambda *_: self.publish_rects())
+            self.loot[corner] = (win, box)
         # the outline of what to click: a transparent surface over the whole output
         self.marks = []
         self.mon_geo = None
@@ -175,8 +230,8 @@ class Overlay(Gtk.Application):
                 cr.rectangle(x - self.mon_geo.x, y - self.mon_geo.y, w, h)
         cr.fill()
 
-    def click_through(self):
-        surface = self.win.get_surface()
+    def click_through(self, win=None):
+        surface = (win or self.win).get_surface()
         if surface is not None:
             surface.set_input_region(cairo.Region())
         GLib.timeout_add(60, self.publish_rects)
@@ -195,12 +250,20 @@ class Overlay(Gtk.Application):
             self.monitor_name = found.get_connector()
             LS.set_monitor(self.win, found)
             LS.set_monitor(self.hl, found)
+            for win, _ in self.loot.values():
+                LS.set_monitor(win, found)
         if found is not None:
             self.mon_geo = found.get_geometry()
         return found
 
     def tick(self):
         self.ticks += 1
+        if self.args.auto_exit:
+            # started by a tool: close a few seconds after the last tool that wanted it is gone
+            self.idle = 0 if has_users(self.dir) else self.idle + 1
+            if self.idle >= 20:
+                self.quit()
+                return False
         cards = read_cards(self.dir)
         key = json.dumps(cards, sort_keys=True)
         if self.ticks % 20 == 1 and cards:  # every ~5 s: the game may have moved to another output
@@ -211,35 +274,42 @@ class Overlay(Gtk.Application):
         return True
 
     def render(self, cards):
-        child = self.box.get_first_child()
-        while child is not None:
-            nxt = child.get_next_sibling()
-            self.box.remove(child)
-            child = nxt
         self.marks = [m for card in cards for m in card.get("marks") or []]
-        if not cards:
-            self.hl.set_visible(False)
-            self.win.set_visible(False)
-            self.publish_rects()
-            return
-        for card in cards:
-            self.box.append(self.card_widget(card))
-        self.pick_monitor()
+        groups = [(self.win, self.box, [c for c in cards if c.get("corner") not in self.loot])]
+        for corner, (win, box) in self.loot.items():
+            groups.append((win, box, [c for c in cards if c.get("corner") == corner]))
+        for win, box, group in groups:
+            child = box.get_first_child()
+            while child is not None:
+                nxt = child.get_next_sibling()
+                box.remove(child)
+                child = nxt
+            for card in group:
+                box.append(self.card_widget(card))
+            if not group:
+                win.set_visible(False)
+        if cards:
+            self.pick_monitor()
         # the masks are written before the outline is drawn, so no picture of it reaches a reader
         self.publish_rects()
-        self.win.set_visible(True)
-        self.win.present()
+        for win, _, group in groups:
+            if group:
+                win.set_visible(True)
+                win.present()
         if self.marks:
             self.hl.set_visible(True)
             self.hl.present()
             self.hl_area.queue_draw()
         else:
             self.hl.set_visible(False)
-        GLib.timeout_add(80, self.publish_rects)
+        if cards:
+            GLib.timeout_add(80, self.publish_rects)
 
     def card_widget(self, card):
         frame = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         frame.add_css_class("card")
+        if card.get("corner") in self.loot:
+            frame.add_css_class("loot")
 
         def label(markup, css):
             lab = Gtk.Label(xalign=0, wrap=True, max_width_chars=self.args.width)
@@ -258,16 +328,22 @@ class Overlay(Gtk.Application):
     def publish_rects(self):
         rects = []
         mon = None
-        if self.win.get_visible() and self.monitor_name:
+        if self.monitor_name:
             monitors = Gdk.Display.get_default().get_monitors()
             for i in range(monitors.get_n_items()):
                 if monitors.get_item(i).get_connector() == self.monitor_name:
                     mon = monitors.get_item(i)
-        w, h = self.win.get_width(), self.win.get_height()
-        if mon is not None and w > 1 and h > 1:
+        if mon is not None:
             g = mon.get_geometry()
-            x = g.x + (g.width - w - self.args.left if self.args.right else self.args.left)
-            rects.append({"x": x - 2, "y": g.y + self.args.top - 2, "width": w + 4, "height": h + 4})
+            w, h = self.win.get_width(), self.win.get_height()
+            if self.win.get_visible() and w > 1 and h > 1:
+                x = g.x + (g.width - w - self.args.left if self.args.right else self.args.left)
+                rects.append({"x": x - 2, "y": g.y + self.args.top - 2, "width": w + 4, "height": h + 4})
+            for corner, (win, _) in self.loot.items():
+                w, h = win.get_width(), win.get_height()
+                if win.get_visible() and w > 1 and h > 1:
+                    x = g.x + (self.args.margin_left if corner == "bottom-left" else g.width - w - self.args.margin)
+                    rects.append({"x": x - 2, "y": g.y + g.height - h - self.args.margin - 2, "width": w + 4, "height": h + 4})
         for mark in self.marks:
             for x, y, w, h in strips(mark):
                 rects.append({"x": x - 2, "y": y - 2, "width": w + 4, "height": h + 4})
@@ -292,13 +368,37 @@ def main():
     p.add_argument("--width", type=int, default=38, help="text width of a card, in characters")
     p.add_argument("--size", type=int, default=16, help="base font size in pixels")
     p.add_argument("--opacity", type=float, default=0.86, help="how solid the card's background is, 0 to 1")
+    p.add_argument("--loot-opacity", type=float, default=0.45, help="how solid the background of a corner card is, 0 to 1")
+    p.add_argument("--margin", type=int, default=24, help="distance of a corner card from the screen's edges, in logical pixels")
+    p.add_argument("--margin-left", type=int, default=380,
+                   help="distance of the bottom-left card from the left edge, in logical pixels; clears the game's chat")
     p.add_argument("--title", default="Torchlight", help="regex for the game's window title")
+    p.add_argument("--auto-exit", action="store_true", help="close when no tool that wants the overlay is running (set by the tools that start it)")
     args = p.parse_args()
     if os.environ.get("XDG_SESSION_TYPE") != "wayland" and not os.environ.get("WAYLAND_DISPLAY"):
         sys.exit("the overlay needs a Wayland session with wlr-layer-shell")
     if not LS.is_supported():
         sys.exit("this compositor does not support wlr-layer-shell")
-    sys.exit(Overlay(args).run([]))
+    directory = runtime_dir()
+    pid_file = os.path.join(directory, "overlay.pid")
+    try:
+        with open(pid_file) as f:
+            other = int(f.read().strip())
+        if other != os.getpid() and running(other):
+            sys.exit("an overlay is already running")
+    except (OSError, ValueError):
+        pass
+    os.makedirs(directory, exist_ok=True)
+    with open(pid_file, "w") as f:
+        f.write(str(os.getpid()))
+    try:
+        code = Overlay(args).run([])
+    finally:
+        try:
+            os.remove(pid_file)
+        except OSError:
+            pass
+    sys.exit(code)
 
 
 if __name__ == "__main__":
