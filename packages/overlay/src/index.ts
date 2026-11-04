@@ -8,7 +8,7 @@
 // Everything lives in `$XDG_RUNTIME_DIR/tli-overlay/`:
 //   cards/<tool>.json   written by a tool, read by the overlay
 //   rects.json          written by the overlay, read by the capture
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -46,6 +46,8 @@ export interface Card {
   lines?: CardLine[]
   /** places on the screen to outline, in the compositor's logical pixels: the cell or card to click */
   marks?: Rect[]
+  /** a bottom corner of the screen to draw the card in, on a mostly transparent background; without it the card goes in the main stack */
+  corner?: 'bottom-left' | 'bottom-right'
 }
 
 /** A card as it sits on disk: the card and the process that wrote it. */
@@ -69,19 +71,82 @@ const cardPath = (tool: string, dir: string) => join(dir, 'cards', `${tool}.json
 
 const alive = (pid: number): boolean => Number.isInteger(pid) && pid > 0 && existsSync(`/proc/${pid}`)
 
-/** Writes the card the overlay shows for `card.tool`. `null` takes it down. */
+/**
+ * Writes the card the overlay shows for `card.tool`. `null` takes it down. A card also makes the tool one
+ * the overlay is kept for: while a process that has published one is alive, an overlay that was started
+ * by `ensureOverlay` does not close.
+ */
 export function publishCard(tool: string, card: Card | null, dir = overlayDir()): void {
   const path = cardPath(tool, dir)
   if (card === null) {
     rmSync(path, { force: true })
     return
   }
+  claim(tool, dir)
   mkdirSync(join(dir, 'cards'), { recursive: true })
   const stored: StoredCard = { ...card, tool, pid: process.pid }
   // the overlay may read at any time: write beside the file and move it into place
   const tmp = `${path}.${process.pid}.tmp`
   writeFileSync(tmp, JSON.stringify(stored))
   renameSync(tmp, path)
+}
+
+const claimed = new Set<string>()
+
+/** Says that this process wants the overlay up: `users/<tool>` holds its pid, and goes stale when it ends. */
+function claim(tool: string, dir: string): void {
+  const key = `${dir}\0${tool}`
+  if (claimed.has(key)) return
+  mkdirSync(join(dir, 'users'), { recursive: true })
+  writeFileSync(join(dir, 'users', tool), String(process.pid))
+  claimed.add(key)
+}
+
+/** The tool is done with the overlay: its card goes, and the overlay may close when no one else is left. */
+export function releaseOverlay(tool: string, dir = overlayDir()): void {
+  rmSync(cardPath(tool, dir), { force: true })
+  rmSync(join(dir, 'users', tool), { force: true })
+  claimed.delete(`${dir}\0${tool}`)
+}
+
+/** Whether an overlay process is up. */
+export function overlayRunning(dir = overlayDir()): boolean {
+  try {
+    const pid = Number(readFileSync(join(dir, 'overlay.pid'), 'utf8'))
+    return alive(pid) && readFileSync(`/proc/${pid}/cmdline`, 'utf8').includes('overlay.py')
+  } catch { return false }
+}
+
+const LIBS = ['/usr/lib/libgtk4-layer-shell.so', '/usr/lib64/libgtk4-layer-shell.so', '/usr/lib/x86_64-linux-gnu/libgtk4-layer-shell.so']
+
+/** The layer-shell library the overlay has to load before libwayland, or undefined when it is not installed. */
+export const layerShellLib = (): string | undefined => LIBS.find(existsSync)
+
+export type EnsureResult = { ok: true; started: boolean } | { ok: false; reason: string }
+
+/**
+ * Makes sure an overlay is up for this tool: it says the tool wants it, and starts one in the background
+ * when none runs. One that this starts closes by itself a few seconds after the last tool that wanted it
+ * has ended or called `releaseOverlay`; one the player started with `bun run overlay` is never closed.
+ */
+export function ensureOverlay(tool: string, dir = overlayDir()): EnsureResult {
+  if (!process.env.WAYLAND_DISPLAY && process.env.XDG_SESSION_TYPE !== 'wayland') {
+    return { ok: false, reason: 'the overlay needs a Wayland session' }
+  }
+  if (Bun.which('python3') === null) return { ok: false, reason: 'the overlay needs python3' }
+  if (layerShellLib() === undefined) return { ok: false, reason: 'the overlay needs gtk4-layer-shell and python-gobject' }
+  claim(tool, dir)
+  if (overlayRunning(dir)) return { ok: true, started: false }
+  const log = openSync(join(dir, 'overlay.log'), 'a')
+  try {
+    Bun.spawn([process.execPath, join(import.meta.dir, '..', 'scripts', 'start.ts'), '--auto-exit'], {
+      stdio: ['ignore', log, log],
+      detached: true,
+    }).unref()
+  } finally {
+    closeSync(log)
+  }
+  return { ok: true, started: true }
 }
 
 /** The cards of the tools that are still running, in the order of their names. */

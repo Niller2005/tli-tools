@@ -9,6 +9,12 @@ bun run overlay                     # leave it running; it shows a card while Vo
 bun run overlay -- --output=DP-1 --left=24 --top=700 --size=16
 ```
 
+The loot tracker starts the overlay itself when its loot card is turned on (`ensureOverlay` in `src/index.ts`).
+That one runs with `--auto-exit`: it closes a few seconds after the last tool that published a card (or asked for the
+overlay) has ended. Vorax and Warden use an overlay that is already running, and keep an auto-started one open while
+they run. Only one overlay runs at a time; a second `bun run overlay` exits. Errors of an auto-started one go to
+`$XDG_RUNTIME_DIR/tli-overlay/overlay.log`.
+
 | Option | Default | |
 |--------|---------|--|
 | `--output` | the output the game's window is on (asked from Niri), else the first | monitor to draw on, e.g. `DP-1` |
@@ -17,10 +23,17 @@ bun run overlay -- --output=DP-1 --left=24 --top=700 --size=16
 | `--width` | 38 | width of a card, in characters |
 | `--size` | 16 | font size in pixels |
 | `--opacity` | 0.86 | how solid the card's background is |
+| `--loot-opacity` | 0.45 | how solid the background of a corner card is |
+| `--margin` | 24 | distance of a corner card from the screen's edges |
+| `--margin-left` | 380 | distance of the bottom-left card from the left edge, so it sits to the right of the game's chat |
 
 Needs `python-gobject`, `gtk4` and `gtk4-layer-shell` (Arch: `pacman -S python-gobject gtk4 gtk4-layer-shell`), and a
 compositor with layer-shell (Niri, Sway, Hyprland, KDE; not GNOME). `scripts/start.ts` sets `LD_PRELOAD` for
 `libgtk4-layer-shell`, which has to load before `libwayland`.
+
+A card with `corner` set (`bottom-left` or `bottom-right`; the loot tracker's, from `bun run tracker -- --overlay=left`)
+is drawn in that corner on a mostly transparent background instead of in the main stack, and is masked out of captures
+like the others.
 
 ## The outline
 
