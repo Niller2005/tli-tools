@@ -5,7 +5,7 @@
 //! and the instrument icons are read from pixels.
 
 import { readHeld } from './instruments'
-import { ocr, ocrAll, type Line } from './ocr'
+import { ocr, ocrAll, ocrDigits, type Line } from './ocr'
 import { beastAt, pickShown } from './scene'
 import { type Layout } from './layout'
 import { Rect, type Rgba } from './mod'
@@ -272,12 +272,13 @@ export function number(token: string): number | null {
   return Number(digits)
 }
 
-/** "N day(s) until Riot": the number is what comes before "day", or before
- * the first space when "day" misreads. OCR can drop the space ("0day(s)")
- * and reads the red 0 as "()". On a frame scaled up from a short window the
- * number can come as its own line after the text, so the lines go left to
- * right. */
-export function days(lines: Line[]): number | null {
+/** The number of "N day(s) until Riot" as written, before it is taken as a
+ * number, and the box of the line it starts. The number is what comes before
+ * "day", or before the first space when "day" misreads. OCR can drop the
+ * space ("0day(s)") and reads the red 0 as "()". On a frame scaled up from a
+ * short window the number can come as its own line after the text, so the
+ * lines go left to right. */
+function daysHead(lines: Line[]): [string, Rect] | null {
   const sorted = [...lines].sort((a, b) => a.rect.x - b.rect.x)
   const text = joined(sorted).trim()
   const lower = text.toLowerCase()
@@ -286,7 +287,33 @@ export function days(lines: Line[]): number | null {
   const head = text.slice(0, at)
   const rest = text.slice(at)
   if (!(similarity(rest, 'day(s) until Riot') >= 0.6 || squash(rest).endsWith('riot'))) return null
-  return number(head.replace(/ /g, '').replace('()', '0'))
+  return [head.replace(/ /g, '').replace('()', '0'), sorted[0].rect]
+}
+
+/** "N day(s) until Riot" as the line's text gives it. */
+export function days(lines: Line[]): number | null {
+  const head = daysHead(lines)
+  return head === null ? null : number(head[0])
+}
+
+/** The width of one digit of the counter in the frame's pixels, and the
+ * margin around the digits read alone. */
+const DAYS_DIGIT_W = 21
+const DAYS_MARGIN = 3
+
+/** [`days`], with a number that came with letters in it ("O day(s)") read
+ * again as digits alone: the large digits of the counter read as letters
+ * under the line's free read (a 9 as O), and a letter taken for a 0 would
+ * count the Riot days down to 0 for good. */
+async function daysRead(img: Rgba, lines: Line[]): Promise<number | null> {
+  const head = daysHead(lines)
+  if (head === null) return null
+  const [text, at] = head
+  const plain = number(text)
+  if (text.length === 0 || /^\d+$/.test(text)) return plain
+  const box = new Rect(at.x - DAYS_MARGIN, at.y - DAYS_MARGIN, text.length * DAYS_DIGIT_W + 2 * DAYS_MARGIN, at.h + 2 * DAYS_MARGIN)
+  const alone = await ocrDigits(img, box, 2.0)
+  return alone.length === text.length ? Number(alone) : plain
 }
 
 /** A game dialog: the "Tip" box of a network timeout, the connecting notice,
@@ -569,7 +596,7 @@ export async function readPanelsTitled(img: Rgba, title: Rgba): Promise<Panels> 
   ] = await ocrAll(imgs, REGIONS)
   const p: Panels = {
     screen: 'unknown',
-    days: days(daysLines),
+    days: await daysRead(img, daysLines),
     doors: [],
     decision: [],
     instruments: [],

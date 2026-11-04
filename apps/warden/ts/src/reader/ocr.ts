@@ -17,8 +17,9 @@ export interface OcrEngine {
   /** The language tag the engine reads in; null when it has none. */
   language(): string | null
   /** The lines of each image with their boxes, in its pixels; none for a
-   * missing image or a failed read. Several images are read at once. */
-  recognizeAll(imgs: (Rgba | null)[]): Promise<TextLine[][]>
+   * missing image or a failed read. Several images are read at once. With
+   * `digits`, each image is one line of digits and nothing else is read. */
+  recognizeAll(imgs: (Rgba | null)[], digits?: boolean): Promise<TextLine[][]>
 }
 
 /** The engine the reader reads through, when another one was set. */
@@ -101,6 +102,27 @@ export async function ocrAll(imgs: Rgba[], regions: [Rect, number][]): Promise<L
     out.push(lines)
   }
   return out
+}
+
+/** The digits in `rect` of `img`, read at `scale` as one line of digits and
+ * nothing else: the engine cannot take a letter for a digit here, which the
+ * free read of a lone large digit does (a 9 for an O). Empty when nothing
+ * reads. */
+export async function ocrDigits(img: Rgba, rect: Rect, scale: number): Promise<string> {
+  const hash = cropHash(img, rect)
+  const key = `${cacheKey(img, rect, scale)}#digits`
+  const hit = cache.get(key)
+  if (hit !== undefined && hit.hash === hash) return hit.lines.map((l) => l.text).join('')
+  const input = prepare(img, rect, scale)
+  if (input === null) return ''
+  const [read] = await ocrEngine().recognizeAll([input], true)
+  const lines = mapLines(read ?? [], rect, scale)
+  cache.set(key, { hash, lines })
+  if (cache.size > CACHE_SIZE) {
+    const oldest = cache.keys().next()
+    if (!oldest.done) cache.delete(oldest.value)
+  }
+  return lines.map((l) => l.text).join('')
 }
 
 /** The lines of the OCR of an image, in the frame's pixels. */
@@ -211,8 +233,8 @@ export const tesseractEngine: OcrEngine = {
   language(): string | null {
     return tesseractFound() ? 'en' : null
   },
-  async recognizeAll(imgs: (Rgba | null)[]): Promise<TextLine[][]> {
-    return Promise.all(imgs.map((img) => (img === null ? Promise.resolve([]) : recognize(img))))
+  async recognizeAll(imgs: (Rgba | null)[], digits = false): Promise<TextLine[][]> {
+    return Promise.all(imgs.map((img) => (img === null ? Promise.resolve([]) : recognize(img, digits))))
   },
 }
 
@@ -291,11 +313,14 @@ function encode(img: Rgba): Buffer {
   return Buffer.concat([header, localContrast(img)])
 }
 
-/** The lines of an image, read by tesseract. */
-async function recognize(img: Rgba): Promise<TextLine[]> {
+/** The program's arguments for one line of digits. */
+const DIGIT_ARGS = ['--psm', '7', '-l', 'eng', '-c', 'tessedit_char_whitelist=0123456789'] as const
+
+/** The lines of an image, read by tesseract; with `digits`, as one line of digits. */
+async function recognize(img: Rgba, digits: boolean): Promise<TextLine[]> {
   let stdout: string
   try {
-    const run = await runTesseract(encode(img), [...TESSERACT_ARGS, 'tsv'])
+    const run = await runTesseract(encode(img), [...(digits ? DIGIT_ARGS : TESSERACT_ARGS), 'tsv'])
     if (!run.ok) throw new Error('tesseract failed')
     stdout = run.out
   } catch {
