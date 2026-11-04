@@ -315,6 +315,15 @@ export class TrackerApp {
       case 'x':
         this.hooks.onReport()
         return
+      case 'o': {
+        const order = [null, 'bottom-left', 'bottom-right'] as const
+        this.state.overlay = order[(order.indexOf(this.state.overlay) + 1) % order.length] ?? null
+        this.state.message =
+          this.state.overlay === null
+            ? 'the loot card is off'
+            : `the loot card is in the ${this.state.overlay.replace('-', ' ')} corner`
+        return
+      }
       case 'r':
         this.hooks.onRead()
         this.state.message = 'the log was read again'

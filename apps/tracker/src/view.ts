@@ -46,6 +46,7 @@ export const MENU: MenuItem[] = [
   { section: 'Windows', key: 'a', label: 'Open Arcana in a window' },
   { section: 'Windows', key: 'v', label: 'Open Vorax in a window' },
   { section: 'Windows', key: 'w', label: 'Open Warden in a window' },
+  { section: 'Windows', key: 'o', label: 'Loot card over the game: off, bottom-left, bottom-right' },
   { section: 'List', key: 's', label: 'Change how the list is sorted' },
   { section: 'List', key: '/', label: 'Search the list' },
   { section: 'List', key: 'i', label: 'Open the wiki page of the picked item' },
@@ -87,6 +88,8 @@ export interface ViewState {
   menu: number | null
   /** whether the help is open */
   help: boolean
+  /** the corner of the screen the loot card is shown in over the game, or null when it is off */
+  overlay: 'bottom-left' | 'bottom-right' | null
   /** whether the clock is stopped */
   paused: boolean
   /** what the tracker says at the bottom of the screen */
@@ -120,6 +123,7 @@ export function freshView(logFile: string, now: number): ViewState {
     help: false,
     menu: null,
     paused: false,
+    overlay: null,
     message: '',
     baselineAt: null,
     baselineCount: 0,

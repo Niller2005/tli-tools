@@ -147,6 +147,7 @@ const HELP: [string, string][] = [
   ['s', 'change how the list is sorted'],
   ['/', 'search the list that has the focus (enter keeps it, esc clears it)'],
   ['x', 'write the loot report to a csv file'],
+  ['o', 'the loot card over the game: off, bottom-left, bottom-right (starts the overlay)'],
   ['f', 'which modifiers of the maps paid (a page; esc or the same key closes it)'],
   ['h', 'what you did at the exchange: listings, payments, what you collected'],
   ['g', 'the sessions, each with its runs, FE and experience added up'],

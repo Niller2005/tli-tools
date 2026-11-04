@@ -13,6 +13,7 @@ bun src/tui.ts --reset              # forget what was saved and read the log fro
 bun src/tui.ts --no-backfill        # do not read the log's old lines, only the new lines
 bun src/tui.ts --no-color           # draw without colours
 bun src/tui.ts --no-baseline        # do not use the community prices
+bun src/tui.ts --overlay=left|right  # also show the loot in a bottom corner over the game (starts the overlay)
 ```
 
 ## What it shows
@@ -96,6 +97,7 @@ The keys:
 | `a` | Open Arcana in a window of its own |
 | `v` | Open Vorax in a window of its own |
 | `w` | Open Warden in a window of its own |
+| `o` | The loot card over the game: off, bottom-left, bottom-right. Starts the overlay when none runs |
 | `?` | The help |
 | `q` | Quit |
 
