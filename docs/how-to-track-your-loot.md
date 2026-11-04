@@ -133,6 +133,12 @@ It only knows about the items you have looked up. For the rest, set the price yo
 *Bag* or the *Prices* panel and press `e`, then type the price in FE and press `enter`. A price you set wins over
 one that was learned, and it is kept when the tracker is closed.
 
+Not sure what an item is? Pick it in the *Bag* or the *Prices* panel and press `i`: the tracker opens its page on the
+[Torchlight: Infinite wiki](https://tlidb.com) in your browser, with the picture, the tier and what it does. The
+tracker only reads the wiki's public pages for this; it asks for the page of the item's name, and if the wiki has
+none under that name (the names in the tracker can be older than the wiki's), for the name the wiki gives the item's
+id. An item with no page of that name opens the wiki's search for it.
+
 Under both of them sits the community price: what players saw an item go for on the auction house,
 collected by [TLI Companion](https://tlicompanion.com). The tracker reads its public API (see [the
 docs](https://tlicompanion.com/api)) and uses the prices for the items nobody looked up. A price you set and a
