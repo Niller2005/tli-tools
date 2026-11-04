@@ -12,6 +12,7 @@
     "@opentui/core": "0.8.0",
     "@tli/gamelog": "workspace:*",
     "@tli/launch": "workspace:*",
+    "@tli/overlay": "workspace:*",
     "@tli/tracker": "workspace:*",
     "@tli/tui": "workspace:*"
   },

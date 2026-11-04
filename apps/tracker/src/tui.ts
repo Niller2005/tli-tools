@@ -7,6 +7,8 @@
 //   bun src/tui.ts                     follow the log of the running game
 //   bun src/tui.ts --log=<UE_game.log> read another log
 //   bun src/tui.ts --reset             forget what was saved and read the log from its start
+//   bun src/tui.ts --overlay=left      also show the loot over the game, in the bottom-left corner (right: bottom-right);
+//                                      starts the overlay when none runs
 //   bun src/tui.ts --no-backfill       do not read the log's old lines, only the new ones
 //   bun src/tui.ts --no-color          draw without colours
 //   bun src/tui.ts --no-baseline       do not use the community prices
@@ -16,6 +18,7 @@
 // Warden in a window of their own, / searches the list that has the focus, ? help, q quits.
 
 import { findLog } from '@tli/gamelog'
+import { ensureOverlay, publishCard, releaseOverlay, type Card } from '@tli/overlay'
 import { Launcher, openTool } from '@tli/launch'
 import {
   ITEM_TABLE_PATH,
@@ -35,6 +38,7 @@ import {
 import { startApp } from '@tli/tui'
 import { TrackerApp } from './app'
 import { writeReport } from './report'
+import { lootCard } from './card'
 
 const arg = (name: string): string | null =>
   process.argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3) ?? null
@@ -42,9 +46,16 @@ const flag = (name: string): boolean => process.argv.includes(`--${name}`)
 
 if (flag('help')) {
   process.stdout.write(
-    'bun src/tui.ts [--log=<UE_game.log>] [--reset] [--no-backfill] [--no-color] [--no-baseline]\n',
+    'bun src/tui.ts [--log=<UE_game.log>] [--reset] [--no-backfill] [--no-color] [--no-baseline] [--overlay=left|right]\n',
   )
   process.exit(0)
+}
+
+const corner: NonNullable<Card['corner']> | null =
+  arg('overlay') === 'left' ? 'bottom-left' : arg('overlay') === 'right' ? 'bottom-right' : null
+if (arg('overlay') !== null && corner === null) {
+  process.stderr.write('--overlay takes left or right\n')
+  process.exit(1)
 }
 
 /* ---------- the log ---------- */
@@ -100,15 +111,40 @@ function readLog(): void {
   app.state.logNote = detailSeen ? '' : 'the game is not writing its own lines: turn on Enable Log (Esc, Account Related, Enable Log)'
 }
 
+/** Keeps the loot card in step with the player's choice: starts the overlay when the card is turned on. */
+let shownCorner: Card['corner'] | null = null
+function syncOverlay(): void {
+  const corner = app.state.overlay
+  if (corner !== shownCorner) {
+    shownCorner = corner
+    if (corner === null) {
+      releaseOverlay('tracker')
+    } else {
+      const result = ensureOverlay('tracker')
+      if (!result.ok) {
+        app.state.overlay = null
+        shownCorner = null
+        app.state.message = result.reason
+        return
+      }
+    }
+  }
+  if (corner !== null) publishCard('tracker', lootCard(tracker, corner))
+}
+
 /* ---------- the terminal ---------- */
 
 const terminal = await startApp({
-  onShutdown: () => save(),
+  onShutdown: async () => {
+    releaseOverlay('tracker')
+    await save()
+  },
   onKey: (key) => {
     app.key(key)
   },
   onTick: () => {
     readLog()
+    syncOverlay()
     app.draw()
   },
   onSave: () => save(),
@@ -152,6 +188,7 @@ const app = new TrackerApp(terminal.renderer, tracker, names, logFile, {
   },
 })
 
+app.state.overlay = corner
 if (cached !== null) {
   app.state.baselineAt = cached.fetchedAt
   app.state.baselineCount = cached.prices.length

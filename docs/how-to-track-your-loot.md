@@ -224,6 +224,27 @@ so it says the same as the screen; `--full` reads the whole log from its beginni
 line of the report says what kind of run it is about: `map` for a trip into a map, `prison` for a
 visit to the Tartarus prison.
 
+## Show the loot over the game
+
+With the overlay (see [`packages/overlay`](../packages/overlay/README.md)), the tracker can
+draw a small card in a bottom corner of the screen about the run that is going on, or the last one when none is: what
+it is worth, how long it took, its pace in FE an hour, and the eight most valuable things picked up in it. While a
+session is going on, the first line under the head is the session's FE an hour and its number of runs.
+
+```
+bun run tracker -- --overlay=left     # bottom-left corner
+bun run tracker -- --overlay=right    # bottom-right corner
+```
+
+The `o` key (or the menu's "Loot card over the game") turns the card off or moves it between the corners while the
+tracker runs.
+
+The card is mostly transparent (`bun run overlay -- --loot-opacity=0.45`; `--margin=24` for the distance from the
+edges). The bottom-left card sits 380 px from the left edge, to the right of the game's chat; `--margin-left` changes
+it. It takes no clicks. The tracker starts the overlay itself when the card is turned on, and the overlay closes a few
+seconds after the tracker quits or the card is turned off, unless Vorax or Warden is still using it or you started it
+yourself with `bun run overlay`.
+
 ## Start again later
 
 The tracker keeps the runs, the bag, the prices, what the exchange did, the sessions and its place in the log in a
