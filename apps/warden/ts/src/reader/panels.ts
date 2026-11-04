@@ -116,11 +116,17 @@ export function offBoard(p: Panels): boolean {
   return (p.screen === 'unknown' || p.screen === 'dayBanner') && p.days === null
 }
 
+/** The strip of the door labels, over the cards' art. */
+function doorLabels(): Rect {
+  return new Rect(360, 840, 1160, 80)
+}
+
 /** The regions (x, y, w, h) at 1918x1078 and the upscale each reads best at:
  * the days counter, the title band, the heading, the cards, the Consume
  * target pick's heading, its Cancel button, the day banner, the dialogs, the
  * Prison Incident title, the theme scroll's title, the objective panel, the
- * View Prison Status button, the riot title and the pick cards' names. */
+ * View Prison Status button, the riot title, the pick cards' names and the
+ * door labels' strip. */
 function regions(): [Rect, number][] {
   return [
     // The days counter.
@@ -158,6 +164,10 @@ function regions(): [Rect, number][] {
     // Ravenous Chains"); the hovered card is raised, its name at about y 435-470.
     // The descriptions start below about y 550.
     [new Rect(0, 420, 1918, 125), 1.0],
+    // The door labels' strip: the row read as a whole can drown the labels in the cards' art (closed doors, with
+    // tesseract), and the strip alone, at the larger scale the rereads use, reads "Go to Cell 12". It is read with
+    // the rest because a door screen needs it and nothing it waits for decides that.
+    [doorLabels(), 2.5],
   ]
 }
 
@@ -593,6 +603,7 @@ export async function readPanelsTitled(img: Rgba, title: Rgba): Promise<Panels> 
     status,
     riot,
     nameLines,
+    labels,
   ] = await ocrAll(imgs, REGIONS)
   const p: Panels = {
     screen: 'unknown',
@@ -641,15 +652,11 @@ export async function readPanelsTitled(img: Rgba, title: Rgba): Promise<Panels> 
     const found = buttons(cards)
     p.decision = found.map((b) => b[0])
     // The decision buttons share the doors' row: with buttons on screen there are no door cards.
-    let readDoors = found.length === 0 ? await doors(cards, (x) => reread(img, x)) : []
+    // The row read as a whole and its strip read alone are two reads of the same doors: together, not in turn.
+    const rereadAt = (x: number): Promise<number | null> => reread(img, x)
+    const [whole, strip] = found.length === 0 ? await Promise.all([doors(cards, rereadAt), doors(labels, rereadAt)]) : [[], []]
     const read = (d2: [number | null, number][]): number => d2.filter((c) => c[0] !== null).length
-    if (found.length === 0) {
-      // The row read as a whole can drown the labels in the cards' art (closed doors, with tesseract): their
-      // strip alone, at the larger scale the rereads use, reads "Go to Cell 12".
-      const LABELS = new Rect(360, 840, 1160, 80)
-      const strip = await doors(await ocr(img, LABELS, 2.5), (x) => reread(img, x))
-      if (read(strip) > read(readDoors)) readDoors = strip
-    }
+    let readDoors = read(strip) > read(whole) ? strip : whole
     if (found.length === 0 && read(readDoors) < 2) {
       // An End button alone (nothing left to Consume, Replace or Hunt) sits in the middle of the row over its
       // medallion, where the row read as a whole loses its name; the name alone, enlarged, reads.
