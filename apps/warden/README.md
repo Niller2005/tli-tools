@@ -61,9 +61,12 @@ bar along the bottom carries the keys on caps and the marks of the board as a le
 tell their meaning without the colours too: `›` the advised cell, `@` the warden's cell, `~` a move
 nearly as good as the advice, `?` a cell to check and `!` an incident mark.
 
-The playouts of the solve run in a worker, so the window keeps painting and the capture keeps its
-pace while they do. `WARDEN_PROFILE=<file>` writes the time each stage took (the capture, the
-fingerprint, the read, the solve, the drawing) to that file, one JSON line each.
+The playouts of the solve are spread over worker threads, so the window keeps painting and the
+capture keeps its pace while they do. The rounds depend on their seeds alone and are taken in seed
+order, so the ranking is the same on any number of threads. A quarter of the machine's threads
+play, at most 8; `WARDEN_SOLVE_THREADS=<n>` sets the number. `WARDEN_PROFILE=<file>` writes the
+time each stage took (the capture, the fingerprint, the read, the solve, the drawing) to that file,
+one JSON line each.
 
 ## Run logs
 

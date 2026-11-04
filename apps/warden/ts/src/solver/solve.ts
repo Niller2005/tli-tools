@@ -234,10 +234,20 @@ export function solve(st: State, rollouts: number, seed: number, p: Params): Sol
   return r.ranking()
 }
 
+/** A stretch of rounds to play: the seeds in round order, the candidates
+ * that play them, and whether the stretch ends on a racing checkpoint. */
+export interface Stretch {
+  seeds: number[]
+  live: number[]
+  race: boolean
+}
+
 /** `solve` in steps: `run` adds rounds and `ranking` ranks the rounds so far,
  * so a caller can show partial rankings. Running N rounds in any number of
  * steps, on any number of threads, gives the same ranking as `solve` with N
- * rollouts.
+ * rollouts. A round depends on its seed alone, so the rounds of a stretch
+ * (`next`, `playRounds`, `commit`) can be played on other threads: the seeds
+ * are drawn in order first and the results taken in seed order.
  *
  * Racing: at round `RACE_FROM` and every `RACE_EVERY` rounds after, a
  * candidate whose mean trails the leader's (the best of those still
@@ -300,26 +310,49 @@ export class Rollouts {
   /** Plays up to `rounds` more rounds and returns how many ran (none with
    * fewer than two candidates running: there is nothing to compare). */
   run(rounds: number): number {
-    return this.runOn(rounds, 1)
+    let ran = 0
+    for (;;) {
+      const stretch = this.next(rounds - ran)
+      if (stretch === null) return ran
+      this.commit(stretch, this.playRounds(stretch.seeds, stretch.live))
+      ran += stretch.seeds.length
+    }
   }
 
-  /** `run` on up to `threads` threads: the seeds are drawn in order first
-   * and the results kept in seed order, so the ranking does not depend on
-   * the thread count. */
-  runOn(rounds: number, threads: number): number {
-    // The rounds are played one after the other, so the thread count does
-    // not change anything: the seeds and the results keep their order.
-    void threads
-    let ran = 0
-    while (ran < rounds && this.running().length >= 2) {
-      // A call stops at each racing checkpoint on its way.
-      const checkpoint = Math.max(RACE_FROM, (Math.floor(this.played / RACE_EVERY) + 1) * RACE_EVERY)
-      const step = Math.min(rounds - ran, checkpoint - this.played)
-      this.play(step)
-      ran += step
-      if (this.played === checkpoint) this.race()
+  /** Draws the seeds of the next stretch: at most `rounds` rounds, and no
+   * further than the next racing checkpoint. Null when no round is left to
+   * play or fewer than two candidates run. */
+  next(rounds: number): Stretch | null {
+    if (rounds <= 0 || this.running().length < 2) return null
+    const checkpoint = Math.max(RACE_FROM, (Math.floor(this.played / RACE_EVERY) + 1) * RACE_EVERY)
+    const step = Math.min(rounds, checkpoint - this.played)
+    const seeds: number[] = []
+    for (let i = 0; i < step; i++) {
+      seeds.push((this.random.roll() * 4294967296) >>> 0)
     }
-    return ran
+    return { seeds, live: this.running(), race: this.played + step === checkpoint }
+  }
+
+  /** One round per seed for the candidates `live`. The rounds do not touch
+   * the ranking, and any `Rollouts` built from the same board, seed and
+   * weights plays them the same. */
+  playRounds(seeds: number[], live: number[]): [number, number][][] {
+    return seeds.map((seed) => this.round(seed, live))
+  }
+
+  /** Takes the rounds of a stretch `next` drew, one per seed in the seeds'
+   * order, and races at the stretch's end when it ends on a checkpoint. */
+  commit(stretch: Stretch, results: [number, number][][]): void {
+    for (const round of results) {
+      for (let i = 0; i < stretch.live.length; i++) {
+        const k = stretch.live[i]
+        const [val, best] = round[i]
+        this.vals[k].push(val)
+        this.best[k] += best
+      }
+      this.played += 1
+    }
+    if (stretch.race) this.race()
   }
 
   /** The indices of the candidates still playing rounds. */
@@ -347,34 +380,14 @@ export class Rollouts {
     }
   }
 
-  /** Plays `rounds` rounds of the running candidates. */
-  private play(rounds: number): void {
-    const seeds: number[] = []
-    for (let i = 0; i < rounds; i++) {
-      seeds.push((this.random.roll() * 4294967296) >>> 0)
-    }
-    const live = this.running()
-    const results = seeds.map((seed) => this.round(seed))
-    for (const round of results) {
-      for (let i = 0; i < live.length; i++) {
-        const k = live[i]
-        const [val, best] = round[i]
-        this.vals[k].push(val)
-        this.best[k] += best
-      }
-      this.played += 1
-    }
-  }
-
-  /** One round on `seed`: per running candidate, the Riot loot (NaN when
+  /** One round on `seed`: per candidate of `live`, the Riot loot (NaN when
    * the move does not apply) and the best rarity reached (0 then). */
-  private round(seed: number): [number, number][] {
+  private round(seed: number, live: number[]): [number, number][] {
     // The hidden future is the same for every candidate of the round.
     const hidden = this.base.clone()
     hideFuture(hidden, seed)
     const out: [number, number][] = []
-    for (let k = 0; k < this.list.length; k++) {
-      if (!this.live[k]) continue
+    for (const k of live) {
       const c = this.list[k]
       const trial = hidden.clone()
       if (!apply(trial, c.action).ok) {

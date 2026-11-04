@@ -179,15 +179,15 @@ test('solves as recorded', () => {
 }, 600_000)
 
 /** Racing stops moves at fixed round counts, so 1600 rounds in one call and
- * in steps of 50 on 3 threads rank the same, and the patrol board's trailing
- * moves stop before the leader. */
+ * in steps of 50 rank the same, and the patrol board's trailing moves stop
+ * before the leader. */
 test('races the same in any steps', () => {
   const [st, problems] = buildBoard('patrol.json')
   expect(problems).toEqual([])
   const whole = new Rollouts(st, 1, TUNED)
   whole.run(1600)
   const steps = new Rollouts(st, 1, TUNED)
-  while (steps.runOn(50, 3) > 0) {
+  while (steps.run(50) > 0) {
     // The rounds run until the race is over.
   }
   expect(whole.ranking()).toEqual(steps.ranking())

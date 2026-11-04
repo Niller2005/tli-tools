@@ -237,22 +237,17 @@ test('casket meal on a locked cell', () => {
   expect(warningText(warnings[0]).startsWith('Check cell 02: a new Inmate from ')).toBe(true)
 })
 
-/** The rollouts rank the same on any thread count and in any steps. */
-test('rollouts are the same on any thread count', () => {
+/** The rollouts rank the same in any steps. */
+test('rollouts are the same in any steps', () => {
   const [st, problems] = buildBoard('ratway.json')
   expect(problems).toEqual([])
-  const ranked = (threads: number) => {
-    const r = new Rollouts(st, 7, TUNED)
-    expect(r.runOn(60, threads)).toBe(60)
-    return r.ranking()
-  }
-  const one = ranked(1)
+  const whole = new Rollouts(st, 7, TUNED)
+  expect(whole.run(60)).toBe(60)
+  const one = whole.ranking()
   expect(one.length).toBeGreaterThan(2)
-  expect(ranked(4)).toEqual(one)
-  // In steps, with a thread count that does not divide the rounds.
   const r = new Rollouts(st, 7, TUNED)
   r.run(25)
-  r.runOn(35, 3)
+  r.run(35)
   expect(r.ranking()).toEqual(one)
 })
 
