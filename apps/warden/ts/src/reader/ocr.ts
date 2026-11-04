@@ -4,7 +4,6 @@
 //! tests can read without the program.
 
 import { Rect, Rgba } from './mod'
-import { encodePng } from '@tli/png'
 import { parseTsv, runTesseract, tesseractFound, TESSERACT_ARGS, type TextLine } from '@tli/ocr'
 
 /** One line of text and its box in frame pixels. */
@@ -176,7 +175,7 @@ function prepare(img: Rgba, rect: Rect, scale: number): Rgba | null {
 /** Stretches the contrast so the 1st to 99th percentile of luma spans 0-255:
  * faded-in buttons and text under the red target-pick tint read better. */
 function stretch(img: Rgba): Rgba {
-  const hist = new Array<number>(256).fill(0)
+  const hist = new Uint32Array(256)
   for (let i = 0; i < img.data.length; i += 4) hist[luma(img.data, i)] += 1
   const n = img.w * img.h
   const percentile = (q: number): number | undefined => {
@@ -191,7 +190,7 @@ function stretch(img: Rgba): Rgba {
   const hi = percentile(99) ?? 255
   if (hi - lo < 8.0) return new Rgba(img.w, img.h, img.data.slice())
   const k = 255.0 / (hi - lo)
-  const table = new Array<number>(256)
+  const table = new Uint8Array(256)
   for (let v = 0; v < 256; v++) table[v] = Math.min(Math.max(Math.trunc((v - lo) * k), 0), 255)
   const data = img.data.slice()
   for (let i = 0; i < data.length; i += 4) {
@@ -237,15 +236,27 @@ function localContrast(img: Rgba): Uint8Array {
     }
   }
   const above = new Uint8Array(w * h)
-  const hist = new Array<number>(256).fill(0)
+  const hist = new Uint32Array(256)
+  // Each column's box edges, worked out once.
+  const left = new Int32Array(w)
+  const right = new Int32Array(w)
+  for (let x = 0; x < w; x++) {
+    left[x] = Math.max(x - AROUND, 0)
+    right[x] = Math.min(x + AROUND + 1, w)
+  }
+  const stride = w + 1
   for (let y = 0; y < h; y++) {
     const y0 = Math.max(y - AROUND, 0)
     const y1 = Math.min(y + AROUND + 1, h)
+    const rowTop = y0 * stride
+    const rowBottom = y1 * stride
+    const rows = y1 - y0
     for (let x = 0; x < w; x++) {
-      const x0 = Math.max(x - AROUND, 0)
-      const x1 = Math.min(x + AROUND + 1, w)
-      const total = sum[y1 * (w + 1) + x1] + sum[y0 * (w + 1) + x0] - sum[y0 * (w + 1) + x1] - sum[y1 * (w + 1) + x0]
-      const mean = Math.floor(total / ((x1 - x0) * (y1 - y0)))
+      const x0 = left[x]
+      const x1 = right[x]
+      const total = sum[rowBottom + x1] + sum[rowTop + x0] - sum[rowTop + x1] - sum[rowBottom + x0]
+      // The box's whole-number mean (the total and the area are positive).
+      const mean = (total / ((x1 - x0) * rows)) | 0
       const a = Math.min(Math.max(grey[y * w + x] - mean, 0), 255)
       above[y * w + x] = a
       hist[a] += 1
@@ -263,22 +274,21 @@ function localContrast(img: Rgba): Uint8Array {
     }
   }
   top = Math.max(top, 24)
+  // The output of each brightness above the neighbourhood, worked out once.
+  const level = new Uint8Array(256)
+  for (let v = 0; v < 256; v++) level[v] = Math.min(Math.max(255 - (v * 255) / top, 0), 255)
   const out = new Uint8Array(w * h)
-  for (let i = 0; i < out.length; i++) out[i] = Math.min(Math.max(255 - (above[i] * 255) / top, 0), 255)
+  for (let i = 0; i < out.length; i++) out[i] = level[above[i]]
   return out
 }
 
-/** The greyscale PNG of an image's local contrast, as tesseract reads it. */
+/** The local contrast of an image as a binary greyscale picture (PGM), which
+ * tesseract reads from its input as it does a PNG: a pipe to a program on
+ * this machine gains nothing from compressing the picture, and deflating it
+ * took as long as everything before it. */
 function encode(img: Rgba): Buffer {
-  const grey = localContrast(img)
-  const flat = new Rgba(img.w, img.h, new Uint8Array(img.w * img.h * 4))
-  for (let i = 0; i < grey.length; i++) {
-    flat.data[i * 4] = grey[i]
-    flat.data[i * 4 + 1] = grey[i]
-    flat.data[i * 4 + 2] = grey[i]
-    flat.data[i * 4 + 3] = 255
-  }
-  return encodePng(flat, true)
+  const header = Buffer.from(`P5\n${img.w} ${img.h}\n255\n`, 'latin1')
+  return Buffer.concat([header, localContrast(img)])
 }
 
 /** The lines of an image, read by tesseract. */
