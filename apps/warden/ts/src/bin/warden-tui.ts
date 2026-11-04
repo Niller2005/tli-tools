@@ -24,6 +24,7 @@ import { asBytes } from '@tli/png'
 import { startApp } from '@tli/tui'
 import { Session, Watch, fingerprint } from '@/app/session'
 import { timed } from '@/app/profile'
+import { solvePool } from '@/app/solve-pool'
 import { Rgba, loadPng } from '@/reader/mod'
 import { publishCard } from '@tli/overlay'
 import { WardenApp } from '@/tui/app'
@@ -137,6 +138,8 @@ async function run(): Promise<void> {
     return
   }
 
+  // The workers load while the first frame is captured and read.
+  solvePool().warm()
   let readNow = false
   let quitting = false
 

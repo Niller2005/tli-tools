@@ -26,17 +26,13 @@ import { consumeTargets, jawed, Run, type CellEdit, type Meal, type Reading, typ
 import { instant, instantBite, type SolveOption } from '@/solver/solve'
 import { RunLog, timestamp } from './runlog'
 import { timed } from './profile'
-import type { SolveProgress } from './solve-worker'
+import { solvePool, type SolveRun } from './solve-pool'
 
-/** Rounds the worker plays between two partial rankings. */
+/** Rounds played between two partial rankings. */
 export const ROUND = 50
 /** The seed of the board's hidden parts and of the playouts, as in
  * `warden-cli solve`. */
 const SEED = 1
-
-/** The solver's worker: the playouts run in it, so the window keeps
- * painting and the capture keeps its pace while they do. */
-const SOLVER = new URL('./solve-worker.ts', import.meta.url)
 
 /** What the reader saw in a frame, the frame's size, the frame itself
  * when the run log keeps it, and the interface scale it was read at. */
@@ -346,10 +342,9 @@ export class Session {
   /** The number of the running solve; a solve that is not the current one
    * stops at its next round. */
   private solveGen = 0
-  /** The worker that plays the rounds of the running solve. */
-  private solver: Worker | null = null
-  /** The wait for the worker's next ranking. */
-  private solverWait: ((progress: SolveProgress | null) => void) | null = null
+  /** The running solve, in the pool of worker threads that play its rounds,
+   * so the window keeps painting and the capture keeps its pace. */
+  private solveRun: SolveRun | null = null
   /** The worker's latest ranking. */
   private progress: Progress | null = null
 
@@ -737,63 +732,35 @@ export class Session {
     this.startSolve(st, firstBite ? bites : null)
   }
 
-  /** Plays the rounds of a solve in the solver's worker, one chunk at a
+  /** Plays the rounds of a solve on the pool's workers, a stretch at a
    * time, so the window keeps painting between them. */
   private startSolve(st: State, bites: number[] | null): void {
     const gen = ++this.solveGen
     this.solving = true
-    const worker = new Worker(SOLVER)
-    this.solver = worker
-    worker.onmessage = (e: MessageEvent) => {
-      const wait = this.solverWait
-      this.solverWait = null
-      wait?.(e.data as SolveProgress)
-    }
-    worker.onerror = () => {
-      const wait = this.solverWait
-      this.solverWait = null
-      wait?.(null)
-    }
-    this.solveTask = (async () => {
-      const started = performance.now()
-      let first = true
-      try {
-        worker.postMessage({ state: st, seed: SEED, rollouts: this.rollouts, round: ROUND, bite: bites })
-        for (;;) {
-          const { promise, resolve } = Promise.withResolvers<SolveProgress | null>()
-          this.solverWait = resolve
-          const progress = await promise
-          if (progress === null || gen !== this.solveGen) return
-          this.progress = progress
-          this.notify?.()
-          if (first) {
-            first = false
-            timed('solve-first', performance.now() - started)
-          }
-          if (progress.done) {
-            timed('solve', performance.now() - started)
-            return
-          }
+    const started = performance.now()
+    let first = true
+    const run = solvePool().solve(
+      { state: st, seed: SEED, rollouts: this.rollouts, round: ROUND, bite: bites },
+      (progress) => {
+        if (gen !== this.solveGen) return
+        this.progress = progress
+        this.notify?.()
+        if (first) {
+          first = false
+          timed('solve-first', performance.now() - started)
         }
-      } finally {
-        if (this.solver === worker) this.solver = null
-        worker.terminate()
-      }
-    })()
+        if (progress.done) timed('solve', performance.now() - started)
+      },
+    )
+    this.solveRun = run
+    this.solveTask = run.done
   }
 
-  /** Drops the solve, its ranking and pick; the worker stops at its next
-   * round. */
+  /** Drops the solve, its ranking and pick; the workers stop at their next
+   * chunk. */
   private stop(): void {
-    const worker = this.solver
-    this.solver = null
-    if (worker !== null) {
-      // The wait for the next ranking is released, so the solve's task ends.
-      const wait = this.solverWait
-      this.solverWait = null
-      wait?.(null)
-      worker.terminate()
-    }
+    this.solveRun?.cancel()
+    this.solveRun = null
     this.ranking = []
     this.rounds = 0
     this.pick = null

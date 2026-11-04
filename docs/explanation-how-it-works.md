@@ -102,7 +102,7 @@ recorded games and solves below stay as regression tests, but nothing keeps the 
 - The reader gives the same model JSON, and the CLI the same text, on the real screenshots tested.
 
 The TypeScript solver was slower than the Rust one when the port was made (by roughly a factor of five); the solve now
-runs in a worker so it no longer blocks the screen.
+runs on worker threads, so it no longer blocks the screen and takes a fraction of the single-thread time.
 
 ## Why there are shared packages
 
