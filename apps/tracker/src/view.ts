@@ -48,6 +48,7 @@ export const MENU: MenuItem[] = [
   { section: 'Windows', key: 'w', label: 'Open Warden in a window' },
   { section: 'List', key: 's', label: 'Change how the list is sorted' },
   { section: 'List', key: '/', label: 'Search the list' },
+  { section: 'List', key: 'i', label: 'Open the wiki page of the picked item' },
   { section: 'Other', key: '?', label: 'Help' },
   { section: 'Other', key: 'q', label: 'Quit' },
 ]

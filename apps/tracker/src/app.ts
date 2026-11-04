@@ -34,6 +34,8 @@ export interface AppHooks {
   onOpenWindow: (tool: Tool) => string
   /** the player wants the community prices fetched again; the message says what is happening */
   onBaseline?: () => string
+  /** the player wants the wiki page of an item opened; the message says what is happening */
+  onWiki?: (item: number, name: string | null) => string
 }
 
 /** The tools the tracker opens in a window of their own, and the key that opens them. */
@@ -237,6 +239,16 @@ export class TrackerApp {
         }
         const known = this.tracker.prices.price(item)
         this.state.box = { kind: 'price', item, name: this.names.name(item), text: known > 0 ? String(known) : '' }
+        return
+      }
+      case 'i': {
+        const item = this.selectedItem()
+        if (item === null) {
+          this.state.message = 'there is no item to look up'
+          return
+        }
+        const name = this.names.knows(item) ? this.names.name(item) : null
+        this.state.message = this.hooks.onWiki?.(item, name) ?? 'the wiki lookup is not on'
         return
       }
       case 'u': {

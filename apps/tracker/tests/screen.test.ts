@@ -87,7 +87,7 @@ async function setup(width = 120, height = 24, tracker = trackerWithItems()) {
   // The kitty keyboard protocol sends every key on its own, so the escape key does not have to
   // wait for the terminal's parser to see whether more of a sequence is coming.
   const test = await createTestRenderer({ width, height, kittyKeyboard: true })
-  const state = { quit: false, reported: false, read: false, opened: [] as string[] }
+  const state = { quit: false, reported: false, read: false, opened: [] as string[], wiki: [] as [number, string | null][] }
   const app = new TrackerApp(
     test.renderer,
     tracker,
@@ -107,6 +107,10 @@ async function setup(width = 120, height = 24, tracker = trackerWithItems()) {
         // the tests never open a window: they only remember what was asked for
         state.opened.push(tool.id)
         return `${tool.name} is open in a new window`
+      },
+      onWiki: (item, name) => {
+        state.wiki.push([item, name])
+        return 'looking it up'
       },
     },
     NOW,
@@ -361,6 +365,29 @@ describe('the tracker screen', () => {
     expect(tracker.prices.price(300)).toBe(0)
     expect(tracker.prices.info(300)).toBeNull()
     expect(app.state.message).toContain('out of the prices')
+    test.renderer.destroy()
+  })
+
+  test('i looks up the picked item on the wiki, in the bag and in the prices', async () => {
+    const { test, app, state } = await setup(120, 24)
+    app.state.focus = 'inventory'
+    app.draw()
+    test.mockInput.pressKey('i')
+    app.state.focus = 'prices'
+    app.draw()
+    test.mockInput.pressKey('i')
+    expect(state.wiki).toEqual([
+      [100, 'Ember Core'],
+      [300, 'Ancient Relic'],
+    ])
+    test.renderer.destroy()
+  })
+
+  test('i has nothing to look up when the lists are empty', async () => {
+    const { test, app, state } = await setup(120, 24, new Tracker({ names: names() }))
+    test.mockInput.pressKey('i')
+    expect(state.wiki).toEqual([])
+    expect(app.state.message).toContain('no item')
     test.renderer.destroy()
   })
 

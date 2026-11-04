@@ -12,8 +12,8 @@
 //   bun src/tui.ts --no-baseline       do not use the community prices
 //
 // Keys: up/down move, tab changes panel, enter detail, esc back, t tax, c map cost, e price,
-// b community prices, x csv report, p pause, a/v/w open Arcana, Vorax or Warden in a window of
-// their own, / searches the list that has the focus, ? help, q quits.
+// i wiki page of the item, b community prices, x csv report, p pause, a/v/w open Arcana, Vorax or
+// Warden in a window of their own, / searches the list that has the focus, ? help, q quits.
 
 import { findLog } from '@tli/gamelog'
 import { Launcher, openTool } from '@tli/launch'
@@ -24,11 +24,13 @@ import {
   Tracker,
   baselineIsStale,
   fetchBaseline,
+  findWikiPage,
   loadTracker,
   readBaseline,
   saveTracker,
   userItemsPath,
   writeBaseline,
+  type WikiTarget,
 } from '@tli/tracker'
 import { startApp } from '@tli/tui'
 import { TrackerApp } from './app'
@@ -144,6 +146,10 @@ const app = new TrackerApp(terminal.renderer, tracker, names, logFile, {
     void refreshBaseline()
     return 'the community prices are being fetched'
   },
+  onWiki: (item, name) => {
+    void openWiki(item, name)
+    return `looking up ${name ?? `item #${item}`} on the wiki`
+  },
 })
 
 if (cached !== null) {
@@ -168,6 +174,31 @@ async function refreshBaseline(): Promise<void> {
     app.state.message = `the community prices could not be fetched: ${why}`
   }
   app.draw()
+}
+
+/** Opens the wiki page of an item in the browser, and says on the screen what came of it. */
+async function openWiki(item: number, name: string | null): Promise<void> {
+  const say = (message: string): void => {
+    app.state.message = message
+    app.draw()
+  }
+  let target: WikiTarget | null
+  try {
+    target = await findWikiPage(item, name)
+  } catch {
+    say('the wiki could not be reached')
+    return
+  }
+  if (target === null) {
+    say(`the wiki has no page for item #${item}`)
+    return
+  }
+  if (Bun.which('xdg-open') === null) {
+    say(`xdg-open is not installed; the page is ${target.url}`)
+    return
+  }
+  Bun.spawn(['xdg-open', target.url], { stdin: 'ignore', stdout: 'ignore', stderr: 'ignore' }).unref()
+  say(target.page ? `opened ${target.url}` : `the wiki has no page of that name; opened its search: ${target.url}`)
 }
 
 /** Saves what the tracker knows. */
