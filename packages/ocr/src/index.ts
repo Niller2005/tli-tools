@@ -38,9 +38,9 @@ export function tesseractFound(): boolean {
   return found
 }
 
-/** Runs `tesseract stdin stdout` over a PNG and gives back what it wrote.
- * Throws when the program could not be run at all. */
-export async function runTesseract(png: Uint8Array, args: readonly string[] = TESSERACT_ARGS): Promise<TesseractResult> {
+/** Runs `tesseract stdin stdout` over a picture (a PNG, or a binary PGM, which skips the cost of compressing one) and
+ * gives back what it wrote. Throws when the program could not be run at all. */
+export async function runTesseract(picture: Uint8Array, args: readonly string[] = TESSERACT_ARGS): Promise<TesseractResult> {
   const child = spawn('tesseract', ['stdin', 'stdout', ...args], {
     env: { ...process.env, OMP_THREAD_LIMIT: '1' },
     stdio: ['pipe', 'pipe', 'ignore'],
@@ -53,7 +53,7 @@ export async function runTesseract(png: Uint8Array, args: readonly string[] = TE
     // The child is gone; the close handler reports it.
   })
   const closed = once(child, 'close') as Promise<[number | null]>
-  child.stdin.end(png)
+  child.stdin.end(picture)
   const chunks: Buffer[] = []
   for await (const chunk of child.stdout) chunks.push(chunk as Buffer)
   const [code] = await closed
