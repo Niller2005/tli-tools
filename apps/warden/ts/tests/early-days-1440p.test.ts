@@ -99,3 +99,16 @@ test('the destination pick of day 4 reads the Rare Rat the Replace left in cell 
   const cell = model.cells[7]
   expect(cell?.kind === 'inmate' ? `${cell.beast}${cell.tier}` : cell?.kind).toBe('rat2')
 })
+
+const THREE_WAY_DAY4 = new URL('./fixtures/s16-three-way-day4-1440p.png', import.meta.url).pathname
+
+test('the three decisions on day 4 read a Normal Mammoth under the warden in cell 12', async () => {
+  const panels = await readPanels(loadPng(THREE_WAY_DAY4))
+  expect(panels.screen).toBe('manage')
+  expect(panels.days).toBe(16)
+  expect(panels.decision).toEqual(['Consume', 'Replace', 'End'])
+  const [model] = await readModel(THREE_WAY_DAY4)
+  expect(model.warden).toBe(11)
+  const cell = model.cells[11]
+  expect(cell?.kind === 'inmate' ? `${cell.beast}${cell.tier}` : cell?.kind).toBe('mammoth0')
+})
