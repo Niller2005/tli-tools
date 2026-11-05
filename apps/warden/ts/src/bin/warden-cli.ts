@@ -564,12 +564,14 @@ async function runSolve(args: string[]): Promise<number> {
   options.forEach((o, i) => {
     const gap = i === 0 ? '-' : Number.isFinite(o.gapSe) ? fixed(o.gapSe, 3) : 'inf'
     const mark = o.policy ? ' *' : ''
+    // An option no playout ran (the only move there is) has no mean to show.
+    const played = o.n > 0
     out(
-      `${pad(String(i + 1), 4, true)}  ${pad(o.label, width, false)}  ${pad(fixed(o.mean, 3), 6, true)}  ${pad(
+      `${pad(String(i + 1), 4, true)}  ${pad(o.label, width, false)}  ${pad(played ? fixed(o.mean, 3) : '-', 6, true)}  ${pad(
         gap,
         6,
         true,
-      )}  ${pad(fixed(o.best, 2), 5, true)}  ${pad(String(o.n), 5, true)}${mark}`,
+      )}  ${pad(played ? fixed(o.best, 2) : '-', 5, true)}  ${pad(String(o.n), 5, true)}${mark}`,
     )
   })
   out(
