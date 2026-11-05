@@ -122,10 +122,11 @@ auto.stop()                                                       // on the way 
 
 Once a second it reads the settings file and the minigames' states and opens, in a window of its
 own, each tool that has `autoLaunch` on, whose minigame just turned `open` and that is not already
-running. The first sample is never a transition, so a board that is already open opens nothing, and
-nothing is ever closed. `view` takes the states from a program that already watches them (Vorax and
-Warden do) instead of a second watcher, and `onOpened` tells the program what was opened. The
-dashboard uses the same `AutoLauncher`, which takes one sample at a time.
+running. The first sample is never a transition, so a board that is already open opens nothing. A tool it opened is closed again, with the launcher's
+`close`, once the log has said its minigame is `closed` for `AUTO_CLOSE_MS` (5 seconds); a minigame that opens
+again in that time keeps it, `unknown` closes nothing, and a tool it did not open is never closed. `view` takes the states from a program that already watches them (Vorax and
+Warden do) instead of a second watcher, `onOpened` and `onClosed` tell the program what was opened and closed. The
+dashboard uses the same `AutoLauncher`, whose `step` takes one sample and returns `{ opened, closed }`.
 
 "Already running" is the launcher's memory plus `running.ts`: `self` makes the program write
 `running/<tool>.pid` for as long as it runs (it goes away when the process ends, and a pid that no

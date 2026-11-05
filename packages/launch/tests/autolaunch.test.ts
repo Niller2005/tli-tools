@@ -78,8 +78,9 @@ describe('a program that opens the tools without the dashboard', () => {
     rmSync(dir, { recursive: true, force: true })
   })
 
-  const opened = (): { launcher: Launcher; started: string[][] } => {
+  const opened = (): { launcher: Launcher; started: string[][]; killed: number[] } => {
     const started: string[][] = []
+    const killed: number[] = []
     const launcher = new Launcher({
       env: { TLI_TERMINAL: 'ghostty' },
       host: {
@@ -88,9 +89,12 @@ describe('a program that opens the tools without the dashboard', () => {
           started.push(argv)
           return { pid: 4242, exited: new Promise<number>(() => {}) }
         },
+        kill: (pid: number) => {
+          killed.push(pid)
+        },
       },
     })
-    return { launcher, started }
+    return { launcher, started, killed }
   }
   const on = setToolSettings(defaultSettings(), 'warden', { autoLaunch: true })
   const closed = view('closed', 'closed', 'closed')
@@ -99,22 +103,22 @@ describe('a program that opens the tools without the dashboard', () => {
   test('the tool opens when its board opens after the first sample, and only once', () => {
     const { launcher, started } = opened()
     const auto = new AutoLauncher({ launcher, argv: ['--log=/tmp/UE_game.log'], dir, which: () => '/usr/bin/x' })
-    expect(auto.step(closed, on)).toEqual([])
-    const first = auto.step(wardenOpen, on)
+    expect(auto.step(closed, on).opened).toEqual([])
+    const first = auto.step(wardenOpen, on).opened
     expect(first.map(launched => launched.tool.id)).toEqual(['warden'])
     expect(first[0]?.result.ok).toBe(true)
     expect(started).toHaveLength(1)
     // the board stays open, then closes and opens again: the window is still there
-    expect(auto.step(wardenOpen, on)).toEqual([])
+    expect(auto.step(wardenOpen, on).opened).toEqual([])
     auto.step(closed, on)
-    expect(auto.step(wardenOpen, on)).toEqual([])
+    expect(auto.step(wardenOpen, on).opened).toEqual([])
     expect(started).toHaveLength(1)
   })
 
   test('a board that is open at the first sample opens nothing', () => {
     const { launcher, started } = opened()
     const auto = new AutoLauncher({ launcher, argv: [], dir, which: () => '/usr/bin/x' })
-    expect(auto.step(wardenOpen, on)).toEqual([])
+    expect(auto.step(wardenOpen, on).opened).toEqual([])
     expect(started).toEqual([])
   })
 
@@ -123,7 +127,7 @@ describe('a program that opens the tools without the dashboard', () => {
     const release = registerRunning('warden', dir)
     const auto = new AutoLauncher({ launcher, argv: [], dir, which: () => '/usr/bin/x' })
     auto.step(closed, on)
-    expect(auto.step(wardenOpen, on)).toEqual([])
+    expect(auto.step(wardenOpen, on).opened).toEqual([])
     expect(started).toEqual([])
     release()
   })
@@ -144,9 +148,63 @@ describe('a program that opens the tools without the dashboard', () => {
     const { launcher } = opened()
     const auto = new AutoLauncher({ launcher, argv: [], dir, which: () => null })
     auto.step(closed, on)
-    const failed = auto.step(wardenOpen, on)
+    const failed = auto.step(wardenOpen, on).opened
     expect(failed[0]?.result.ok).toBe(false)
     expect(claimOpen('warden', dir)).toBe(true)
+  })
+
+  describe('closing what it opened', () => {
+    const T0 = 1_000_000
+    const make = (): ReturnType<typeof opened> & { auto: AutoLauncher } => {
+      const made = opened()
+      const auto = new AutoLauncher({ launcher: made.launcher, argv: [], dir, which: () => '/usr/bin/x', closeAfterMs: 5000 })
+      auto.step(closed, on, T0)
+      auto.step(wardenOpen, on, T0 + 1000)
+      return { ...made, auto }
+    }
+
+    test('the tool is closed once its board has been closed for the delay, and not before', () => {
+      const { auto, killed } = make()
+      expect(auto.step(closed, on, T0 + 2000).closed).toEqual([])
+      expect(auto.step(closed, on, T0 + 6999).closed).toEqual([])
+      expect(killed).toEqual([])
+      const step = auto.step(closed, on, T0 + 7000)
+      expect(step.closed.map(done => done.tool.id)).toEqual(['warden'])
+      expect(step.closed[0]?.result.ok).toBe(true)
+      expect(killed).toEqual([4242])
+      // asked once, not on every sample after
+      expect(auto.step(closed, on, T0 + 8000).closed).toEqual([])
+      expect(killed).toEqual([4242])
+    })
+
+    test('a board that opens again within the delay keeps the tool, and the delay starts over', () => {
+      const { auto, killed } = make()
+      auto.step(closed, on, T0 + 2000)
+      auto.step(wardenOpen, on, T0 + 5000)
+      expect(auto.step(closed, on, T0 + 6000).closed).toEqual([])
+      expect(auto.step(closed, on, T0 + 10999).closed).toEqual([])
+      expect(killed).toEqual([])
+      expect(auto.step(closed, on, T0 + 11000).closed).toHaveLength(1)
+    })
+
+    test('a log that says nothing closes nothing', () => {
+      const { auto, killed } = make()
+      const unknown = view('unknown', 'unknown', 'unknown')
+      auto.step(closed, on, T0 + 2000)
+      expect(auto.step(unknown, on, T0 + 60_000).closed).toEqual([])
+      expect(auto.step(null, on, T0 + 120_000).closed).toEqual([])
+      expect(killed).toEqual([])
+    })
+
+    test('a tool this launcher did not open is not closed', () => {
+      const { launcher, killed } = opened()
+      const auto = new AutoLauncher({ launcher, argv: [], dir, which: () => '/usr/bin/x', closeAfterMs: 5000 })
+      // the board is open at the first sample, so nothing is opened
+      auto.step(wardenOpen, on, T0)
+      auto.step(closed, on, T0 + 1000)
+      expect(auto.step(closed, on, T0 + 60_000).closed).toEqual([])
+      expect(killed).toEqual([])
+    })
   })
 })
 

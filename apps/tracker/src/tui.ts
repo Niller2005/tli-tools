@@ -199,6 +199,10 @@ const autoLaunch = startAutoLaunch({
     app.state.message = `opened by itself: ${result.message}`
     app.draw()
   },
+  onClosed: ({ result }) => {
+    app.state.message = `closed by itself: ${result.message}`
+    app.draw()
+  },
 })
 
 if (cached !== null) {

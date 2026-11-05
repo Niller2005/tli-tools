@@ -97,11 +97,11 @@ async function dashboard(): Promise<void> {
       state.view = view
       state.status = await readStatus({ view, launcher, log: givenLog, itemAge })
 
-      // a tool the player asked for opens by itself: once per open transition, never twice,
-      // and nothing is ever closed by it
-      for (const { result } of auto.step(view, state.settings)) {
-        state.message = `opened by itself: ${result.message}`
-      }
+      // a tool the player asked for opens by itself: once per open transition, never twice. One
+      // it opened itself closes again when its minigame has been over for a few seconds.
+      const step = auto.step(view, state.settings)
+      for (const { result } of step.opened) state.message = `opened by itself: ${result.message}`
+      for (const { result } of step.closed) state.message = `closed by itself: ${result.message}`
 
       app.draw()
     }

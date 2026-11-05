@@ -133,8 +133,9 @@ when it is opened.
 
 `a` turns auto-launch of the tool under the cursor on or off (the tracker has no minigame of its
 own, so it says no). With it on, the tool opens in a window of its own when its minigame turns
-`open` and it is not already running — once per closed-to-open transition, not once per second, and
-nothing is ever closed by it. A board that is already open when the dashboard comes up does not
+`open` and it is not already running — once per closed-to-open transition, not once per second. A tool
+opened this way closes again, tmux pane or window, once its minigame has been closed for 5 seconds
+(a board that opens again in that time keeps it); a tool you opened yourself is never closed by it. A board that is already open when the dashboard comes up does not
 open anything: the dashboard has to see the board close and open again first.
 
 The dashboard does not have to be running for this. The loot tracker, Arcana, Vorax and Warden
