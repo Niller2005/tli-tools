@@ -185,6 +185,10 @@ const autoLaunch = startAutoLaunch({
     state.message = `opened by itself: ${result.message}`
     app.draw()
   },
+  onClosed: ({ result }) => {
+    state.message = `closed by itself: ${result.message}`
+    app.draw()
+  },
 })
 
 await terminal.done

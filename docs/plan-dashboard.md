@@ -78,7 +78,9 @@ each task appends to.
 ## Auto-launch (5)
 
 Off by default and per tool, stored in the settings file. A tool opens in a window when its minigame turns `open`
-and it is not already running; it is never closed automatically. The watcher is the one the dashboard already runs
+and it is not already running. A tool opened this way is closed again (SIGTERM to the process the launcher started,
+so a tmux pane goes with it) once the log has said the minigame is closed for 5 seconds; a minigame that opens again
+in that time keeps it, and a tool the player opened is never closed. The watcher is the one the dashboard already runs
 for badges. A launch happens once per open transition, not once per second. The first sample after a program starts
 is not a transition, however open a board already is: it has to see the minigame close and open again before
 anything is opened by itself.

@@ -79,12 +79,15 @@ export {
 } from './open'
 
 export {
+  AUTO_CLOSE_MS,
   AutoLauncher,
   newlyOpen,
   startAutoLaunch,
   statesOf,
   toolsToAutoLaunch,
+  type AutoClosed,
   type AutoLaunched,
+  type AutoStep,
   type AutoLauncherOptions,
   type MinigameStates,
   type StartAutoLaunchOptions,
