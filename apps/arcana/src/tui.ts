@@ -18,6 +18,7 @@ import { statSync } from 'node:fs'
 import { Tracker, historyOf, loadArcana, saveArcana, type SavedArcana, SCHEMA_VERSION } from '@tli/arcana'
 import { MinigameTracker, findLog, scanBack } from '@tli/gamelog'
 import { ITEM_TABLE_PATH, ItemNames, LogReader, loadTracker, userItemsPath } from '@tli/tracker'
+import { startAutoLaunch } from '@tli/launch'
 import { startApp } from '@tli/tui'
 import { ArcanaApp } from './app'
 import { freshView } from './view'
@@ -149,7 +150,10 @@ firstRead()
 /* ---------- the terminal ---------- */
 
 const terminal = await startApp({
-  onShutdown: () => saveState(),
+  onShutdown: () => {
+    autoLaunch.stop()
+    return saveState()
+  },
   onKey: (key) => {
     app.key(key)
   },
@@ -172,5 +176,15 @@ const app = new ArcanaApp(terminal.renderer, tracker, names, state, {
 })
 
 app.draw()
+
+// the tools the player turned auto-launch on for open when their minigame opens, with no dashboard
+const autoLaunch = startAutoLaunch({
+  self: 'arcana',
+  log: logFile,
+  onOpened: ({ result }) => {
+    state.message = `opened by itself: ${result.message}`
+    app.draw()
+  },
+})
 
 await terminal.done

@@ -27,6 +27,7 @@ import { createCapture, type Capture } from '@tli/capture'
 import { findLog, minigameCaptureGate, retryCapture, watchMinigames, type MinigameView, type Watcher } from '@tli/gamelog'
 import { startApp } from '@tli/tui'
 import { publishCard } from '@tli/overlay'
+import { startAutoLaunch } from '@tli/launch'
 import { cardOf } from './tui/card'
 import { VoraxApp } from './tui/app'
 import { createAdvisor } from './tui/advice'
@@ -303,6 +304,7 @@ const terminal = await startApp({
     advisor.close()
     cap.close()
     minigames?.close()
+    autoLaunch.stop()
     publishCard('vorax', null)
   },
   onKey: (key) => {
@@ -337,6 +339,10 @@ draw = () => {
 
 
 connectLog()
+
+// the tools the player turned auto-launch on for open when their minigame opens, with no dashboard;
+// the states are the ones this helper already watches
+const autoLaunch = startAutoLaunch({ self: 'vorax', view: () => minigames?.state() ?? null })
 let polling = false
 setInterval(async () => {
   if (!loop) return

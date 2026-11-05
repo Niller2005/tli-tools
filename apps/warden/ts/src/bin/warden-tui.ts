@@ -27,6 +27,7 @@ import { timed } from '@/app/profile'
 import { solvePool } from '@/app/solve-pool'
 import { Rgba, loadPng } from '@/reader/mod'
 import { publishCard } from '@tli/overlay'
+import { startAutoLaunch } from '@tli/launch'
 import { WardenApp } from '@/tui/app'
 import { plainScreen, stateFromSession } from '@/tui/view'
 
@@ -175,6 +176,9 @@ async function run(): Promise<void> {
   // The game's log says whether the board is on screen; without it (the log is
   // missing, or it has no detail) the window is watched as before.
   const log = a.noLog ? null : watchMinigames(a.logPath === null ? {} : { log: a.logPath })
+  // the tools the player turned auto-launch on for open when their minigame opens, with no
+  // dashboard; the states are the ones the capture gate already watches
+  const autoLaunch = startAutoLaunch({ self: 'warden', view: () => log?.state() ?? null })
   let wasClosed = false
   let next = performance.now()
   // the capture's back-off window: a failed grab holds the next automatic one back for 2 s
@@ -235,6 +239,7 @@ async function run(): Promise<void> {
     publishCard('warden', null)
     capture.close()
     log?.close()
+    autoLaunch.stop()
     await terminal.stop()
   }
 }

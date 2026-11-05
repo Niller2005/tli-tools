@@ -157,6 +157,16 @@ is closed with the tool, or by closing the window.
 
 Where the window ends up on the screen is the compositor's business.
 
+### Opening by itself
+
+With auto-launch turned on for a minigame's tool (`a` in the [dashboard](../dashboard/README.md), kept
+in its settings file), the tracker opens that tool in a window of its own when the minigame opens in
+the log, even when no dashboard is running: with only the tracker open, entering a Tartarus prison
+opens Warden. It is the same rule as the dashboard's: once per closed-to-open transition, never for a
+board that is already open when the tracker starts, and nothing is closed by it. A tool that is
+already running anywhere (another window, another terminal, another tool that saw the same board)
+is not opened again. Arcana, Vorax and Warden do the same for each other and for the tracker.
+
 ## What it reads from the log
 
 The game writes `UE_game.log` while it runs. The tracker reads:
