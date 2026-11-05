@@ -127,3 +127,19 @@ test('the decision after the Replace on day 4 reads a Rare Lion pair in cells 6 
   })
   expect(kinds).toEqual(['lion2', 'lion2'])
 })
+
+const DAY5 = new URL('./fixtures/s16-destination-day5-1440p.png', import.meta.url).pathname
+
+test('the destination pick of day 5 reads the Coin of Fate having raised the Lion in cell 12 and emptied cell 6', async () => {
+  const panels = await readPanels(loadPng(DAY5))
+  expect(panels.screen).toBe('patrol')
+  expect(panels.days).toBe(15)
+  expect(panels.doors).toEqual([13, 14, 1])
+  const [model] = await readModel(DAY5)
+  expect(model.day).toBe(5)
+  const kinds = [5, 11].map(i => {
+    const cell = model.cells[i]
+    return cell?.kind === 'inmate' ? `${cell.beast}${cell.tier}` : cell?.kind
+  })
+  expect(kinds).toEqual(['sealed', 'lion4'])
+})
