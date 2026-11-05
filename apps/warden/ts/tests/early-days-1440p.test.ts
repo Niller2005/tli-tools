@@ -70,3 +70,18 @@ test('the Taste of Freedom incident reads as a popup over the dimmed board', asy
   expect(panels.doors).toEqual([])
   expect(panels.decision).toEqual([])
 })
+
+const THREE_WAY = new URL('./fixtures/s16-three-way-day3-1440p.png', import.meta.url).pathname
+
+test('Consume, Replace and End read together, with three cells opened by the incident', async () => {
+  const panels = await readPanels(loadPng(THREE_WAY))
+  expect(panels.screen).toBe('manage')
+  expect(panels.decision).toEqual(['Consume', 'Replace', 'End'])
+  const [model] = await readModel(THREE_WAY)
+  expect(model.warden).toBe(7)
+  const kinds = [2, 10, 14].map(i => {
+    const cell = model.cells[i]
+    return cell?.kind === 'inmate' ? `${cell.beast}${cell.tier}` : cell?.kind
+  })
+  expect(kinds).toEqual(['mammoth1', 'rat1', 'lion0'])
+})
