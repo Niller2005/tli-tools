@@ -112,3 +112,18 @@ test('the three decisions on day 4 read a Normal Mammoth under the warden in cel
   const cell = model.cells[11]
   expect(cell?.kind === 'inmate' ? `${cell.beast}${cell.tier}` : cell?.kind).toBe('mammoth0')
 })
+
+const CONSUME_DAY4 = new URL('./fixtures/s16-consume-or-end-day4-1440p.png', import.meta.url).pathname
+
+test('the decision after the Replace on day 4 reads a Rare Lion pair in cells 6 and 12', async () => {
+  const panels = await readPanels(loadPng(CONSUME_DAY4))
+  expect(panels.screen).toBe('manage')
+  expect(panels.decision).toEqual(['Consume', 'End'])
+  const [model] = await readModel(CONSUME_DAY4)
+  expect(model.warden).toBe(11)
+  const kinds = [5, 11].map(i => {
+    const cell = model.cells[i]
+    return cell?.kind === 'inmate' ? `${cell.beast}${cell.tier}` : cell?.kind
+  })
+  expect(kinds).toEqual(['lion2', 'lion2'])
+})
