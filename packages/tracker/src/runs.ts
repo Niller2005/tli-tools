@@ -4,11 +4,12 @@
 // starts when a map level is entered and ends when the player goes back to the hideout or into
 // another level. The map's name comes from the level's path, which the game sends just after.
 //
-// The Tartarus prison is a run of its own. The board the warden reads opens in the town, and the
-// challenge it leads into is a level of its own (type 28). The visit begins when the board opens
-// and ends when the player leaves the prison level.
+// The Tartarus prison and the Vorax game are runs of their own. The board the warden or the Vorax
+// helper reads opens in the town, and the challenge it leads into is a level of its own (type 28 for
+// the prison, type 26 for Vorax). The visit begins when the board opens and ends when the player
+// leaves that level.
 
-import { PRISON_NAME, zoneName } from './zones'
+import { PRISON_NAME, VORAX_NAME, zoneName } from './zones'
 
 /** The level types that are a map the player farms. */
 export const MAP_LEVEL_TYPES: Record<number, true> = { 3: true, 16: true, 17: true, 25: true, 27: true }
@@ -19,8 +20,24 @@ export const PRISON_LEVEL_TYPES: Record<number, true> = { 28: true }
 /** The page that is the Tartarus prison board: the visit begins when the board opens. */
 export const PRISON_PAGES: Record<string, true> = { S16BoardMain: true }
 
-/** What kind of run it is: a trip into a map, or a visit to the Tartarus prison. */
-export type RunKind = 'map' | 'prison'
+/** The level types that are the Vorax game's fight. */
+export const VORAX_LEVEL_TYPES: Record<number, true> = { 26: true }
+
+/** The page that is the Vorax board: the visit begins when the board opens. */
+export const VORAX_PAGES: Record<string, true> = { S13GamePlayMain: true }
+
+/** What kind of run it is: a trip into a map, or a visit to the Tartarus prison or the Vorax game. */
+export type RunKind = 'map' | 'prison' | 'vorax'
+
+/** The kinds of run that are a board in the town and a level of its own. */
+type VisitKind = Exclude<RunKind, 'map'>
+
+/** What makes a visit: the level it leads into, the page that begins it, and what the run is called. */
+const VISITS: Record<VisitKind, { levels: Record<number, true>; pages: Record<string, true>; name: string }> = {
+  prison: { levels: PRISON_LEVEL_TYPES, pages: PRISON_PAGES, name: PRISON_NAME },
+  vorax: { levels: VORAX_LEVEL_TYPES, pages: VORAX_PAGES, name: VORAX_NAME },
+}
+const VISIT_KINDS = Object.keys(VISITS) as VisitKind[]
 
 /** One trip into a map. */
 export interface Run {
@@ -84,7 +101,8 @@ export class RunSegmenter {
 
   /** The level the player is in changed. Ends the run that was going on, if any. */
   level(ltype: number, lid: number, at: number): Run | null {
-    if (PRISON_LEVEL_TYPES[ltype] === true) return this.prison(lid, at)
+    const visit = VISIT_KINDS.find((kind) => VISITS[kind].levels[ltype] === true)
+    if (visit !== undefined) return this.visit(visit, lid, at)
     const ended = this.endRun(at)
     if (MAP_LEVEL_TYPES[ltype] !== true) return ended
     this.current = this.newRun('map', lid, at)
@@ -92,45 +110,46 @@ export class RunSegmenter {
   }
 
   /**
-   * The Tartarus prison's level began.
+   * The level of a visit began.
    *
    * The visit that began on the board goes on into the level: the board is closed by the game
    * when the level opens, so the visit is one run, from the board to the end of the level.
    */
-  private prison(lid: number, at: number): Run | null {
+  private visit(kind: VisitKind, lid: number, at: number): Run | null {
     const current = this.current
-    if (current !== null && current.kind === 'prison') {
+    if (current !== null && current.kind === kind) {
       current.levelId = lid
       return null
     }
     const ended = this.endRun(at)
-    this.current = this.newRun('prison', lid, at)
+    this.current = this.newRun(kind, lid, at)
     return ended
   }
 
   /** A page of the game opened, was hidden, or was destroyed. */
   screen(name: string, state: 'run' | 'hide' | 'destory', at: number): void {
-    if (PRISON_PAGES[name] !== true) return
-    if (state === 'run') this.board(at)
-    if (state === 'destory') this.boardClosed()
+    const kind = VISIT_KINDS.find((visit) => VISITS[visit].pages[name] === true)
+    if (kind === undefined) return
+    if (state === 'run') this.board(kind, at)
+    if (state === 'destory') this.boardClosed(kind)
   }
 
-  /** The prison board opened: the visit begins. */
-  private board(at: number): void {
+  /** The board of a visit opened: the visit begins. */
+  private board(kind: VisitKind, at: number): void {
     if (this.current !== null) return
-    this.current = this.newRun('prison', 0, at)
+    this.current = this.newRun(kind, 0, at)
   }
 
   /**
-   * The prison board was destroyed.
+   * The board of a visit was destroyed.
    *
-   * The game closes the board when the prison level opens, so a visit that is already in its
+   * The game closes the board when the visit's level opens, so a visit that is already in its
    * level goes on. A visit that never had a level is not a run: the player closed the board
    * without a challenge, so there is nothing to show.
    */
-  private boardClosed(): void {
+  private boardClosed(kind: VisitKind): void {
     const current = this.current
-    if (current === null || current.kind !== 'prison') return
+    if (current === null || current.kind !== kind) return
     if (current.levelId !== 0) return
     this.dropCurrent()
   }
@@ -149,7 +168,7 @@ export class RunSegmenter {
     if (current === null) return
     if (current.zone !== '') return
     current.zone = zone
-    if (current.kind !== 'prison') current.name = zoneName(zone)
+    if (current.kind === 'map') current.name = zoneName(zone)
   }
 
   /** Ends the run that was going on, if there is one. */
@@ -206,7 +225,7 @@ export class RunSegmenter {
       id: this.nextId++,
       kind,
       zone: '',
-      name: kind === 'prison' ? PRISON_NAME : 'Unknown',
+      name: kind === 'map' ? 'Unknown' : VISITS[kind].name,
       levelId: lid,
       start: at,
       end: null,

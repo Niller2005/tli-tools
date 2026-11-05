@@ -74,6 +74,9 @@ a level of its own, so the run begins with the board and ends when you leave the
 says *prison* next to those runs, and the loot of the prison is worth what the prices say, like the loot of
 any other map. Looking at the board without a challenge is not a run, so it does not add one.
 
+The Vorax game works the same way: the run begins when its board opens and ends when you leave the fight, and
+the list of the runs says *vorax* next to it.
+
 ## The legendaries
 
 When a legendary drops, the log only says the base of the gear, so the tracker shows the base at first. When you
@@ -222,7 +225,7 @@ bun run tracker:report --out=loot.csv
 The report starts from what the tracker saved and reads the log on from where the tracker left it,
 so it says the same as the screen; `--full` reads the whole log from its beginning instead. Every
 line of the report says what kind of run it is about: `map` for a trip into a map, `prison` for a
-visit to the Tartarus prison.
+visit to the Tartarus prison, `vorax` for a Vorax fight.
 
 ## Show the loot over the game
 

@@ -164,3 +164,28 @@ describe('the names of the maps', () => {
     expect(zoneName('SD_YuanGuTongDao101')).toBe('Steel Forge - Beast Plains')
   })
 })
+
+describe('the Vorax game', () => {
+  test('the visit begins when the board opens, and the fight level goes on in it', () => {
+    const runs = new RunSegmenter()
+    runs.screen('S13GamePlayMain', 'run', BOARD)
+    expect(runs.currentRun?.kind).toBe('vorax')
+    expect(runs.currentRun?.name).toBe("Vorax - Shelly's Operating Theater")
+    runs.level(26, 230043, PRISON)
+    runs.screen('S13GamePlayMain', 'destory', PRISON + 3)
+    const ended = runs.level(0, 110, OUT)
+    expect(ended?.kind).toBe('vorax')
+    expect(ended?.levelId).toBe(230043)
+    expect(ended?.start).toBe(BOARD)
+    expect(ended?.end).toBe(OUT)
+  })
+
+  test('a board closed without a fight is not a run, and the other game\'s board does not end it', () => {
+    const runs = new RunSegmenter()
+    runs.screen('S13GamePlayMain', 'run', BOARD)
+    runs.screen('S16BoardMain', 'destory', BOARD + 100)
+    expect(runs.currentRun?.kind).toBe('vorax')
+    runs.screen('S13GamePlayMain', 'destory', BOARD + 3000)
+    expect(runs.currentRun).toBeNull()
+  })
+})

@@ -20,7 +20,7 @@ console.log(tracker.stats())
 |------|--------------|
 | `src/parse.ts` | reads the log's lines: the level, the map's path, the bag, the pages the game opens, the blocks the game writes its item changes in, the experience bar, the modifiers of a map and the character that logged in |
 | `src/inventory.ts` | the bag: which items are in which slot, and how many of each the player has |
-| `src/runs.ts` | the runs: the time in each map, what was picked up in it, what it cost, the experience and the modifiers, and the visits to the Tartarus prison |
+| `src/runs.ts` | the runs: the time in each map, what was picked up in it, what it cost, the experience and the modifiers, and the visits to the Tartarus prison and the Vorax game |
 | `src/prices.ts` | the prices the exchange told it about, and the ones the player set |
 | `src/baseline.ts` | the community prices of TITrack, and the file they are kept in |
 | `src/exchange.ts` | the exchange's blocks of lines: what a search found |
@@ -43,8 +43,11 @@ map it is: the type 3 is a map, the type 0 is the hideout.
 The Tartarus prison is a run of its own. The board the warden reads opens in the town
 (`S16BoardMain Run`), and the challenge it leads into is a level of its own (the type 28), so the
 visit begins with the board and ends when the player leaves the prison level. The runs have a kind
-(`map` or `prison`) that is kept in the state that is saved: the state of the first version had no
+(`map`, `prison` or `vorax`) that is kept in the state that is saved: the state of the first version had no
 kind, and its runs are all trips into a map.
+
+The Vorax game is a visit the same way: its board is `S13GamePlayMain`, and the fight it leads into is
+the type 26.
 
 ## The prices
 

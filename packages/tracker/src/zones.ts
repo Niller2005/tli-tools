@@ -133,3 +133,11 @@ export function zoneName(zone: string): string {
  * known before the level is, so the run carries this name from the moment the board opens.
  */
 export const PRISON_NAME = 'Tartarus Prison'
+
+/**
+ * The name of the Vorax game's run.
+ *
+ * Like the prison, the board is read before the level it leads into is known, so the run carries
+ * this name from the moment the board opens.
+ */
+export const VORAX_NAME = "Vorax - Shelly's Operating Theater"
