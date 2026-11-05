@@ -10,12 +10,21 @@ import { setOcrEngine, tesseractEngine } from '@/reader/ocr'
 const FRAMES = [1, 2, 3, 4].map(
   (n) => new URL(`./fixtures/s16-instrument-pick-start-1440p-${n}.png`, import.meta.url).pathname,
 )
+const REWARD = new URL('./fixtures/s16-instrument-reward-1440p.png', import.meta.url).pathname
 
 test('the pick reads its three offers at 2560x1440', async () => {
   const panels = await readPanels(loadPng(FRAMES[0] as string))
   expect(panels.screen).toBe('instrumentPick')
   // Severed Iron Maiden, Hangman's Noose, Rusty Saw
   expect(panels.instruments).toEqual(['maiden', 'rope', 'saw'])
+  expect(panels.decision).toEqual([])
+})
+
+test('the reward pick after an objective reads its offers, with the prompt over the title', async () => {
+  const panels = await readPanels(loadPng(REWARD))
+  expect(panels.screen).toBe('instrumentPick')
+  // Kin's Coin of Fate, Warden's Scales, Burning Stake
+  expect(panels.instruments).toEqual(['coin', 'scales', 'stake'])
   expect(panels.decision).toEqual([])
 })
 
