@@ -79,9 +79,14 @@ each task appends to.
 
 Off by default and per tool, stored in the settings file. A tool opens in a window when its minigame turns `open`
 and it is not already running; it is never closed automatically. The watcher is the one the dashboard already runs
-for badges. A launch happens once per open transition, not once per second. The first sample after the dashboard
-starts is not a transition, however open a board already is: the dashboard has to see the minigame close and open
-again before anything is opened by itself.
+for badges. A launch happens once per open transition, not once per second. The first sample after a program starts
+is not a transition, however open a board already is: it has to see the minigame close and open again before
+anything is opened by itself.
+
+The rule is not the dashboard's alone: `startAutoLaunch` in `packages/launch` lets the tracker, Arcana, Vorax and
+Warden apply it too, so a tool opens even when no dashboard runs. "Already running" is then asked of the tools
+themselves (a pid file each in `$XDG_RUNTIME_DIR/tli-tools/running/`), and a claim file per tool keeps two programs
+that see the same board open from both opening it.
 
 ## Spike result
 

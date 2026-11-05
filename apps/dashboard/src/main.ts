@@ -12,6 +12,7 @@
 
 import { watchMinigames, type Watcher } from '@tli/gamelog'
 import {
+  AutoLauncher,
   Launcher,
   openTool,
   readSettings,
@@ -22,7 +23,6 @@ import {
 } from '@tli/launch'
 import { itemTableAge, refreshBaseline } from '@tli/tracker'
 import { startApp } from '@tli/tui'
-import { newlyOpen, statesOf, toolsToAutoLaunch } from './autolaunch'
 import { DashboardApp, freshState } from './app'
 import { launch } from './launch'
 import { readStatus } from './status'
@@ -80,9 +80,9 @@ async function dashboard(): Promise<void> {
 
   while (true) {
     let watcher: Watcher | null = null
-    // the minigames' states as the last sample had them: the first sample has none, so nothing
-    // counts as a transition however open a board already is
-    let previous = statesOf(null)
+    // opens the tools the player asked for when their minigame opens; the first sample is no
+    // transition, however open a board already is
+    const auto = new AutoLauncher({ launcher, argv: process.argv })
     // whether a read of the status is still going: the tick skips itself rather than pile up
     let reading = false
     const stopWatching = (): void => {
@@ -94,18 +94,12 @@ async function dashboard(): Promise<void> {
     let app: DashboardApp
     const refresh = async (): Promise<void> => {
       const view = watcher?.state() ?? null
-      const opened = newlyOpen(previous, view)
-      previous = statesOf(view)
       state.view = view
       state.status = await readStatus({ view, launcher, log: givenLog, itemAge })
 
       // a tool the player asked for opens by itself: once per open transition, never twice,
       // and nothing is ever closed by it
-      for (const tool of toolsToAutoLaunch(opened, state.settings, (id) => launcher.isOpen(id))) {
-        const result = openTool(launcher, tool, {
-          parentArgv: process.argv,
-          settings: toolSettings(state.settings, tool.id),
-        })
+      for (const { result } of auto.step(view, state.settings)) {
         state.message = `opened by itself: ${result.message}`
       }
 
