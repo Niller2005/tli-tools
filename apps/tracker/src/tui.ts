@@ -19,7 +19,7 @@
 
 import { findLog } from '@tli/gamelog'
 import { ensureOverlay, publishCard, releaseOverlay, type Card } from '@tli/overlay'
-import { Launcher, openTool } from '@tli/launch'
+import { Launcher, openTool, startAutoLaunch } from '@tli/launch'
 import {
   ITEM_TABLE_PATH,
   ItemNames,
@@ -137,6 +137,7 @@ function syncOverlay(): void {
 const terminal = await startApp({
   onShutdown: async () => {
     releaseOverlay('tracker')
+    autoLaunch.stop()
     await save()
   },
   onKey: (key) => {
@@ -189,6 +190,17 @@ const app = new TrackerApp(terminal.renderer, tracker, names, logFile, {
 })
 
 app.state.overlay = corner
+
+// the tools the player turned auto-launch on for open when their minigame opens, with no dashboard
+const autoLaunch = startAutoLaunch({
+  self: 'tracker',
+  log: logFile,
+  onOpened: ({ result }) => {
+    app.state.message = `opened by itself: ${result.message}`
+    app.draw()
+  },
+})
+
 if (cached !== null) {
   app.state.baselineAt = cached.fetchedAt
   app.state.baselineCount = cached.prices.length
