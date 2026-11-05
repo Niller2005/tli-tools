@@ -42,6 +42,8 @@ export {
   MAP_LEVEL_TYPES,
   PRISON_LEVEL_TYPES,
   PRISON_PAGES,
+  VORAX_LEVEL_TYPES,
+  VORAX_PAGES,
   type Run,
   type RunKind,
 } from './runs'
@@ -76,7 +78,7 @@ export {
   SCHEMA_VERSION,
   type SavedTracker,
 } from './store'
-export { zoneName, ZONE_NAMES, PRISON_NAME } from './zones'
+export { zoneName, ZONE_NAMES, PRISON_NAME, VORAX_NAME } from './zones'
 export { trackerStatus, sessionSummary, type SessionSummary, type SummaryRun } from './status'
 export { refreshBaseline } from './baseline'
 export { itemTableAge, readItemTableMeta, type ItemTableMeta } from './items'

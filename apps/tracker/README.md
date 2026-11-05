@@ -23,7 +23,7 @@ bun src/tui.ts --overlay=left|right  # also show the loot in a bottom corner ove
 | The header | the tool name on a bar of its own and the log path, then net worth, FE per hour, FE per run, how many runs, how long in maps, the average run, your level with a progress bar of how far through it you are, the experience per hour and the time to the next level, and the switches as chips: tax, map cost, PAUSED, the session and the character |
 | Current run | the map you are in, how long you have been in it, and what you have picked up, the most valuable first |
 | Best run | the run worth the most, in one line above the recent runs (hidden until a run has value) |
-| Recent runs | the last runs, with how long each took and what it was worth; the runs that are visits to the Tartarus prison say so; `enter` opens the detail of one |
+| Recent runs | the last runs, with how long each took and what it was worth; the runs that are visits to the Tartarus prison or the Vorax game say so; `enter` opens the detail of one |
 | Bag | what you have, sorted by value (or by how many, or by name); the value of each thing |
 | Prices | what the tracker knows the price of each item to be; `*` a price you set, `·` one learned from the exchange, `~` a community price |
 
@@ -172,7 +172,7 @@ is not opened again. Arcana, Vorax and Warden do the same for each other and for
 The game writes `UE_game.log` while it runs. The tracker reads:
 
 - **the level**: `LevelMgr@ LevelUid, LevelType, LevelId = 1071008 3 4708`. The type says whether the
-  player is in a map, in the hideout, or in the Tartarus prison. A run is the time between entering
+  player is in a map, in the hideout, in the Tartarus prison, or in the Vorax game. A run is the time between entering
   a map and leaving it. The types the logs have shown:
 
   | Type | What it is |
@@ -182,12 +182,14 @@ The game writes `UE_game.log` while it runs. The tracker reads:
   | 16, 17, 27 | maps the tracker follows; the logs of this machine have not shown them |
   | 19 | the Fateful Contest, which the Arcana tracker follows |
   | 25 | the harder tier of a map |
+  | 26 | the Vorax game's fight (`DiXiaZhenSuo`) |
   | 28 | the Tartarus prison |
 
   A type that is not in this list is not a run: the tracker leaves that level alone. When a new one
   shows up in the log, it is written down here.
-- **the pages**: `S16BoardMain Run` and `S16BoardMain Destory`. The Tartarus prison's board opens in
-  the town, and the visit to the prison begins with it.
+- **the pages**: `S16BoardMain Run` and `S16BoardMain Destory`, `S13GamePlayMain Run` and
+  `S13GamePlayMain Destory`. The Tartarus prison's board and the Vorax board open in the town, and the
+  visit begins with it.
 - **the bag**: `ItemChange@ Update Id=5140_... BagNum=26 in PageId=102 SlotId=23`. A slot's count is
   absolute, so the change is the difference against what was there before. The game writes these in
   blocks that say what caused them: `PickItem` and `PickItems` are loot, `Spv3Open` is the beacon
@@ -213,6 +215,13 @@ leaves the prison level. The list of the runs says *prison* next to those runs, 
 prison is worth what the prices say, like the loot of any other map.
 
 A visit that never had a challenge is not a run: looking at the board for a moment does not add one.
+
+## The Vorax game
+
+The Vorax game is a run of its own, the same way: the board the Vorax helper reads opens in the town
+(`S13GamePlayMain Run`), the fight it leads into is a level of its own (the type 26), and the visit
+begins with the board and ends when the player leaves that level. The list of the runs says *vorax*
+next to those runs. A board that is closed without a fight is not a run.
 
 ## The prices
 

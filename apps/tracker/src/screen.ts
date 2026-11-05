@@ -50,7 +50,7 @@ import {
   tone,
   visibleLength,
 } from '@tli/tui'
-import type { Run, Tracker } from '@tli/tracker'
+import type { Run, RunKind, Tracker } from '@tli/tracker'
 import { ATTRIBUTION, ATTRIBUTION_URL } from '@tli/tracker'
 import {
   MENU,
@@ -84,6 +84,9 @@ const TITLE_FILTER = 20
 
 /** The width of the column that says what kind of run it is. */
 const KIND_WIDTH = 7
+
+/** What the kind column says of a run: nothing for a trip into a map. */
+const kindLabel = (kind: RunKind): string => (kind === 'map' ? '' : kind)
 
 /** The name of a list panel: its name, the filter and how many rows there are. */
 function listTitle(name: string, count: number, total: number, filter: string): string {
@@ -719,7 +722,7 @@ export class TrackerScreen {
       rows.push({
         cells: [
           { text: run.name, tone: 'blue' },
-          { text: run.kind === 'prison' ? 'prison' : '', tone: 'purple', width: KIND_WIDTH },
+          { text: kindLabel(run.kind), tone: 'purple', width: KIND_WIDTH },
         ],
       })
       rows.push({
@@ -756,7 +759,7 @@ export class TrackerScreen {
       selected: state.focus === 'runs' && index === state.runsAt,
       cells: [
         { text: `#${run.id}`, tone: 'dim', width: 5, align: 'right' },
-        { text: run.kind === 'prison' ? 'prison' : '', tone: 'purple', width: KIND_WIDTH },
+        { text: kindLabel(run.kind), tone: 'purple', width: KIND_WIDTH },
         { text: run.name, tone: 'blue' },
         { text: duration(run.took), tone: 'teal', width: durationWidth, align: 'right' },
         { text: fe(run.worth), tone: run.worth > 0 ? 'gold' : 'dim', width: valueWidth, align: 'right' },
@@ -777,7 +780,7 @@ export class TrackerScreen {
       {
         cells: [
           { text: `#${best.id}`, tone: 'dim', width: 5, align: 'right' },
-          { text: best.kind === 'prison' ? 'prison' : '', tone: 'purple', width: KIND_WIDTH },
+          { text: kindLabel(best.kind), tone: 'purple', width: KIND_WIDTH },
           { text: best.name, tone: 'blue' },
           { text: duration(best.took), tone: 'teal', width: 8, align: 'right' },
           { text: fe(best.worth), tone: 'green', width: 13, align: 'right' },
@@ -1019,7 +1022,7 @@ export class TrackerScreen {
     line([tone('dim', 'started    '), tone('teal', clock(run.start))])
     line([tone('dim', 'ended      '), tone('teal', clock(end))])
     line([tone('dim', 'duration   '), tone('teal', duration(end - run.start))])
-    line([tone('dim', 'kind       '), tone(run.kind === 'prison' ? 'purple' : 'default', run.kind)])
+    line([tone('dim', 'kind       '), tone(run.kind === 'map' ? 'default' : 'purple', run.kind)])
     line([tone('dim', 'loot value '), tone(worth.gross > 0 ? 'gold' : 'dim', fe(worth.gross))])
     if (run.xp > 0) line([tone('dim', 'experience '), tone('purple', num(run.xp))])
     line([])
