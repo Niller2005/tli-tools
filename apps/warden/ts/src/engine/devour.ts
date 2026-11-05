@@ -29,27 +29,6 @@ interface Diet {
   cageFight: boolean
 }
 
-function dietOf(s: State): Diet {
-  return {
-    guillotine: s.has('guillotine'),
-    maul: s.has('maul'),
-    crown: s.has('crown'),
-    skewer: s.has('skewer'),
-    cageFight: s.theme === CAGE_FIGHT,
-  }
-}
-
-/** Its index in the diet table, one bit per field. */
-function dietIndex(diet: Diet): number {
-  return (
-    (diet.guillotine ? 1 : 0) |
-    (diet.maul ? 2 : 0) |
-    (diet.crown ? 4 : 0) |
-    (diet.skewer ? 8 : 0) |
-    (diet.cageFight ? 16 : 0)
-  )
-}
-
 /** The species instruments widen the chain: the Fanged Guillotine lets a Wolf
  * eat lower rarities, the Elephant-Foot Maul a Mammoth higher ones, the Iron
  * Crown a Lion any same-rarity inmate, the Skewered Rat Heads a Rat a Rat. */
@@ -70,9 +49,22 @@ function dietCanEat(diet: Diet, eater: Inmate, meal: Inmate | null): boolean {
   )
 }
 
-/** `dietCanEat` under the state's diet. */
+/** The state's row of the diet table: one pass over the instruments held. */
+function dietRow(s: State): Uint32Array {
+  let d = s.theme === CAGE_FIGHT ? 16 : 0
+  for (const tool of s.tools) {
+    if (tool === 'guillotine') d |= 1
+    else if (tool === 'maul') d |= 2
+    else if (tool === 'crown') d |= 4
+    else if (tool === 'skewer') d |= 8
+  }
+  return getDietTable()[d]
+}
+
+/** `dietCanEat` under the state's diet, read from the diet table. */
 export function canEat(s: State, eater: Inmate, meal: Inmate | null): boolean {
-  return dietCanEat(dietOf(s), eater, meal)
+  if (meal === null || eater.id === meal.id) return false
+  return ((dietRow(s)[classOf(eater)] >>> classOf(meal)) & 1) !== 0
 }
 
 /** Inmate classes: (rarity, beast) as `tier * 4 + beast`, Normal to Rainbow. */
@@ -127,10 +119,10 @@ export function bites(s: State, n: number): Bite[] {
   if (cell.sealed || cell.inmate === null) return []
   const eater = cell.inmate
   const out: Bite[] = []
-  const diet = dietOf(s)
+  const row = dietRow(s)[classOf(eater)]
   for (const c of s.cells) {
     if (c.n === n) continue
-    if (!c.sealed && dietCanEat(diet, eater, c.inmate)) {
+    if (!c.sealed && c.inmate !== null && c.inmate.id !== eater.id && ((row >>> classOf(c.inmate)) & 1) !== 0) {
       out.push({ cell: c.n, scratch: false })
     } else if (c.sealed && c.scratch && eater.beast === 'wolf' && c.hidden !== null && c.hidden.tier === eater.tier && eater.tier < RAINBOW) {
       out.push({ cell: c.n, scratch: true })
@@ -154,7 +146,7 @@ export function eaterMask(s: State): number {
       present |= bit
     }
   }
-  const table = getDietTable()[dietIndex(dietOf(s))]
+  const table = dietRow(s)
   let mask = 0
   for (const c of s.cells) {
     if (c.sealed || c.inmate === null) continue
