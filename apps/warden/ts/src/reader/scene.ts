@@ -92,19 +92,34 @@ export function portrait(cell: number): [number, number] {
 function patch(img: Rgba, cx: number, cy: number, bw: number, bh: number, block: number): Float32Array {
   const x0 = cx - Math.trunc((bw * block) / 2)
   const y0 = cy - Math.trunc((bh * block) / 2)
+  const w = img.w
+  const h = img.h
+  const d = img.data
   const out = new Float32Array(bw * bh * 3)
   let at = 0
   for (let by = 0; by < bh; by++) {
     for (let bx = 0; bx < bw; bx++) {
-      const s = [0, 0, 0]
+      // The pixel's RGB, as `img.rgb` reads it (clamped to the image),
+      // summed one channel at a time in the same order.
+      let s0 = 0
+      let s1 = 0
+      let s2 = 0
       for (let dy = 0; dy < block; dy++) {
         for (let dx = 0; dx < block; dx++) {
-          const p = img.rgb(x0 + bx * block + dx, y0 + by * block + dy)
-          for (let c = 0; c < 3; c++) s[c] = f(s[c] + p[c])
+          let x = x0 + bx * block + dx
+          let y = y0 + by * block + dy
+          x = x < 0 ? 0 : x > w - 1 ? w - 1 : x
+          y = y < 0 ? 0 : y > h - 1 ? h - 1 : y
+          const i = (y * w + x) * 4
+          s0 = f(s0 + d[i])
+          s1 = f(s1 + d[i + 1])
+          s2 = f(s2 + d[i + 2])
         }
       }
       const n = block * block
-      for (let c = 0; c < 3; c++) out[at++] = f(s[c] / n)
+      out[at++] = f(s0 / n)
+      out[at++] = f(s1 / n)
+      out[at++] = f(s2 / n)
     }
   }
   return out
