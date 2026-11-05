@@ -156,3 +156,16 @@ test('the three decisions on day 5 read a Normal Alpha Wolf under the warden in 
   const cell = model.cells[13]
   expect(cell?.kind === 'inmate' ? `${cell.beast}${cell.tier}` : cell?.kind).toBe('wolf0')
 })
+
+const DAY6 = new URL('./fixtures/s16-destination-day6-1440p.png', import.meta.url).pathname
+
+test('the destination pick of day 6 reads the Legendary Lion the Replace left in cell 14', async () => {
+  const panels = await readPanels(loadPng(DAY6))
+  expect(panels.screen).toBe('patrol')
+  expect(panels.days).toBe(14)
+  expect(panels.doors).toEqual([15, 16, 1])
+  const [model] = await readModel(DAY6)
+  expect(model.day).toBe(6)
+  const cell = model.cells[13]
+  expect(cell?.kind === 'inmate' ? `${cell.beast}${cell.tier}` : cell?.kind).toBe('lion3')
+})
