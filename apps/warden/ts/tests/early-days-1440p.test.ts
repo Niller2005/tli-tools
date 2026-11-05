@@ -169,3 +169,16 @@ test('the destination pick of day 6 reads the Legendary Lion the Replace left in
   const cell = model.cells[13]
   expect(cell?.kind === 'inmate' ? `${cell.beast}${cell.tier}` : cell?.kind).toBe('lion3')
 })
+
+const REPLACE_DAY6 = new URL('./fixtures/s16-replace-or-end-day6-1440p.png', import.meta.url).pathname
+
+test('Replace and End on day 6 read a Normal Rat under the warden in cell 16', async () => {
+  const panels = await readPanels(loadPng(REPLACE_DAY6))
+  expect(panels.screen).toBe('manage')
+  expect(panels.days).toBe(14)
+  expect(panels.decision).toEqual(['Replace', 'End'])
+  const [model] = await readModel(REPLACE_DAY6)
+  expect(model.warden).toBe(15)
+  const cell = model.cells[15]
+  expect(cell?.kind === 'inmate' ? `${cell.beast}${cell.tier}` : cell?.kind).toBe('rat0')
+})
