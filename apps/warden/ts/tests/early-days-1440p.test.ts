@@ -1,5 +1,5 @@
-//! Live frames of the second day of a run, taken on Linux at 2560x1440 with the Ultimate objective done (the Noose
-//! and the Coin of Fate held): the destination pick, then the decisions with the warden in cell 7.
+//! Live frames of days 2 and 3 of a run, taken on Linux at 2560x1440 with the Ultimate objective done (the Noose and
+//! the Coin of Fate held): the destination picks and the decisions with the warden in cell 7.
 
 import { expect, test } from 'bun:test'
 import { loadPng, readModel } from '@/reader/mod'
@@ -48,4 +48,16 @@ test('the decision after the Replace reads Consume and End, with an Ultimate Rat
   expect(model.warden).toBe(6)
   const cell = model.cells[6]
   expect(cell?.kind === 'inmate' ? `${cell.beast}${cell.tier}` : cell?.kind).toBe('rat4')
+})
+
+const DAY3 = new URL('./fixtures/s16-destination-day3-1440p.png', import.meta.url).pathname
+
+test('the destination pick of day 3 reads 17 days, the incident door 8 and the doors 11 and 12', async () => {
+  const panels = await readPanels(loadPng(DAY3))
+  expect(panels.screen).toBe('patrol')
+  expect(panels.days).toBe(17)
+  expect(panels.doors).toEqual([8, 11, 12])
+  const [model] = await readModel(DAY3)
+  expect(model.day).toBe(3)
+  expect(model.dest).toEqual([7, 10, 11])
 })
