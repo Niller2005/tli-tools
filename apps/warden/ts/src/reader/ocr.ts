@@ -3,6 +3,7 @@
 //! does the reading, one process per region. The engine is injectable, so
 //! tests can read without the program.
 
+import { resample } from './layout'
 import { Rect, Rgba } from './mod'
 import { parseTsv, runTesseract, tesseractFound, TESSERACT_ARGS, type TextLine } from '@tli/ocr'
 
@@ -211,7 +212,7 @@ function prepare(img: Rgba, rect: Rect, scale: number): Rgba | null {
   if (crop.w === 0 || crop.h === 0) return null
   const w = Math.max(1, Math.round(crop.w * scale))
   const h = Math.max(1, Math.round(crop.h * scale))
-  return stretch(crop.resize(w, h))
+  return stretch(resample(crop, w, h))
 }
 
 /** Stretches the contrast so the 1st to 99th percentile of luma spans 0-255:
