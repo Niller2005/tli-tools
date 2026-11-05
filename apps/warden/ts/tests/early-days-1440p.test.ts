@@ -61,3 +61,12 @@ test('the destination pick of day 3 reads 17 days, the incident door 8 and the d
   expect(model.day).toBe(3)
   expect(model.dest).toEqual([7, 10, 11])
 })
+
+const INCIDENT = new URL('./fixtures/s16-incident-taste-of-freedom-1440p.png', import.meta.url).pathname
+
+test('the Taste of Freedom incident reads as a popup over the dimmed board', async () => {
+  const panels = await readPanels(loadPng(INCIDENT))
+  expect(panels.screen).toBe('popup')
+  expect(panels.doors).toEqual([])
+  expect(panels.decision).toEqual([])
+})
