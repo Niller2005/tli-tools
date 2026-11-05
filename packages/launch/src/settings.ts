@@ -5,8 +5,7 @@
 // file is the player's: whatever is wrong with it, reading it still works — the dashboard starts
 // from the default settings and says nothing, rather than refusing to run.
 //
-// `autoLaunch` is only stored here. The dashboard acts on it; nothing in this package opens a
-// window because of it.
+// `autoLaunch` is only stored here: `startAutoLaunch` and `AutoLauncher` (autolaunch.ts) act on it.
 
 import { readFileSync, mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { basename, dirname, isAbsolute, join } from 'node:path'
@@ -25,7 +24,7 @@ export interface ToolSettings {
   niriScreenshot?: boolean
   /** a command that writes a PNG of the game to {out}, instead of the capture of the compositor */
   captureCmd?: string | null
-  /** the tool opens by itself when its minigame opens; stored here, acted on by the dashboard */
+  /** the tool opens by itself when its minigame opens; stored here, acted on by autolaunch.ts */
   autoLaunch?: boolean
 }
 

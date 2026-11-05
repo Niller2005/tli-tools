@@ -22,7 +22,7 @@ export function childFlags(tool: Tool, parentArgv: readonly string[]): string[] 
  * Only the settings the tool's command takes become flags: the ones it does not take are left
  * out, and each is spelled the way that tool reads it (vorax glues the capture command onto
  * `--capture-cmd=`, warden takes it as the word after `--capture-cmd`). `autoLaunch` never
- * becomes a flag: it is stored for the dashboard, not passed to the tool.
+ * becomes a flag: it is stored for the programs that open tools by themselves, not passed to the tool.
  */
 export function optionFlags(tool: Tool, settings: ToolSettings = {}): string[] {
   const takes = tool.accepts

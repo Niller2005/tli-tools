@@ -2,6 +2,7 @@
 //
 // The tracker and the dashboard both start tools: the tracker opens one in a window of its own,
 // the dashboard starts the ones that take the terminal over. They read the same table of tools.
+// Every tool can also open the others by itself when a minigame opens (`startAutoLaunch`).
 
 export {
   Launcher,
@@ -76,3 +77,17 @@ export {
   optionFlags,
   type OpenToolOptions,
 } from './open'
+
+export {
+  AutoLauncher,
+  newlyOpen,
+  startAutoLaunch,
+  statesOf,
+  toolsToAutoLaunch,
+  type AutoLaunched,
+  type AutoLauncherOptions,
+  type MinigameStates,
+  type StartAutoLaunchOptions,
+} from './autolaunch'
+
+export { CLAIM_MS, claimOpen, isRunning, registerRunning, releaseClaim, runtimeDir } from './running'

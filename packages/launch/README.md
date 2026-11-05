@@ -14,6 +14,8 @@ a minigame's tool in a window of its own and carries on following the log.
 | `launcher.ts` | the launcher: it opens the window and remembers what it has open |
 | `open.ts` | opening one of the tools in a window of its own |
 | `settings.ts` | the settings file of the dashboard: read tolerantly, written in one piece |
+| `running.ts` | which tools run, as every program can tell: pid files and claims in `$XDG_RUNTIME_DIR/tli-tools/` |
+| `autolaunch.ts` | opening a tool by itself when its minigame opens, from any program that reads the log |
 
 ## The tools
 
@@ -69,7 +71,7 @@ const options = toolSettings(readSettings(path), 'vorax') // the settings, with 
 The file is written in one piece (a neighbour file that is renamed over it), so a reader never
 sees half of it. Reading is tolerant: a file that is missing, not JSON, or of another version gives
 the default settings, and a tool entry keeps only what it says plainly. `autoLaunch` is stored
-here and nothing else: the dashboard acts on it.
+here; `startAutoLaunch` and `AutoLauncher` act on it.
 
 `openTool` takes the settings and turns them into the flags of the tool that is opened — only for
 the tools whose command takes them, each spelled the way that tool reads it:
@@ -105,6 +107,31 @@ It is replaced when the same tool is opened again.
 `close` sends SIGTERM to one process only: the one the launcher itself started, or the one tmux
 named for the pane the launcher opened. Nothing is looked up by name, and the game is never
 touched.
+
+## Opening by itself
+
+Any program that reads the game's log can open the tools whose minigame opens, not only the
+dashboard:
+
+```typescript
+import { startAutoLaunch } from '@tli/launch'
+
+const auto = startAutoLaunch({ self: 'tracker', log: logFile })   // once the terminal is up
+auto.stop()                                                       // on the way out
+```
+
+Once a second it reads the settings file and the minigames' states and opens, in a window of its
+own, each tool that has `autoLaunch` on, whose minigame just turned `open` and that is not already
+running. The first sample is never a transition, so a board that is already open opens nothing, and
+nothing is ever closed. `view` takes the states from a program that already watches them (Vorax and
+Warden do) instead of a second watcher, and `onOpened` tells the program what was opened. The
+dashboard uses the same `AutoLauncher`, which takes one sample at a time.
+
+"Already running" is the launcher's memory plus `running.ts`: `self` makes the program write
+`running/<tool>.pid` for as long as it runs (it goes away when the process ends, and a pid that no
+process has counts for nothing), so a tool started by hand or by another program is seen too. A
+program about to open a tool first writes `claims/<tool>`; the others see it for 15 seconds, so
+several programs that watch the same board do not each open the tool.
 
 ## In tmux
 
