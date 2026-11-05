@@ -306,24 +306,31 @@ export function days(lines: Line[]): number | null {
   return head === null ? null : number(head[0])
 }
 
-/** The width of one digit of the counter in the frame's pixels, and the
- * margin around the digits read alone. */
+/** The width of one digit of the counter in the frame's pixels, the margin
+ * around the digits read alone, and the width of the line "N day(s) until
+ * Riot" with a single digit: the line is centred, so every further digit
+ * widens it by one digit. */
 const DAYS_DIGIT_W = 21
 const DAYS_MARGIN = 3
+const DAYS_LINE_W = 232
 
-/** [`days`], with a number that came with letters in it ("O day(s)") read
- * again as digits alone: the large digits of the counter read as letters
- * under the line's free read (a 9 as O), and a letter taken for a 0 would
- * count the Riot days down to 0 for good. */
+/** [`days`], with a number that came with letters or brackets in it ("O
+ * day(s)" for a 9, "7))" for a 2) read again as digits alone: the large
+ * digits of the counter read as other glyphs under the line's free read, and
+ * a letter taken for a 0 would count the Riot days down to 0 for good. The
+ * digits are counted from the width of the line read whole, as the free
+ * read's garbage has no length to trust. */
 async function daysRead(img: Rgba, lines: Line[]): Promise<number | null> {
   const head = daysHead(lines)
   if (head === null) return null
   const [text, at] = head
   const plain = number(text)
   if (text.length === 0 || /^\d+$/.test(text)) return plain
-  const box = new Rect(at.x - DAYS_MARGIN, at.y - DAYS_MARGIN, text.length * DAYS_DIGIT_W + 2 * DAYS_MARGIN, at.h + 2 * DAYS_MARGIN)
+  const wide = lines.length === 1 ? Math.round((at.w - DAYS_LINE_W) / DAYS_DIGIT_W) + 1 : 0
+  const digits = wide >= 1 && wide <= 2 ? wide : text.length
+  const box = new Rect(at.x - DAYS_MARGIN, at.y - DAYS_MARGIN, digits * DAYS_DIGIT_W + 2 * DAYS_MARGIN, at.h + 2 * DAYS_MARGIN)
   const alone = await ocrDigits(img, box, 2.0)
-  return alone.length === text.length ? Number(alone) : plain
+  return alone.length === digits ? Number(alone) : plain
 }
 
 /** A game dialog: the "Tip" box of a network timeout, the connecting notice,
