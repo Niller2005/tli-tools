@@ -137,6 +137,12 @@ own, so it says no). With it on, the tool opens in a window of its own when its 
 nothing is ever closed by it. A board that is already open when the dashboard comes up does not
 open anything: the dashboard has to see the board close and open again first.
 
+The dashboard does not have to be running for this. The loot tracker, Arcana, Vorax and Warden
+each watch the log and open the tools that have auto-launch on, with the same settings file and the
+same rule, so with only the loot tracker open, entering a Tartarus prison opens Warden. The tools
+say they run in `$XDG_RUNTIME_DIR/tli-tools/`, and a program that is about to open one says so first,
+so a tool is not opened twice when several programs see the same board open.
+
 ## Adding a tool
 
 Add an entry to `TOOLS` in [`packages/launch/src/tools.ts`](../../packages/launch/src/tools.ts): an id, a name, a
