@@ -216,6 +216,73 @@ function paint(out: Uint8Array, frame: Rgba, u: number, z: Zone): void {
   }
 }
 
+/** `img` resized to `w` x `h`: exactly the pixels `Rgba::resize` gives, the
+ * same bilinear taps and the same f32 rounding, but with the per-pixel
+ * arithmetic kept off `Math.round`'s double path (the channel sums are
+ * non-negative f32 values below 512, where `(z + 0.5) | 0` rounds the same)
+ * and the column taps in flat arrays instead of per-pixel object loads.
+ * Every read pays for one or more of these: the layout of a native capture
+ * here, the OCR crops in `prepare`. */
+export function resample(img: Rgba, w: number, h: number): Rgba {
+  if (w === img.w && h === img.h) return new Rgba(img.w, img.h, img.data.slice())
+  const d = img.data
+  const out = new Uint8Array(w * h * 4)
+  const sx = f(img.w / w)
+  const sy = f(img.h / h)
+  // Each output column's two source byte offsets in a row and the weight of
+  // the second pixel, worked out once.
+  const ca = new Int32Array(w)
+  const cb = new Int32Array(w)
+  const ct = new Float32Array(w)
+  const cu = new Float32Array(w)
+  for (let x = 0; x < w; x++) {
+    const fx = f(Math.min(Math.max(f(f((x + 0.5) * sx) - 0.5), 0), img.w - 1))
+    const x0 = Math.trunc(fx)
+    ca[x] = x0 * 4
+    cb[x] = Math.min(x0 + 1, img.w - 1) * 4
+    const t = f(fx - x0)
+    ct[x] = t
+    cu[x] = f(1 - t)
+  }
+  const rowLen = img.w * 4
+  for (let y = 0; y < h; y++) {
+    const fy = f(Math.min(Math.max(f(f((y + 0.5) * sy) - 0.5), 0), img.h - 1))
+    const y0 = Math.trunc(fy)
+    const top = y0 * rowLen
+    const bot = Math.min(y0 + 1, img.h - 1) * rowLen
+    const ty = f(fy - y0)
+    const uy = f(1 - ty)
+    let o = y * w * 4
+    for (let x = 0; x < w; x++) {
+      const a = ca[x]
+      const b = cb[x]
+      const t = ct[x]
+      const u = cu[x]
+      const t0 = f(f(d[top + a] * u) + f(d[top + b] * t))
+      const b0 = f(f(d[bot + a] * u) + f(d[bot + b] * t))
+      out[o] = clamp(f(f(t0 * uy) + f(b0 * ty)))
+      const t1 = f(f(d[top + a + 1] * u) + f(d[top + b + 1] * t))
+      const b1 = f(f(d[bot + a + 1] * u) + f(d[bot + b + 1] * t))
+      out[o + 1] = clamp(f(f(t1 * uy) + f(b1 * ty)))
+      const t2 = f(f(d[top + a + 2] * u) + f(d[top + b + 2] * t))
+      const b2 = f(f(d[bot + a + 2] * u) + f(d[bot + b + 2] * t))
+      out[o + 2] = clamp(f(f(t2 * uy) + f(b2 * ty)))
+      const t3 = f(f(d[top + a + 3] * u) + f(d[top + b + 3] * t))
+      const b3 = f(f(d[bot + a + 3] * u) + f(d[bot + b + 3] * t))
+      out[o + 3] = clamp(f(f(t3 * uy) + f(b3 * ty)))
+      o += 4
+    }
+  }
+  return new Rgba(w, h, out)
+}
+
+/** A non-negative f32 channel sum rounded and clamped to a byte, as
+ * `Math.min(255, Math.max(0, Math.round(z)))` on it. */
+function clamp(z: number): number {
+  const r = (z + 0.5) | 0
+  return r > 255 ? 255 : r
+}
+
 /** `frame` at the reference size in the board layout at interface scale `u`
  * (see [`uiScale`]). A 16:9 frame (within 1%) at u = 1 is resized. Any
  * other frame is laid out by [`ZONES`]: a reference pixel (x, y) in a zone
@@ -225,7 +292,7 @@ function paint(out: Uint8Array, frame: Rgba, u: number, z: Zone): void {
  * `frame` itself; pixels outside every zone keep to the centre. Pixels past
  * the frame's edges are black. */
 export function layOut(frame: Rgba, u: number): Rgba {
-  if (u === 1.0 && is16x9(frame.w, frame.h)) return frame.resize(REF_W, REF_H)
+  if (u === 1.0 && is16x9(frame.w, frame.h)) return resample(frame, REF_W, REF_H)
   const data = new Uint8Array(REF_W * REF_H * 4)
   paint(data, frame, u, zone(0, 0, REF_W, REF_H, 'centre', 'centre'))
   for (const z of zones()) paint(data, frame, u, z)
