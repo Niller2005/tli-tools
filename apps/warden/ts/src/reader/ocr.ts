@@ -64,21 +64,23 @@ export function ocr(img: Rgba, rect: Rect, scale: number): Promise<Line[]> {
  *
  * A region whose pixels are the same as the last time it was read is not
  * read again: the program reads the same text from the same pixels, and
- * starting it costs more than the whole read of the board. */
+ * starting it costs more than the whole read of the board. The same means
+ * within the noise of the game's animated art, see `sameCrop`; the pixels
+ * kept are those of the read, so slow drift ends in a new read. */
 export async function ocrAll(imgs: Rgba[], regions: [Rect, number][]): Promise<Line[][]> {
   const keys: string[] = []
-  const hashes: number[] = []
+  const crops: Uint8Array[] = []
   const inputs: (Rgba | null)[] = []
   const known: (Line[] | null)[] = []
   for (let i = 0; i < regions.length; i++) {
     const [rect, scale] = regions[i]
     const img = imgs[i]
-    const hash = cropHash(img, rect)
+    const pixels = cropLuma(img, rect)
     const key = cacheKey(img, rect, scale)
     const hit = cache.get(key)
     keys.push(key)
-    hashes.push(hash)
-    if (hit !== undefined && hit.hash === hash) {
+    crops.push(pixels)
+    if (hit !== undefined && sameCrop(hit.pixels, pixels)) {
       known.push(hit.lines)
       inputs.push(null)
       continue
@@ -92,7 +94,7 @@ export async function ocrAll(imgs: Rgba[], regions: [Rect, number][]): Promise<L
     const [rect, scale] = regions[i]
     const lines = known[i] ?? mapLines(read[i] ?? [], rect, scale)
     if (known[i] === null) {
-      cache.set(keys[i] as string, { hash: hashes[i] as number, lines })
+      cache.set(keys[i] as string, { pixels: crops[i] as Uint8Array, lines })
       // The oldest region goes when the table is full.
       if (cache.size > CACHE_SIZE) {
         const oldest = cache.keys().next()
@@ -109,15 +111,15 @@ export async function ocrAll(imgs: Rgba[], regions: [Rect, number][]): Promise<L
  * free read of a lone large digit does (a 9 for an O). Empty when nothing
  * reads. */
 export async function ocrDigits(img: Rgba, rect: Rect, scale: number): Promise<string> {
-  const hash = cropHash(img, rect)
+  const pixels = cropLuma(img, rect)
   const key = `${cacheKey(img, rect, scale)}#digits`
   const hit = cache.get(key)
-  if (hit !== undefined && hit.hash === hash) return hit.lines.map((l) => l.text).join('')
+  if (hit !== undefined && sameCrop(hit.pixels, pixels)) return hit.lines.map((l) => l.text).join('')
   const input = prepare(img, rect, scale)
   if (input === null) return ''
   const [read] = await ocrEngine().recognizeAll([input], true)
   const lines = mapLines(read ?? [], rect, scale)
-  cache.set(key, { hash, lines })
+  cache.set(key, { pixels, lines })
   if (cache.size > CACHE_SIZE) {
     const oldest = cache.keys().next()
     if (!oldest.done) cache.delete(oldest.value)
@@ -141,9 +143,9 @@ function mapLines(lines: TextLine[], rect: Rect, scale: number): Line[] {
   })
 }
 
-/** A region read before: the hash of its pixels and the lines it gave. */
+/** A region read before: its pixels' luma when read, and the lines it gave. */
 interface Read {
-  hash: number
+  pixels: Uint8Array
   lines: Line[]
 }
 
@@ -166,22 +168,40 @@ function cacheKey(img: Rgba, rect: Rect, scale: number): string {
   return `${x0},${y0},${x1},${y1}@${scale}`
 }
 
-/** The hash of the pixels of `rect` in `img`: the same pixels give the same
- * hash, and different ones almost never do. */
-function cropHash(img: Rgba, rect: Rect): number {
+/** The luma of the pixels of `rect` in `img`, row by row: what a later read of
+ * the region is compared with. */
+function cropLuma(img: Rgba, rect: Rect): Uint8Array {
   const x0 = Math.min(Math.max(rect.x, 0), img.w)
   const y0 = Math.min(Math.max(rect.y, 0), img.h)
   const x1 = Math.min(Math.max(rect.x + rect.w, x0), img.w)
   const y1 = Math.min(Math.max(rect.y + rect.h, y0), img.h)
-  let hash = 0x811c9dc5
+  const out = new Uint8Array((x1 - x0) * (y1 - y0))
+  let k = 0
   for (let y = y0; y < y1; y++) {
-    const from = (y * img.w + x0) * 4
-    const to = (y * img.w + x1) * 4
-    for (let i = from; i < to; i++) {
-      hash = Math.imul(hash ^ (img.data[i] as number), 0x01000193)
-    }
+    for (let x = x0; x < x1; x++) out[k++] = luma(img.data, (y * img.w + x) * 4)
   }
-  return hash >>> 0
+  return out
+}
+
+/** How far a pixel's luma may move and still count as the same: the game's
+ * animated art and its video dither shift pixels by a few levels, which no
+ * glyph change does. */
+const LUMA_NOISE = 16
+
+/** How many pixels may move further than that and the region still count as
+ * unchanged: a stray one or two. A changed glyph moves dozens. */
+const STRAY_PIXELS = 3
+
+/** Whether two crops of the same region show the same text: at most
+ * `STRAY_PIXELS` pixels differ by more than `LUMA_NOISE`. */
+function sameCrop(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) return false
+  let strays = 0
+  for (let i = 0; i < a.length; i++) {
+    const d = (a[i] as number) - (b[i] as number)
+    if ((d > LUMA_NOISE || d < -LUMA_NOISE) && ++strays > STRAY_PIXELS) return false
+  }
+  return true
 }
 
 /** The OCR input for `rect`: the crop upscaled by `scale` with its contrast
