@@ -430,21 +430,31 @@ function nccAt(strip: Strip, m: Mark, s: number, y: number, step: number, taps: 
   let st = 0
   let stt = 0
   let spt = 0
+  const grey = strip.grey
+  const xs = taps.xi
+  const txs = taps.tx
+  const t = m.t
   for (let j = 0; j < th; j += step) {
     const [yi, ty] = axis(f(f(y + f(f(j + 0.5) * s)) - 0.5), strip.h)
-    for (let k = 0; k < taps.xi.length; k++) {
-      const xi = taps.xi[k] as number
-      const tx = taps.tx[k] as number
-      const top = f(strip.grey[yi * strip.w + xi] + f(f(strip.grey[yi * strip.w + xi + 1] - strip.grey[yi * strip.w + xi]) * tx))
-      const bot = f(strip.grey[(yi + 1) * strip.w + xi] + f(f(strip.grey[(yi + 1) * strip.w + xi + 1] - strip.grey[(yi + 1) * strip.w + xi]) * ty))
+    // The two rows the template row samples, their base offsets worked out
+    // once instead of per pixel.
+    const topAt = yi * strip.w
+    const botAt = (yi + 1) * strip.w
+    for (let k = 0; k < xs.length; k++) {
+      const xi = xs[k] as number
+      const tx = txs[k] as number
+      const a = grey[topAt + xi]
+      const top = f(a + f(f(grey[topAt + xi + 1] - a) * tx))
+      const c = grey[botAt + xi]
+      const bot = f(c + f(f(grey[botAt + xi + 1] - c) * ty))
       const p = f(top + f(f(bot - top) * ty))
-      const t = m.t[j * tw + k * step]
+      const tv = t[j * tw + k * step]
       n += 1
       sp += p
       spp += p * p
-      st += t
-      stt += t * t
-      spt += p * t
+      st += tv
+      stt += tv * tv
+      spt += p * tv
     }
   }
   const vp = spp - (sp * sp) / n
