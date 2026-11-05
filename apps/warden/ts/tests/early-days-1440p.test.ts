@@ -143,3 +143,16 @@ test('the destination pick of day 5 reads the Coin of Fate having raised the Lio
   })
   expect(kinds).toEqual(['sealed', 'lion4'])
 })
+
+const THREE_WAY_DAY5 = new URL('./fixtures/s16-three-way-day5-1440p.png', import.meta.url).pathname
+
+test('the three decisions on day 5 read a Normal Alpha Wolf under the warden in cell 14', async () => {
+  const panels = await readPanels(loadPng(THREE_WAY_DAY5))
+  expect(panels.screen).toBe('manage')
+  expect(panels.days).toBe(15)
+  expect(panels.decision).toEqual(['Consume', 'Replace', 'End'])
+  const [model] = await readModel(THREE_WAY_DAY5)
+  expect(model.warden).toBe(13)
+  const cell = model.cells[13]
+  expect(cell?.kind === 'inmate' ? `${cell.beast}${cell.tier}` : cell?.kind).toBe('wolf0')
+})
