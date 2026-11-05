@@ -475,13 +475,8 @@ export class State implements StateInit {
       event: this.event === null ? null : { ...this.event },
       incidentCounts: { ...this.incidentCounts },
       incidentWeights: { ...this.incidentWeights },
-      cells: this.cells.map((c) => ({
-        ...c,
-        inmate: c.inmate === null ? null : { ...c.inmate },
-        hidden: c.hidden === null ? null : { ...c.hidden },
-        nest: c.nest === null ? null : { ...c.nest },
-      })),
-      vault: this.vault.map((v) => ({ ...v })),
+      cells: this.cells.map(copyCell),
+      vault: this.vault.map((v) => ({ id: v.id, beast: v.beast, day: v.day })),
       cache: this.cache,
       tools: [...this.tools],
       rerolls: this.rerolls,
@@ -489,7 +484,7 @@ export class State implements StateInit {
       objective: this.objective === null ? null : { ...this.objective },
       theme: this.theme,
       used: { ...this.used },
-      prey: this.prey.map((l) => ({ ...l })),
+      prey: this.prey.map((l) => ({ lion: l.lion, prey: l.prey, preyBeast: l.preyBeast, rounds: l.rounds, next: l.next })),
       nextId: this.nextId,
       stats: { ...this.stats },
       result: this.result === null ? null : { ...this.result },
@@ -544,6 +539,26 @@ export function blankCell(n: number): Cell {
     nest: null,
     event: null,
     ivory: false,
+  }
+}
+
+function copyInmate(i: Inmate | null): Inmate | null {
+  return i === null ? null : { id: i.id, beast: i.beast, tier: i.tier }
+}
+
+/** A cell with its own inmates and nest; written out field by field, because
+ * the solver clones a state for every action it tries. */
+function copyCell(c: Cell): Cell {
+  return {
+    n: c.n,
+    sealed: c.sealed,
+    inmate: copyInmate(c.inmate),
+    hidden: copyInmate(c.hidden),
+    known: c.known,
+    scratch: c.scratch,
+    nest: c.nest === null ? null : { due: c.nest.due },
+    event: c.event,
+    ivory: c.ivory,
   }
 }
 
