@@ -85,3 +85,17 @@ test('Consume, Replace and End read together, with three cells opened by the inc
   })
   expect(kinds).toEqual(['mammoth1', 'rat1', 'lion0'])
 })
+
+const DAY4 = new URL('./fixtures/s16-destination-day4-1440p.png', import.meta.url).pathname
+
+test('the destination pick of day 4 reads the Rare Rat the Replace left in cell 8', async () => {
+  const panels = await readPanels(loadPng(DAY4))
+  expect(panels.screen).toBe('patrol')
+  expect(panels.days).toBe(16)
+  expect(panels.doors).toEqual([9, 10, 12])
+  const [model] = await readModel(DAY4)
+  expect(model.day).toBe(4)
+  expect(model.warden).toBe(7)
+  const cell = model.cells[7]
+  expect(cell?.kind === 'inmate' ? `${cell.beast}${cell.tier}` : cell?.kind).toBe('rat2')
+})
