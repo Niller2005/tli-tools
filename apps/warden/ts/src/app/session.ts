@@ -387,6 +387,12 @@ export class Session {
     return this.scanTask !== null
   }
 
+  /** The number of the solve on show. A new solve or a dropped run changes it; a read that finds the same board
+   * over and over does not, though it hands out a new `reading` each time. */
+  get solveId(): number {
+    return this.solveGen
+  }
+
   /** Called from the worker after each partial ranking (the UI asks for a
    * repaint). */
   onProgress(notify: () => void): void {
