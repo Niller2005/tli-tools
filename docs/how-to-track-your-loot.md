@@ -132,6 +132,9 @@ which league or season a character is in, so a character is told apart by its id
 The tracker learns prices from the exchange: when you look an item up in the game, the prices of the listings come
 back in the log, and the tracker keeps the tenth of them, which is close to what a quick sale gets.
 
+A search with affixes picked (gear, memories) only lists the items that have them, so the tracker ignores it: what it
+would learn is the price of that roll, not of the item.
+
 It only knows about the items you have looked up. For the rest, set the price yourself: move to the item in the
 *Bag* or the *Prices* panel and press `e`, then type the price in FE and press `enter`. A price you set wins over
 one that was learned, and it is kept when the tracker is closed.
