@@ -21,7 +21,7 @@ import {
   writeSettings,
   type Tool,
 } from '@tli/launch'
-import { itemTableAge, refreshBaseline } from '@tli/tracker'
+import { itemTableAge, refreshBaselineStatus } from '@tli/tracker'
 import { startApp } from '@tli/tui'
 import { DashboardApp, freshState } from './app'
 import { launch } from './launch'
@@ -64,18 +64,11 @@ async function dashboard(): Promise<void> {
       return
     }
     fetching = true
-    void refreshBaseline().then(
-      (data) => {
-        fetching = false
-        state.message = `the community prices are here: ${data.prices.length} items`
-        draw()
-      },
-      (error) => {
-        fetching = false
-        state.message = { text: `the community prices could not be fetched: ${(error as Error).message}`, tone: 'red' }
-        draw()
-      },
-    )
+    void refreshBaselineStatus().then((refresh) => {
+      fetching = false
+      state.message = refresh.ok ? refresh.message : { text: refresh.message, tone: 'red' }
+      draw()
+    })
   }
 
   while (true) {

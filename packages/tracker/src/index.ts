@@ -58,11 +58,11 @@ export {
   baselineAge,
   baselineIsStale,
   baselinePath,
-  fetchBaseline,
   parsePrices,
   readBaseline,
-  writeBaseline,
+  refreshBaselineStatus,
   type BaselineData,
+  type BaselineRefresh,
 } from './baseline'
 export { ExchangeParser, FE_ITEM, isFiltered, parseQuote, parseRequest, type Quote } from './exchange'
 export { valueOf, durationOf, perHour, TRADE_TAX, type Value } from './valuation'
@@ -80,6 +80,5 @@ export {
 } from './store'
 export { zoneName, ZONE_NAMES, PRISON_NAME, VORAX_NAME } from './zones'
 export { trackerStatus, sessionSummary, type SessionSummary, type SummaryRun } from './status'
-export { refreshBaseline } from './baseline'
 export { itemTableAge, readItemTableMeta, type ItemTableMeta } from './items'
 export { findWikiPage, wikiSearchUrl, wikiSlug, wikiUrl, type WikiTarget } from './wiki'
