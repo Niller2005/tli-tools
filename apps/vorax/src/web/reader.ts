@@ -67,7 +67,7 @@ export function textReader(): Promise<ReadText | null> {
 /* ---------- the scanner ---------- */
 /** skip: (Vorax Helper) asked of the board's first reading: true leaves the cards unread (a picture the page will set aside) */
 export interface ScanOptions { skip?(base: Reading): boolean }
-export interface Scanner { (img: ImageData, trigger?: string, local?: LocalRefs, o?: ScanOptions): Promise<Reading>; ocr: Promise<boolean> }
+export interface Scanner { (img: ImageData, trigger?: string, local?: LocalRefs, o?: ScanOptions): Promise<Reading & { crop: Crop }>; ocr: Promise<boolean> }
 export function createScanner(): Scanner {
   const w = blobWorker(SRC()!.scan)
   const waiting = new Map<number, (r: never) => void>()
@@ -103,7 +103,7 @@ export function createScanner(): Scanner {
     if (!full.problems.some(p => p.kind === 'animating')) crops.set(size, best.crop)
     return { img: best.img, base: best.base, crop: best.crop }
   }
-  const scan = (async (img: ImageData, trigger?: string, local: LocalRefs = {}, o: ScanOptions = {}) => {
+  const scan = async (img: ImageData, trigger?: string, local: LocalRefs = {}, o: ScanOptions = {}) => {
     const f = await frame(img, trigger, local)
     // the card names are most of the time a reading takes: not read for a picture the page won't use
     if (o.skip?.(f.base)) return Object.assign(f.base, { crop: f.crop, cardsSkipped: true })
@@ -112,9 +112,8 @@ export function createScanner(): Scanner {
       ? await ask<Reading>({ img: f.img, trigger, local, pictures: true })
       : await readTitles(f.img, f.base, readText, async (phase: HandPhase, size: number, which: number[]) => ask<Record<number, PictureRead>>({ kind: 'slots', img: f.img, phase, size, slots: which, local, shift: f.base.handShift, ui: f.base.ui }))
     return Object.assign(r, { crop: f.crop })
-  }) as Scanner
-  scan.ocr = ocr
-  return scan
+  }
+  return Object.assign(scan, { ocr }) satisfies Scanner
 }
 
 /** An image file / pasted picture as pixels. */
