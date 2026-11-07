@@ -97,7 +97,7 @@ The keys:
 | `a` | Open Arcana in a window of its own |
 | `v` | Open Vorax in a window of its own |
 | `w` | Open Warden in a window of its own |
-| `o` | The loot card over the game: off, bottom-left, bottom-right. Starts the overlay when none runs |
+| `o` | The loot card over the game: off, bottom-left, bottom-right. Starts the overlay when none runs. It sums up the session going on, or today's runs when none is: runs, time, loot value per hour, in total and per run |
 | `?` | The help |
 | `q` | Quit |
 
