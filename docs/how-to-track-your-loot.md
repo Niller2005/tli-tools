@@ -231,8 +231,9 @@ visit to the Tartarus prison, `vorax` for a Vorax fight.
 
 With the overlay (see [`packages/overlay`](../packages/overlay/README.md)), the tracker can
 draw a small card in a bottom corner of the screen about the run that is going on, or the last one when none is: what
-it is worth, how long it took, its pace in FE an hour, and the eight most valuable things picked up in it. While a
-session is going on, the first line under the head is the session's FE an hour and its number of runs.
+it is worth, how long it took, its pace in FE an hour, and the eight most valuable things picked up in it. Two lines
+under the head sum up the farming: the session you started with `n` while one is going on, otherwise the runs of
+today. The first gives the runs and the time, the second what the loot is worth an hour, in total and a run.
 
 ```
 bun run tracker -- --overlay=left     # bottom-left corner
