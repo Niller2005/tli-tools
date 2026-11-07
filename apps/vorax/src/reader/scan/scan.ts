@@ -9,7 +9,7 @@ import { crossCheck, readTank, type TankRead } from './tanks'
 import { cardsPresent, fanSize, headerOnly, loneMiddle, readHand, readPhase } from './cards'
 import { readInstruments } from './instruments'
 import { normalColours, readAreas } from './levels'
-import { findLabels, LABEL_MIN_OFF, withLabels, type TankFix } from './labels'
+import { findLabels, LABEL_MIN_OFF, withLabels } from './labels'
 import normal from './levels.json'
 
 const DIGIT_MIN = 0.75

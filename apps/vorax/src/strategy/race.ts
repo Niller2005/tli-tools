@@ -2,7 +2,7 @@
 // after the first slices stops being played. Futures are numbered and seeded by their number, so every option is
 // played on the same futures (common random numbers) and slices add up exactly as the full run would.
 // Meant to give the same advice as the full look-ahead in less time; the local sim (dealt.ts rplan / rsmart) checks that.
-import type { Action, GameState } from '@/engine/types'
+import type { Action } from '@/engine/types'
 import { canRefresh } from '@/engine/game'
 import { evChooser, instrumentFutures, play, potionFutures, shortlist, type Chooser, type InstrumentChoice, type InstrumentPicker, type LookAhead, type Tally } from './bot'
 
