@@ -14,6 +14,16 @@ export function fe(n: number): string {
   return `${num(n)} FE`
 }
 
+/** A big number in few columns: 292224385 -> "292.2M", 61000 -> "61.0k", 840 -> "840". */
+export function compact(value: number): string {
+  const sign = value < 0 ? '-' : ''
+  const n = Math.abs(value)
+  if (n >= 1e9) return `${sign}${(n / 1e9).toFixed(1)}B`
+  if (n >= 1e6) return `${sign}${(n / 1e6).toFixed(1)}M`
+  if (n >= 1e4) return `${sign}${(n / 1e3).toFixed(1)}k`
+  return `${sign}${num(n)}`
+}
+
 /** A unit price in FE, small ones keep their first digits: 533 -> "533 FE", 0.0003 -> "0.0003 FE". */
 export function price(n: number): string {
   if (n >= 1 || n <= 0) return fe(n)

@@ -26,6 +26,7 @@ import {
   color,
   colorEnabled,
   defaultBackground,
+  compact,
   defaultForeground,
   duration,
   fe,
@@ -92,16 +93,6 @@ const kindLabel = (kind: RunKind): string => (kind === 'map' ? '' : kind)
 function listTitle(name: string, count: number, total: number, filter: string): string {
   if (filter.trim() === '') return `${name} (${total})`
   return `${name} /${fit(filter, TITLE_FILTER)} (${count}/${total})`
-}
-
-/** A big number in few columns: 292224385 -> "292.2M", 61000 -> "61.0k", 840 -> "840". */
-function compact(value: number): string {
-  const sign = value < 0 ? '-' : ''
-  const n = Math.abs(value)
-  if (n >= 1e9) return `${sign}${(n / 1e9).toFixed(1)}B`
-  if (n >= 1e6) return `${sign}${(n / 1e6).toFixed(1)}M`
-  if (n >= 1e4) return `${sign}${(n / 1e3).toFixed(1)}k`
-  return `${sign}${num(n)}`
 }
 
 /** A day and a time of the player's own clock: "11-01 14:05". */
