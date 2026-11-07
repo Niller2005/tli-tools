@@ -35,7 +35,32 @@ describe('the exchange', () => {
     ]
     const parser = new ExchangeParser()
     const found = lines.map((l) => parser.feed(l)).filter((q) => q !== null)
-    expect(found).toEqual([{ item: 100200, prices: [0.0002, 0.0004] }])
+    expect(found).toEqual([{ item: 100200, prices: [0.0002, 0.0004], filtered: false }])
+  })
+
+  test('a search with affixes picked is marked filtered, whatever the answer names', () => {
+    // Real frame: the item's own refer first, then one `<id>_d1_mt30` refer for each affix picked.
+    const head = '[2026.11.06-16.59.00:254][344]TLNetGame: Display: [Game] '
+    const lines = [
+      `${head}----Socket SendMessage STT----XchgSearchPrice----SynId = 9186`,
+      '+filters+1+key [4]',
+      '|       | +refer [8006]',
+      '|       +2+params+1+min [95]',
+      '|       | +key [5]',
+      '|       | +refer [331003744_d1_mt30]',
+      '+typ3 [60]',
+      `${head}----Socket SendMessage End----`,
+      `${head}----Socket RecvMessage STT----XchgSearchPrice----SynId = 9186`,
+      '+prices+1+currency [100300]',
+      '|      | +unitPrices+1 [195.0]',
+      '|      | |          +2 [999.0]',
+      '+errCode',
+      '+itemGoldId [8006]',
+      `${head}----Socket RecvMessage End----`,
+    ]
+    const parser = new ExchangeParser()
+    const found = lines.map((l) => parser.feed(l)).filter((q) => q !== null)
+    expect(found).toEqual([{ item: 8006, prices: [195, 999], filtered: true }])
   })
 
   test('the item a search asked for is read', () => {

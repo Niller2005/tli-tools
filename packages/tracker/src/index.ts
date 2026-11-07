@@ -64,7 +64,7 @@ export {
   writeBaseline,
   type BaselineData,
 } from './baseline'
-export { ExchangeParser, FE_ITEM, parseQuote, parseRequest, type Quote } from './exchange'
+export { ExchangeParser, FE_ITEM, isFiltered, parseQuote, parseRequest, type Quote } from './exchange'
 export { valueOf, durationOf, perHour, TRADE_TAX, type Value } from './valuation'
 export { ItemNames, ITEM_TABLE_PATH, userItemsPath, configDir, dataDir, dataPath, type ItemEntry } from './items'
 export { LogReader, readTail, TAIL_BYTES, type Batch } from './log'

@@ -569,8 +569,9 @@ export class Tracker {
     }
   }
 
-  /** Keeps what the exchange said about an item. */
+  /** Keeps what the exchange said about an item; a search with affixes picked says nothing of its price. */
   private learnPrice(quote: Quote): void {
+    if (quote.filtered) return
     this.prices.learn(quote.item, quote.prices, this.lastAt)
   }
 

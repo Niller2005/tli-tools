@@ -19,6 +19,10 @@
 //
 // `refer` in the request and `itemGoldId` in the answer are the item's config id; `currency` is the
 // currency the prices are in (100300 is Flame Elementium, the game's FE).
+//
+// A search that picks affixes adds more filters, whose `refer` is `<id>_d1_mt30` (an underscore and a
+// suffix) after the item's own plain `refer`. The answer still names the item, but its listings are
+// only the ones with those affixes, so the price is not the item's price: the quote says `filtered`.
 
 /** What one search of the exchange found. */
 export interface Quote {
@@ -26,6 +30,8 @@ export interface Quote {
   item: number
   /** the prices of the listings, in FE, low to high */
   prices: number[]
+  /** whether the search picked affixes: the listings are then a subset and say nothing of the item's price */
+  filtered: boolean
 }
 
 const RE_SEND = /----Socket SendMessage STT----XchgSearchPrice----SynId = (\d+)/
@@ -33,6 +39,7 @@ const RE_RECV = /----Socket RecvMessage STT----XchgSearchPrice----SynId = (\d+)/
 const RE_SEND_END = /----Socket SendMessage End----/
 const RE_RECV_END = /----Socket RecvMessage End----/
 const RE_REFER = /\+refer \[(\d+)\]/
+const RE_REFER_FILTER = /\+refer \[\d+_/
 const RE_ITEM_GOLD = /\+itemGoldId \[(\d+)\]/
 const RE_CURRENCY = /\+currency \[(\d+)\]/
 const RE_PRICE = /\+(?:unitPrices\+)?\d+ \[([0-9.]+)\]/g
@@ -47,7 +54,7 @@ export class ExchangeParser {
   private body: string[] = []
   private synId = ''
   /** The item each recent request asked for, by SynId: some answers (currency, materials) don't name the item. */
-  private readonly asked = new Map<string, number>()
+  private readonly asked = new Map<string, { item: number; filtered: boolean }>()
 
   /** A line of the log; a quote when the line finished an answer. */
   feed(line: string): Quote | null {
@@ -66,9 +73,10 @@ export class ExchangeParser {
       return null
     }
     if (this.mode === 'send' && RE_SEND_END.test(line)) {
-      const item = parseRequest(this.body.join('\n'))
+      const request = this.body.join('\n')
+      const item = parseRequest(request)
       if (item !== null && item !== 0) {
-        this.asked.set(this.synId, item)
+        this.asked.set(this.synId, { item, filtered: isFiltered(request) })
         if (this.asked.size > 32) this.asked.delete(this.asked.keys().next().value as string)
       }
       this.mode = 'idle'
@@ -81,7 +89,7 @@ export class ExchangeParser {
       this.asked.delete(this.synId)
       this.mode = 'idle'
       this.body = []
-      return parseQuote(body, asked)
+      return parseQuote(body, asked?.item ?? null, asked?.filtered ?? false)
     }
     if (this.mode !== 'idle') this.body.push(line)
     return null
@@ -94,7 +102,7 @@ export class ExchangeParser {
 }
 
 /** The item and the prices in the body of an answer; `asked` is the item the request named, for answers that don't. */
-export function parseQuote(body: string, asked: number | null = null): Quote | null {
+export function parseQuote(body: string, asked: number | null = null, filtered = false): Quote | null {
   const named = RE_ITEM_GOLD.exec(body)
   const item = named !== null ? +named[1] : asked
   if (item === null) return null
@@ -110,11 +118,16 @@ export function parseQuote(body: string, asked: number | null = null): Quote | n
     for (const m of section.matchAll(RE_PRICE)) prices.push(Number(m[1]))
   }
   if (!found || prices.length === 0) return null
-  return { item, prices }
+  return { item, prices, filtered }
 }
 
 /** The item a search asked for, from the body of a request. */
 export function parseRequest(body: string): number | null {
   const m = RE_REFER.exec(body)
   return m === null ? null : +m[1]
+}
+
+/** Whether a request picked affixes, which narrows the listings to the ones that have them. */
+export function isFiltered(body: string): boolean {
+  return RE_REFER_FILTER.test(body)
 }
