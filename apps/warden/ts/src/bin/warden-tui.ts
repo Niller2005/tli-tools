@@ -20,12 +20,11 @@
 
 import { createCapture } from '@tli/capture'
 import { captureMinigame, logHint, minigameCaptureGate, retryCapture, watchMinigames } from '@tli/gamelog'
-import { asBytes } from '@tli/png'
 import { startApp } from '@tli/tui'
 import { Session, Watch, fingerprint } from '@/app/session'
 import { timed } from '@/app/profile'
 import { solvePool } from '@/app/solve-pool'
-import { Rgba, loadPng } from '@/reader/mod'
+import { asRgba, loadPng } from '@/reader/mod'
 import { publishCard } from '@tli/overlay'
 import { startAutoLaunch } from '@tli/launch'
 import { WardenApp } from '@/tui/app'
@@ -104,12 +103,6 @@ function args(): Args {
     }
   }
   return a
-}
-
-/** The game window's picture, as the reader takes it. */
-function asRgba(img: { width: number; height: number; data: Uint8ClampedArray }): Rgba {
-  const bytes = asBytes(img)
-  return new Rgba(bytes.width, bytes.height, bytes.data)
 }
 
 /** The text of a title as a pattern that matches it as it stands. */
