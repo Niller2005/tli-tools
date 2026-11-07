@@ -63,13 +63,13 @@ and says how old they are. They are never mixed into what was learned: they have
 own, and the state that is saved does not carry them.
 
 ```ts
-import { baselineIsStale, fetchBaseline, readBaseline, writeBaseline } from '@tli/tracker'
+import { baselineIsStale, readBaseline, refreshBaselineStatus } from '@tli/tracker'
 
 const cached = await readBaseline()
 if (baselineIsStale(cached)) {
-  const data = await fetchBaseline()
-  tracker.prices.setBaseline(data.prices)
-  await writeBaseline(data)
+  const refresh = await refreshBaselineStatus() // never throws; fetches and keeps the prices on disk
+  if (refresh.ok) tracker.prices.setBaseline(refresh.data.prices)
+  console.log(refresh.message) // the line a status bar shows, for either outcome
 }
 ```
 
@@ -141,16 +141,16 @@ object: `id`, `line`, `tone`, `at`, with an empty line when the tracker has no r
 
 The dashboard also shows how old the community prices and the item-name table are, and can ask for
 the prices again. `baselineAge` says how old the prices on disk are (`readBaseline` reads them);
-`refreshBaseline` makes the same fetch `fetchBaseline` makes and keeps the result on disk; and
+`refreshBaselineStatus` fetches them, keeps the result on disk and says what came of it; and
 `itemTableAge` says how old the shipped table is, from the `meta` at its top that the generating
 script writes.
 
 ```ts
-import { baselineAge, itemTableAge, readBaseline, refreshBaseline } from '@tli/tracker'
+import { baselineAge, itemTableAge, readBaseline, refreshBaselineStatus } from '@tli/tracker'
 
 const age = baselineAge(await readBaseline()) // ms, or null when there is nothing on disk
 const tableAge = await itemTableAge() // ms since data/items.json was built
-await refreshBaseline() // fetch the prices and keep them on disk
+await refreshBaselineStatus() // fetch the prices and keep them on disk; the result says if it worked
 ```
 
 ## The data of the items

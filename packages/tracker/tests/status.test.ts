@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { STATE_VERSION, type SavedRun, type SavedState } from '../src/engine'
-import { baselineAge, readBaseline, refreshBaseline } from '../src/baseline'
+import { baselineAge, readBaseline, refreshBaseline, refreshBaselineStatus } from '../src/baseline'
 import { itemTableAge, readItemTableMeta } from '../src/items'
 import { sessionSummary, trackerStatus } from '../src/status'
 
@@ -197,6 +197,34 @@ describe('refreshBaseline', () => {
       const kept = await readBaseline(path)
       expect(kept).toEqual(data)
       expect(baselineAge(kept, 61_000)).toBe(60_000)
+    } finally {
+      globalThis.fetch = realFetch
+    }
+  })
+})
+
+describe('refreshBaselineStatus', () => {
+  test('hands back the prices it kept when the fetch works', async () => {
+    const realFetch = globalThis.fetch
+    globalThis.fetch = (async () => new Response(JSON.stringify({ items: [{ id: 100, price: 10 }] }))) as unknown as typeof fetch
+    try {
+      const path = await folder('baseline.json')
+      const refresh = await refreshBaselineStatus(1000, path)
+      expect(refresh.ok).toBe(true)
+      if (refresh.ok) expect(await readBaseline(path)).toEqual(refresh.data)
+    } finally {
+      globalThis.fetch = realFetch
+    }
+  })
+
+  test('a failed fetch is a result, writes nothing, and does not throw', async () => {
+    const realFetch = globalThis.fetch
+    globalThis.fetch = (async () => new Response('', { status: 503 })) as unknown as typeof fetch
+    try {
+      const path = await folder('baseline.json')
+      const refresh = await refreshBaselineStatus(1000, path)
+      expect(refresh.ok).toBe(false)
+      expect(await readBaseline(path)).toBeNull()
     } finally {
       globalThis.fetch = realFetch
     }

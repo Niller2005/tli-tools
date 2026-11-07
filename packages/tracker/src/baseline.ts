@@ -145,6 +145,26 @@ export async function refreshBaseline(now = Date.now(), path = baselinePath()): 
   return data
 }
 
+/** What a refresh came to, and the line a screen says about it. */
+export type BaselineRefresh =
+  | { ok: true; data: BaselineData; message: string }
+  | { ok: false; message: string }
+
+/**
+ * The refresh a key runs: `refreshBaseline` that never throws, with the words for the status line.
+ *
+ * A screen applies `data` to what it shows when the refresh worked, and shows `message` either way.
+ */
+export async function refreshBaselineStatus(now = Date.now(), path = baselinePath()): Promise<BaselineRefresh> {
+  try {
+    const data = await refreshBaseline(now, path)
+    return { ok: true, data, message: `the community prices are here: ${data.prices.length} items` }
+  } catch (error) {
+    const why = error instanceof Error ? error.message : String(error)
+    return { ok: false, message: `the community prices could not be fetched: ${why}` }
+  }
+}
+
 /** How old the prices are, in ms; null when there are none. */
 export function baselineAge(data: BaselineData | null, now = Date.now()): number | null {
   if (data === null) return null

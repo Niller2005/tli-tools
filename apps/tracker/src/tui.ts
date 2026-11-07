@@ -26,13 +26,12 @@ import {
   LogReader,
   Tracker,
   baselineIsStale,
-  fetchBaseline,
   findWikiPage,
   loadTracker,
   readBaseline,
+  refreshBaselineStatus,
   saveTracker,
   userItemsPath,
-  writeBaseline,
   type WikiTarget,
 } from '@tli/tracker'
 import { startApp } from '@tli/tui'
@@ -215,16 +214,12 @@ if (cached !== null) {
 
 /** Fetches the community prices and puts them under everything else. */
 async function refreshBaseline(): Promise<void> {
-  try {
-    const data = await fetchBaseline()
-    tracker.prices.setBaseline(data.prices)
-    app.state.baselineAt = data.fetchedAt
-    app.state.baselineCount = data.prices.length
-    await writeBaseline(data)
-    app.state.message = `the community prices are here: ${data.prices.length} items`
-  } catch (error) {
-    const why = error instanceof Error ? error.message : String(error)
-    app.state.message = `the community prices could not be fetched: ${why}`
+  const refresh = await refreshBaselineStatus()
+  if (refresh.ok) {
+  app.state.message = refresh.message
+    tracker.prices.setBaseline(refresh.data.prices)
+    app.state.baselineAt = refresh.data.fetchedAt
+    app.state.baselineCount = refresh.data.prices.length
   }
   app.draw()
 }
