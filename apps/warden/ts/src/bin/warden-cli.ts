@@ -15,10 +15,9 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { extname } from 'node:path'
 import { createCapture } from '@tli/capture'
-import { asBytes } from '@tli/png'
 import { buildState, modelFromJson, type Model } from '@/board/board'
 import { toolFromKey, type Tool } from '@/engine/data'
-import { Rgba, readModel, savePng, warningText } from '@/reader/mod'
+import { Rgba, asRgba, readModel, savePng, warningText } from '@/reader/mod'
 import { LOW, bench, isLow, meanSe, spread, strategyBench, summarize, type Game, type Solo } from '@/solver/bench'
 import { cloneParams, setWeight, TUNED, type Params } from '@/solver/mod'
 import { instant, solve } from '@/solver/solve'
@@ -114,12 +113,6 @@ function tools(value: string | undefined): Tool[] {
 function isPng(file: string): boolean {
   const ext = extname(file).toLowerCase()
   return ext === '.png'
-}
-
-/** The picture of the game window, as the reader takes it. */
-function asRgba(img: { width: number; height: number; data: Uint8ClampedArray }): Rgba {
-  const bytes = asBytes(img)
-  return new Rgba(bytes.width, bytes.height, bytes.data)
 }
 
 /** `capture [--frames N] [--capture-cmd COMMAND] <title text> <out.png>`: saves

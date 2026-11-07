@@ -12,7 +12,7 @@ export * from './panels'
 export * from './scene'
 
 import { readFileSync, writeFileSync } from 'node:fs'
-import { decodePng, encodePng, type Image } from '@tli/png'
+import { asBytes, decodePng, encodePng, type Image } from '@tli/png'
 import { layOutScaled } from './layout'
 import { readPanelsTitled } from './panels'
 import { readScene } from './scene'
@@ -121,6 +121,12 @@ export class Rgba implements Image {
 export function decodePngRaw(bytes: Uint8Array): Rgba {
   const img = decodePng(bytes)
   return new Rgba(img.width, img.height, img.data)
+}
+
+/** The game window's picture, as the capture gives it, as the reader takes it. */
+export function asRgba(img: { width: number; height: number; data: Uint8ClampedArray }): Rgba {
+  const bytes = asBytes(img)
+  return new Rgba(bytes.width, bytes.height, bytes.data)
 }
 
 /** Loads a PNG file in the board layout; see [`loadLayouts`]. */
