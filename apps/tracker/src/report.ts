@@ -13,6 +13,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { findLog } from '@tli/gamelog'
 import { ItemNames, LogReader, Tracker, loadTracker, readBaseline } from '@tli/tracker'
+import { arg, flag } from '@tli/tui'
 
 /** A field in the csv file: quoted when it has a comma or a quote in it. */
 function field(text: string): string {
@@ -79,10 +80,6 @@ export async function writeReport(tracker: Tracker, names: ItemNames, out?: stri
 
 /** The command line: read the log and write the report. */
 async function main(): Promise<void> {
-  const argv = process.argv.slice(2)
-  const arg = (name: string): string | null =>
-    argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3) ?? null
-
   const given = arg('log')
   const found = given !== null ? { file: given, exists: true } : findLog()
   if (found === null || !found.exists) {
@@ -96,7 +93,7 @@ async function main(): Promise<void> {
   const cached = await readBaseline()
   if (cached !== null) tracker.prices.setBaseline(cached.prices)
   // what the tracker saved, when it was reading this same log: the report carries on from it
-  const saved = argv.includes('--full') ? null : await loadTracker()
+  const saved = flag('full') ? null : await loadTracker()
   const usable = saved !== null && saved.log.file === found.file ? saved : null
   if (usable !== null) tracker.restore(usable.tracker)
   const reader = new LogReader(found.file, usable?.log.offset ?? 0)

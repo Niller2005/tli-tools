@@ -5,9 +5,7 @@
 
 import { findLog } from '@tli/gamelog'
 import { ItemNames, LogReader, Tracker } from '@tli/tracker'
-
-const arg = (name: string): string | null =>
-  process.argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3) ?? null
+import { arg } from '@tli/tui'
 
 const given = arg('log')
 const found = given !== null ? { file: given, exists: true } : findLog()

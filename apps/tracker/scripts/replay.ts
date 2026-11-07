@@ -11,14 +11,11 @@
 // back to say the runs and the FE came out of it the same.
 import { ItemNames, LogReader, Tracker, loadTracker, saveTracker } from '@tli/tracker'
 import { findLog } from '@tli/gamelog'
+import { arg, flag } from '@tli/tui'
 import { createTestRenderer } from '@opentui/core/testing'
 import type { CapturedFrame } from '@opentui/core'
 import { TrackerScreen } from '../src/screen'
 import { freshView } from '../src/view'
-
-const arg = (name: string): string | null =>
-  process.argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3) ?? null
-const flag = (name: string): boolean => process.argv.includes(`--${name}`)
 
 const given = arg('log')
 const found = given !== null ? { file: given, exists: true } : findLog()

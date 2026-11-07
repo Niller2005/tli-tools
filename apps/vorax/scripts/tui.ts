@@ -25,7 +25,7 @@ import { decodePngClamped } from '@tli/png'
 import { tesseractFound } from '@tli/ocr'
 import { createCapture, type Capture } from '@tli/capture'
 import { findLog, minigameCaptureGate, retryCapture, watchMinigames, type MinigameView, type Watcher } from '@tli/gamelog'
-import { startApp } from '@tli/tui'
+import { arg, flag, startApp } from '@tli/tui'
 import { publishCard } from '@tli/overlay'
 import { startAutoLaunch } from '@tli/launch'
 import { cardOf } from './tui/card'
@@ -36,9 +36,6 @@ import { readWithTesseract } from './tui/ocr'
 import { createReader } from './tui/read'
 import { reportLines } from './tui/report'
 import { freshView, type Board } from './tui/view'
-
-const arg = (name: string) => process.argv.find(a => a.startsWith(`--${name}=`))?.slice(name.length + 3) ?? null
-const flag = (name: string) => process.argv.includes(`--${name}`)
 
 if (!tesseractFound()) {
   console.error('tesseract is needed to read the cards\' names (Arch: pacman -S tesseract tesseract-data-eng).')

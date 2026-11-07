@@ -6,10 +6,8 @@
 // The log is read in pieces, so a log of any size can be replayed.
 
 import { openSync, readSync, closeSync, statSync } from 'node:fs'
+import { arg } from '@tli/tui'
 import { Tracker } from '../src/index'
-
-const arg = (name: string): string | null =>
-  process.argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3) ?? null
 
 const file = arg('log') ?? process.argv[2]
 if (file === undefined || file === '') {

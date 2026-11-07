@@ -13,6 +13,7 @@ terminal.
 |------|------------|
 | `theme.ts` | the palette, the tones, and the switch that turns the colours off |
 | `format.ts` | the numbers (`num`, `fe`, `duration`, `clock`) and the width of plain text |
+| `args.ts` | `arg('name')` reads `--name=value`, `flag('name')` tells whether `--name` is there |
 | `rows.ts` | the cells of a row of a table and how they are laid out |
 | `app.ts` | `startApp`: a renderer, the keys (ctrl+c quits), the tick, the save, and a way out that always puts the terminal back |
 

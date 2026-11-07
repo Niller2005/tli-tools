@@ -19,13 +19,9 @@ import { Tracker, historyOf, loadArcana, saveArcana, type SavedArcana, SCHEMA_VE
 import { MinigameTracker, findLog, scanBack } from '@tli/gamelog'
 import { ITEM_TABLE_PATH, ItemNames, LogReader, loadTracker, userItemsPath } from '@tli/tracker'
 import { startAutoLaunch } from '@tli/launch'
-import { startApp } from '@tli/tui'
+import { arg, flag, startApp } from '@tli/tui'
 import { ArcanaApp } from './app'
 import { freshView } from './view'
-
-const arg = (name: string): string | null =>
-  process.argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3) ?? null
-const flag = (name: string): boolean => process.argv.includes(`--${name}`)
 
 if (flag('help')) {
   process.stdout.write('bun src/tui.ts [--log=<UE_game.log>] [--reset] [--no-backfill] [--no-color]\n')
