@@ -43,6 +43,7 @@ export {
 } from './theme'
 
 export {
+  compact,
   clip,
   clock,
   duration,
