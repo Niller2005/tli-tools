@@ -3,6 +3,8 @@
 // The colours, the way the numbers are written, the way a row of a table is laid out, and the
 // helper that starts a renderer and always puts the terminal back.
 
+export { arg, flag } from './args'
+
 export {
   brandChunks,
   chip,

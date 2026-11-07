@@ -34,14 +34,10 @@ import {
   userItemsPath,
   type WikiTarget,
 } from '@tli/tracker'
-import { startApp } from '@tli/tui'
+import { arg, flag, startApp } from '@tli/tui'
 import { TrackerApp } from './app'
 import { writeReport } from './report'
 import { lootCard } from './card'
-
-const arg = (name: string): string | null =>
-  process.argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3) ?? null
-const flag = (name: string): boolean => process.argv.includes(`--${name}`)
 
 if (flag('help')) {
   process.stdout.write(
@@ -216,11 +212,11 @@ if (cached !== null) {
 async function refreshBaseline(): Promise<void> {
   const refresh = await refreshBaselineStatus()
   if (refresh.ok) {
-  app.state.message = refresh.message
     tracker.prices.setBaseline(refresh.data.prices)
     app.state.baselineAt = refresh.data.fetchedAt
     app.state.baselineCount = refresh.data.prices.length
   }
+  app.state.message = refresh.message
   app.draw()
 }
 

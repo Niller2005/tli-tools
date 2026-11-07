@@ -16,6 +16,7 @@
     "@tli/tracker": "workspace:*"
   },
   "devDependencies": {
+    "@tli/tui": "workspace:*",
     "@types/bun": "latest",
     "@types/node": "latest",
     "typescript": "^5.9.0"
