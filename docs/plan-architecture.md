@@ -318,16 +318,12 @@ move the two functions; delete the `size` field that exists only for `markOn`.
 
 ## Left out on purpose
 
-- `warden-cli` and `warden-tui` both define `asRgba` (3 lines). Not worth an item; fix it in passing when one of those
-  files is open anyway.
 - `apps/dashboard/src/launch.ts` has its own shell quoting beside `packages/launch/src/tmux.ts`. One caller, about 25
   unique lines: deepen it when a second multi-tool launcher appears.
-- Baseline refresh is orchestrated and worded separately in `apps/tracker/src/tui.ts` and `apps/dashboard/src/main.ts`,
-  though `refreshBaseline` exists in `packages/tracker/src/baseline.ts`. Small; do it when either file is open for
-  another reason.
-- "Follow the log, restore, save" skeletons in five scripts, and the `arg`/`flag` helpers repeated eight times. The
-  differences are real policy (arcana's chunked backfill saves); item 4 takes the shared part that is already clear.
-  Revisit once item 4 has landed.
+- "Follow the log, restore, save" skeletons in five scripts. The differences are real policy (arcana's chunked backfill
+  saves); item 4 took the shared part that was already clear. The `arg`/`flag` helpers now live in `packages/tui`;
+  four scripts in `packages/tracker/scripts` still carry their own copy, because moving them adds a `@tli/tui`
+  dependency to that package for developer-only scripts.
 - `packages/tracker/src/engine.ts` `feedLine` switch: deep, with an interface that is fine. Not touched.
 
 ## How this plan is carried out
