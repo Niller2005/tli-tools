@@ -50,6 +50,9 @@ picture from a custom command or Niri's window screenshot is not known.
 - **Tools to overlay.** Vorax and Warden call `publishCard()` each time they draw, and take the card down when the board
   is gone or they exit. Cards are JSON in `$XDG_RUNTIME_DIR/tli-overlay/cards/<tool>.json`; a card whose process has
   died is ignored.
+  Warden holds its card while a solve runs: the move it showed first stays, with no ranking rows, until the solve
+  ends, and then the finished card (the move, its rows and the outline) replaces it once. Reads of the same board
+  during the solve do not change it.
 - **Overlay to capture.** `grim` takes a whole output, layers included, so the card would be in the picture the readers
   OCR, and its changing text would look like a change in the game. The overlay therefore writes where its cards are to
   `rects.json`, and `@tli/capture` blacks those rectangles out of every picture. Put the card where the readers do not

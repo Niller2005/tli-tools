@@ -7,7 +7,7 @@ import type { CliRenderer } from '@opentui/core'
 import type { Session } from '@/app/session'
 import { problem } from '@/reader/ocr'
 import { WardenScreen } from './screen'
-import { publishCard, type Rect } from '@tli/overlay'
+import { publishCard, type Card, type Rect } from '@tli/overlay'
 import { cardOf } from './card'
 import { freshView, stateFromSession, type ViewState } from './view'
 
@@ -43,8 +43,26 @@ export class WardenApp {
   draw(captureNote = this.state.captureNote): void {
     Object.assign(this.state, stateFromSession(this.session, captureNote, problem()))
     this.screen.draw(this.state)
+    this.publish()
+  }
+
+  /** The card shown for the solve in progress: while it runs, the card stays as it was. The overlay then does not
+   * redraw, change its move or re-order its rows with every round of playouts, nor with every read of the same
+   * board (each read hands out a new model, so the model cannot tell a new board from the same one). */
+  private shown: { solve: number; card: Card | null } | null = null
+
+  private publish(): void {
+    const state = this.state
+    const solve = this.session.solveId
+    if (state.solving && this.shown !== null && this.shown.solve === solve) {
+      publishCard('warden', this.shown.card)
+      return
+    }
     const area = this.area()
-    publishCard('warden', cardOf(this.state, area === null ? null : this.session.markOn(area)))
+    const card = cardOf(state, area === null ? null : this.session.markOn(area))
+    // a solve in progress shows the move without the ranking, which only the finished solve can give
+    this.shown = { solve, card: card !== null && state.solving ? { ...card, lines: [] } : card }
+    publishCard('warden', this.shown.card)
   }
 
   /** Does a key press. */
