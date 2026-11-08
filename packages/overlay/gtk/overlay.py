@@ -295,7 +295,7 @@ class Overlay(Gtk.Application):
         for win, _, group in groups:
             if group:
                 # a window that has been big stays big unless its default size says otherwise
-                win.set_default_size(1, 1)
+                win.set_default_size(-1, -1)
                 win.set_visible(True)
                 win.present()
         if self.marks:
