@@ -294,6 +294,8 @@ class Overlay(Gtk.Application):
         self.publish_rects()
         for win, _, group in groups:
             if group:
+                # a window that has been big stays big unless its default size says otherwise
+                win.set_default_size(1, 1)
                 win.set_visible(True)
                 win.present()
         if self.marks:
@@ -310,9 +312,13 @@ class Overlay(Gtk.Application):
         frame.add_css_class("card")
         if card.get("corner") in self.loot:
             frame.add_css_class("loot")
+        else:
+            # a card in the stack is as wide as --width characters of the base font, whatever it says: its labels ask
+            # for as little width as they can and the frame sets the width they wrap to
+            frame.set_size_request(round(self.args.width * self.args.size * 0.6), -1)
 
         def label(markup, css):
-            lab = Gtk.Label(xalign=0, wrap=True, max_width_chars=self.args.width)
+            lab = Gtk.Label(xalign=0, wrap=True, max_width_chars=self.args.width if frame.has_css_class("loot") else 1)
             lab.set_markup(markup)
             lab.add_css_class(css)
             frame.append(lab)
