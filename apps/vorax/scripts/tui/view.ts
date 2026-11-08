@@ -8,6 +8,7 @@ import { LAST_ROUND } from '@/engine/game'
 import type { Advice, Ranked } from '@/strategy/advisor'
 import type { HelperInput, InstrumentAdvice, Row as DeepRow } from '@/web/helper'
 import { type Row, num, type Tone } from '@tli/tui'
+import type { Choice, Place } from './steps'
 
 /** The board the helper read: what is on the screen, and what it says about it. */
 export interface Board {
@@ -16,6 +17,8 @@ export interface Board {
   phase: 'potion' | 'instrument' | 'protocol'
   /** what the reader wasn't sure of, and other things to check on screen */
   warnings: string[]
+  /** where the picture the board came from had its places, while that picture is still what the game shows */
+  place?: Place
 }
 
 /** The deep check's state: the rows it has so far, and how far along it is. */
@@ -144,6 +147,22 @@ export function recommendation(v: ViewState): { move: string; basis: string } | 
   }
   const q = v.quick
   if (q) return { move: name(q.best), basis: q.note ?? 'best for this round alone; looking ahead…' }
+  return null
+}
+
+/** The places the advised move touches, in the order `recommendation` takes its move; null when there is none to point at. */
+export function choiceOf(v: ViewState): Choice | null {
+  const b = v.board
+  if (!b || moveOf(v).tone !== 'green') return null
+  const potion = b.phase === 'potion'
+  const pick = (index: number | null, targets: number[]): Choice | null => (index === null ? null : { index, targets: potion ? targets : [] })
+  const top = v.deep?.rows[0]
+  if (top && v.deep?.finished && !top.out) return top.refresh ? { refresh: true } : pick(top.index, top.targets)
+  const a = v.ahead
+  if (a) return a.best === 'refresh' ? { refresh: true } : a.best ? pick(a.best.index, a.best.targets) : null
+  if (b.phase === 'instrument' && v.table) return v.table.action === 'refresh' ? { refresh: true } : pick(v.table.best ?? 0, [])
+  const q = v.quick
+  if (q) return q.best === 'refresh' ? { refresh: true } : q.best ? pick(q.best.index, q.best.targets) : null
   return null
 }
 

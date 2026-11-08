@@ -169,7 +169,13 @@ function startDeep(board: Board, mine = gen) {
 async function readPicture(img: Img, trigger: string): Promise<'new' | 'same' | 'kept'> {
   view.pictures++
   const raw = await reader.read(img as never, trigger, unclear)
-  return applyReading(raw, trigger)
+  const result = applyReading(raw, trigger)
+  // the outline needs the picture the board is on; a picture that is another screen takes it away
+  if (view.board) {
+    const n = view.board.x.hand.length
+    view.board.place = result === 'kept' ? undefined : { width: img.width, height: img.height, crop: raw.crop, ui: raw.ui, shift: raw.handShift, tankFix: raw.tankFix, hand: n === 5 ? 5 : n === 1 ? 1 : 3 }
+  }
+  return result
 }
 
 /* ---------- one screenshot, for testing and bug reports ---------- */
@@ -330,7 +336,7 @@ const app = new VoraxApp(renderer, view, {
 })
 draw = () => {
   app.draw()
-  publishCard('vorax', cardOf(view))
+  publishCard('vorax', cardOf(view, cap.area()))
   renderer.requestRender()
 }
 

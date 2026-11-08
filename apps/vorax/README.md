@@ -36,6 +36,10 @@ reads the board and shows the move, the chance of reaching your target and the n
 with [OpenTUI](https://opentui.com/docs): the header, the **Next move**, **Options** and **Board** panels, and the keys at
 the bottom.
 
+The overlay also outlines the move on the game, as the Windows helper does: a gold frame around the card to play, the
+tank(s) to use it on, and Confirm (or Refresh). It is drawn only while the last picture was the board and came from
+`grim`, so its place on the screen is known, and it is hidden in rounds 11-13.
+
 ```
 bun scripts/tui.ts
 ```
