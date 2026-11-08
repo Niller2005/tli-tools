@@ -62,11 +62,20 @@ tell their meaning without the colours too: `›` the advised cell, `@` the ward
 nearly as good as the advice, `?` a cell to check and `!` an incident mark.
 
 The playouts of the solve are spread over worker threads, so the window keeps painting and the
-capture keeps its pace while they do. The rounds depend on their seeds alone and are taken in seed
+capture keeps its pace while they do. A finished read and each round of the solve are shown at once, not
+at the next sample of the game (4 a second); the read key does not wait for it either. The rounds depend on their seeds alone and are taken in seed
 order, so the ranking is the same on any number of threads. A quarter of the machine's threads
 play, at most 8; `WARDEN_SOLVE_THREADS=<n>` sets the number. `WARDEN_PROFILE=<file>` writes the
 time each stage took (the capture, the fingerprint, the read, the solve, the drawing) to that file,
 one JSON line each.
+
+While a screen settles, the first frame of the change is already read for its text, which the reader keeps; the read
+after the settle finds it done, so the advice comes about 0.3 s sooner. That early reading is dropped (it shows in the
+profile as `warm`), and what is shown comes from the settled frame.
+
+The next decision is not solved from nothing. The Consume target screen of a board that has just been solved shows that
+solve's ranking of the bites at once, and while you go to an open cell the advice leads to, the board you will find there
+is already being solved; a locked door has no such board, since what is behind it is not known yet.
 
 ## Run logs
 

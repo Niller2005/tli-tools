@@ -116,6 +116,38 @@ function sleep(ms: number): Promise<void> {
   return promise
 }
 
+/** A sleep that a finished read or solve round cuts short, so the result is shown when it is there and not at the
+ * next sample. A nudge that comes while nothing sleeps cuts the next sleep short. */
+function nudgeable(): { nudge: () => void; sleep: (ms: number) => Promise<boolean> } {
+  let wake: (() => void) | null = null
+  let pending = false
+  return {
+    nudge() {
+      if (wake !== null) wake()
+      else pending = true
+    },
+    async sleep(ms) {
+      if (pending) {
+        pending = false
+        return true
+      }
+      const { promise, resolve } = Promise.withResolvers<boolean>()
+      const timer = setTimeout(() => resolve(false), ms)
+      wake = () => {
+        clearTimeout(timer)
+        resolve(true)
+      }
+      const nudged = await promise
+      wake = null
+      return nudged
+    },
+  }
+}
+
+/** The shortest time between two redraws that results cut a sleep short for: a solve reports a round every few
+ * milliseconds. */
+const REDRAW = 80
+
 /** The plain text of a one-image read, for the non-interactive mode. */
 function imageOutput(session: Session, path: string): string[] {
   return plainScreen(stateFromSession(session, `screenshot ${path}`, null))
@@ -136,6 +168,9 @@ async function run(): Promise<void> {
   solvePool().warm()
   let readNow = false
   let quitting = false
+  // a finished read, a solve round and the read key cut the wait for the next sample short
+  const nudge = nudgeable()
+  session.onProgress(nudge.nudge)
 
   /** What the player wanting to leave does: the loop ends, and the terminal is put back. */
   function leave(): void {
@@ -153,6 +188,7 @@ async function run(): Promise<void> {
   const app = new WardenApp(renderer, session, {
     onRead: () => {
       readNow = true
+      nudge.nudge()
     },
     onQuit: leave,
   })
@@ -207,6 +243,8 @@ async function run(): Promise<void> {
               session.readLive(frame)
             } else if (watch.sample(print)) {
               session.readLive(frame)
+            } else if (watch.starting) {
+              session.prewarm(frame)
             }
           }
         } catch (e) {
@@ -224,9 +262,22 @@ async function run(): Promise<void> {
       timed('draw', performance.now() - drawn)
 
       next += SAMPLE
-      const wait = next - performance.now()
-      if (wait > 0) await sleep(wait)
-      else next = performance.now()
+      if (next <= performance.now()) {
+        next = performance.now()
+        continue
+      }
+      // Until the next sample: a read or a solve round that ends meanwhile is shown at once, and the read key does
+      // not wait for the sample either.
+      while (!quitting && next > performance.now() && (await nudge.sleep(next - performance.now()))) {
+        if (readNow) {
+          next = performance.now()
+          break
+        }
+        const changed = session.poll()
+        if (session.wantsReread()) watch.readNext()
+        if (changed) app.draw(captureNote)
+        await sleep(Math.min(REDRAW, Math.max(next - performance.now(), 0)))
+      }
     }
   } finally {
     publishCard('warden', null)

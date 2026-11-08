@@ -91,6 +91,21 @@ test('watch reads settled screens once', () => {
   expect(reads.filter((r) => r).length).toBe(1)
 })
 
+/** The reader may warm up on the first sample of a change, once: not on the samples after it, not on a read one,
+ * not on a hover. */
+test('watch says when a change starts', () => {
+  const w = new Watch()
+  w.markRead(print(80, 0))
+  expect(w.sample(print(80, 2))).toBe(false)
+  expect(w.starting).toBe(false)
+  expect(w.sample(print(200, 0))).toBe(false)
+  expect(w.starting).toBe(true)
+  expect(w.sample(print(200, 0))).toBe(false)
+  expect(w.starting).toBe(false)
+  expect(w.sample(print(200, 0))).toBe(true)
+  expect(w.starting).toBe(false)
+})
+
 /** A lasting change under the threshold, such as an incident marker on a
  * cell, is read once [`RECHECK`] samples passed since the last read, then
  * not again. */

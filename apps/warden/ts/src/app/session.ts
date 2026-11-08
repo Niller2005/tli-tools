@@ -8,7 +8,8 @@
 //! solve plays its rounds between two turns of the event loop, so the
 //! window keeps painting.
 
-import { buildState } from '@/board/board'
+import { buildState, cloneModel } from '@/board/board'
+import { apply } from '@/engine/actions'
 import { data, toolFromKey, type Gift, type Tool } from '@/engine/data'
 import { offerChain, startOptions } from '@/engine/devour'
 import { treasurePicks } from '@/engine/rules'
@@ -24,9 +25,10 @@ import { REF_H, REF_W, type Rgba } from '@/reader/mod'
 import { advise, alsoGood, preferChange, whyShown, type Advice, type Pick } from '@/solver/advise'
 import { consumeTargets, jawed, Run, type CellEdit, type Meal, type Reading, type RunHooks } from './run'
 import { instant, instantBite, type SolveOption } from '@/solver/solve'
+import { sameAction } from '@/solver/mod'
 import { RunLog, timestamp } from './runlog'
 import { timed } from './profile'
-import { solvePool, type SolveRun } from './solve-pool'
+import { solvePool, type SolveProgress, type SolveRun } from './solve-pool'
 
 /** Rounds played between two partial rankings. */
 export const ROUND = 50
@@ -208,6 +210,15 @@ export class Watch {
     return n
   }
 
+  /** Whether the last sample is the first that differs from the screen read, and so not yet read. */
+  private first = false
+
+  /** True when the last sample is the first of a change that is not settled: the reader may warm up on it (see
+   * [`Session.prewarm`]). */
+  get starting(): boolean {
+    return this.first
+  }
+
   /** The next sample counts as read: a screenshot is on show. */
   private adopt = false
   /** The next sample is read whatever it shows: a held read asks for one
@@ -217,6 +228,7 @@ export class Watch {
   /** Takes a sample's print; true when it should be read, which records it
    * as read. */
   sample(print: Uint8Array): boolean {
+    this.first = false
     const prev = this.prev
     this.stable = prev !== null && prev.length === print.length && changed(prev, print) <= HELD_BLOCKS ? this.stable + 1 : 0
     this.prev = print.slice()
@@ -250,6 +262,7 @@ export class Watch {
       this.markRead(print)
       return true
     }
+    this.first = this.waited === 1
     return false
   }
 
@@ -280,6 +293,24 @@ interface Progress {
   rounds: number
   done: boolean
   options: SolveOption[]
+}
+
+/** The solve of the board the advised move leads to, started while the player makes the move. */
+interface Ahead {
+  /** The board it solves, as [`Session.solve`] keys one. */
+  key: string
+  run: SolveRun
+  /** Its latest ranking. */
+  latest: SolveProgress | null
+  /** Where its rankings go once the board is the one on show. */
+  sink: ((progress: SolveProgress) => void) | null
+}
+
+/** A finished solve: the board it solved and its ranking. */
+interface Solved {
+  key: string
+  options: SolveOption[]
+  rounds: number
 }
 
 /** The app's state without the UI: the frame scheduler, the solve worker,
@@ -347,6 +378,10 @@ export class Session {
   private solveRun: SolveRun | null = null
   /** The worker's latest ranking. */
   private progress: Progress | null = null
+  /** The last finished solve, so a board that comes up again as a Consume target pick is not solved again. */
+  private solved: Solved | null = null
+  /** The solve of the board the advised move leads to. */
+  private ahead: Ahead | null = null
 
   /** `days` is the days count the held `tools` were saved at: a higher
    * count read twice is a new run and clears them. */
@@ -429,7 +464,14 @@ export class Session {
       this.queued = { frame, live }
       return
     }
-    this.startScan(frame, live)
+    this.startScan(frame, live, false)
+  }
+
+  /** Reads a frame for nothing but its OCR, which the reader keeps: a screen that has just begun to change is
+   * read while it settles, so the read after the settle finds its regions done. The reading is dropped; a frame
+   * that arrives to be read waits for it. Does nothing while a read runs. */
+  prewarm(frame: Rgba): void {
+    if (this.scanTask === null) this.startScan(frame, false, true)
   }
 
   /** True once after a read was held: the UI reads the game again. */
@@ -438,9 +480,9 @@ export class Session {
   }
 
   /** Starts the read of a frame. */
-  private startScan(frame: Rgba, live: boolean): void {
+  private startScan(frame: Rgba, live: boolean, warm: boolean): void {
     this.live = live
-    const keep = this.log !== null
+    const keep = this.log !== null && !warm
     const hint = this.uiScale
     this.scanReady = false
     this.scanned = null
@@ -448,13 +490,13 @@ export class Session {
       const started = performance.now()
       try {
         const scanned = await scan(frame, keep, hint)
-        this.scanned = scanned
+        this.scanned = warm ? null : scanned
       } catch (error) {
         // The reader failed: the spinner must not stick.
         this.scanned = null
         console.error(error)
       }
-      timed('read', performance.now() - started)
+      timed(warm ? 'warm' : 'read', performance.now() - started)
       this.scanReady = true
       this.notify?.()
     })()
@@ -676,8 +718,17 @@ export class Session {
   /** Starts a solve of the current model in the background, replacing any
    * running one: rounds of [`ROUND`] playouts until `rollouts`, each
    * reported to [`Session.poll`]. A solve that is not the current one stops
-   * at its next round. */
+   * at its next round. A board that [`Session.lookAhead`] has solved or is
+   * solving takes that solve's place; the ranking of a finished solve of the
+   * board answers its Consume target pick, which ranks the same bites. */
   solve(): void {
+    const ahead = this.ahead
+    this.ahead = null
+    this.begin(ahead)
+    if (ahead !== null && this.solveRun !== ahead.run) ahead.run.cancel()
+  }
+
+  private begin(ahead: Ahead | null): void {
     this.stop()
     const reading = this.run.reading
     if (reading === null) return
@@ -735,29 +786,100 @@ export class Session {
     this.pick = pick === null ? null : { action: pick.action, label: pick.label, why: pick.why }
     this.state = st
     this.noteAdvisedTool()
-    this.startSolve(st, firstBite ? bites : null)
+    const key = JSON.stringify(st)
+    if (firstBite && pick !== null && this.reuse(key, bites, pick.action)) return
+    this.startSolve(st, firstBite ? bites : null, key, ahead !== null && ahead.key === key ? ahead : null)
+  }
+
+  /** Shows the finished solve of this board as the ranking of its Consume target pick, when the advised move
+   * was a Consume: the playouts that ranked it played the same bites. False when there is no such solve. */
+  private reuse(key: string, bites: number[], pick: Pick['action']): boolean {
+    const solved = this.solved
+    // One bite has nothing to rank: its solve is over at once.
+    if (solved === null || solved.key !== key || solved.options.length === 0 || bites.length < 2) return false
+    // The gaps of the ranking are to its first row, which the bites must keep.
+    const lead = solved.options[0].action
+    if (lead.type !== 'devour' || !bites.includes(lead.to)) return false
+    const options: SolveOption[] = []
+    for (const o of solved.options) {
+      if (o.action.type === 'devour' && bites.includes(o.action.to)) {
+        options.push({ ...o, policy: sameAction(pick, o.action) })
+      }
+    }
+    if (options.length !== bites.length) return false
+    this.solveGen += 1
+    this.solving = true
+    this.progress = { rounds: solved.rounds, done: true, options }
+    this.notify?.()
+    return true
+  }
+
+  /** Starts the solve of the board the advice leads to, so the screen after the move has its ranking when it is
+   * read. Only a move to an open cell that holds nothing to draw (no incident marker, no shackles roll) is
+   * foreseen: the warden moves and nothing else changes. The board is built from the reading as the reader will
+   * build it from the next one, so a board that differs in any way is solved again. */
+  private lookAhead(): void {
+    this.dropAhead()
+    const st = this.state
+    const reading = this.run.reading
+    if (st === null || reading === null || reading.screen !== 'patrol' || st.phase !== 'patrol') return
+    const advice = this.advice()
+    if (advice === null || advice.action.type !== 'patrol') return
+    const n = advice.action.cell
+    if (st.cells[n].sealed) return
+    const trial = st.clone()
+    if (!apply(trial, advice.action).ok) return
+    if (trial.phase !== 'manage' || trial.pending.length > 0 || trial.rng !== st.rng) return
+    const model = cloneModel(reading.model)
+    model.step = 'manage'
+    model.warden = n
+    model.dest = []
+    const [next, problems] = buildState(model, SEED)
+    if (problems.length > 0) return
+    next.theme = this.run.theme
+    const ahead: Ahead = {
+      key: JSON.stringify(next),
+      latest: null,
+      sink: null,
+      run: solvePool().solve({ state: next, seed: SEED, rollouts: this.rollouts, round: ROUND, bite: null }, (progress) => {
+        ahead.latest = progress
+        ahead.sink?.(progress)
+      }),
+    }
+    this.ahead = ahead
+  }
+
+  private dropAhead(): void {
+    this.ahead?.run.cancel()
+    this.ahead = null
   }
 
   /** Plays the rounds of a solve on the pool's workers, a stretch at a
    * time, so the window keeps painting between them. */
-  private startSolve(st: State, bites: number[] | null): void {
+  private startSolve(st: State, bites: number[] | null, key: string, ahead: Ahead | null): void {
     const gen = ++this.solveGen
     this.solving = true
     const started = performance.now()
     let first = true
-    const run = solvePool().solve(
-      { state: st, seed: SEED, rollouts: this.rollouts, round: ROUND, bite: bites },
-      (progress) => {
-        if (gen !== this.solveGen) return
-        this.progress = progress
-        this.notify?.()
-        if (first) {
-          first = false
-          timed('solve-first', performance.now() - started)
-        }
-        if (progress.done) timed('solve', performance.now() - started)
-      },
-    )
+    const onProgress = (progress: SolveProgress): void => {
+      if (gen !== this.solveGen) return
+      this.progress = progress
+      if (progress.done) this.solved = { key, options: progress.options, rounds: progress.rounds }
+      this.notify?.()
+      if (first) {
+        first = false
+        timed('solve-first', performance.now() - started)
+      }
+      if (progress.done) timed('solve', performance.now() - started)
+    }
+    if (ahead !== null) {
+      this.solveRun = ahead.run
+      this.solveTask = ahead.run.done
+      ahead.sink = onProgress
+      if (ahead.latest !== null) onProgress(ahead.latest)
+      return
+    }
+    const run = solvePool().solve({ state: st, seed: SEED, rollouts: this.rollouts, round: ROUND, bite: bites }, onProgress)
     this.solveRun = run
     this.solveTask = run.done
   }
@@ -765,6 +887,7 @@ export class Session {
   /** Drops the solve, its ranking and pick; the workers stop at their next
    * chunk. */
   private stop(): void {
+    this.dropAhead()
     this.solveRun?.cancel()
     this.solveRun = null
     this.ranking = []
@@ -777,10 +900,17 @@ export class Session {
     this.progress = null
   }
 
+  /** Shows the worker's latest ranking. */
+  private takeProgress(progress: Progress): void {
+    this.ranking = progress.options
+    this.rounds = progress.rounds
+    this.solving = !progress.done
+    this.progress = null
+  }
+
   /** Takes the worker's latest ranking; true when something changed. */
   poll(): boolean {
     let changed = false
-    const wasSolving = this.solving
     if (this.scanTask !== null && this.scanReady) {
       const scanned = this.scanned
       this.scanTask = null
@@ -792,16 +922,18 @@ export class Session {
       }
       this.readQueued()
     }
+    // after the read: a read that installs a board with a ranking at hand has solved it already
+    const wasSolving = this.solving
     const progress = this.progress
     if (progress !== null) {
-      this.ranking = progress.options
-      this.rounds = progress.rounds
-      this.solving = !progress.done
-      this.progress = null
+      this.takeProgress(progress)
       changed = true
     }
     if (changed) this.noteAdvisedTool()
-    if (wasSolving && !this.solving) this.logAdvice()
+    if (wasSolving && !this.solving) {
+      this.logAdvice()
+      this.lookAhead()
+    }
     return changed
   }
 
@@ -825,12 +957,7 @@ export class Session {
       this.solveTask = null
     }
     const progress = this.progress
-    if (progress !== null) {
-      this.ranking = progress.options
-      this.rounds = progress.rounds
-      this.solving = !progress.done
-      this.progress = null
-    }
+    if (progress !== null) this.takeProgress(progress)
     this.noteAdvisedTool()
     if (wasSolving) this.logAdvice()
     if (this.log !== null) await this.log.wait()
@@ -841,7 +968,7 @@ export class Session {
     const queued = this.queued
     if (queued === null) return
     this.queued = null
-    this.startScan(queued.frame, queued.live)
+    this.startScan(queued.frame, queued.live, false)
   }
 }
 
