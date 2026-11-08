@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { maskOverlay, publishCard, readCards, readRects } from '../src'
+import { serveCards } from '../src/obs'
 
 const dirs: string[] = []
 const tmp = () => { const d = mkdtempSync(join(tmpdir(), 'tli-overlay-test-')); dirs.push(d); return d }
@@ -49,4 +50,18 @@ test('rectangles of an overlay that has exited are not used', () => {
   expect(readRects(dir)).toHaveLength(1)
   writeFileSync(join(dir, 'rects.json'), JSON.stringify({ pid: 2 ** 22 + 12345, rects: [{ x: 1, y: 2, width: 3, height: 4 }] }))
   expect(readRects(dir)).toEqual([])
+})
+
+test('the OBS page serves only the cards of the tools asked for', async () => {
+  const dir = tmp()
+  publishCard('tracker', { tool: 'tracker', title: 'Loot', head: '1 FE' }, dir)
+  publishCard('vorax', { tool: 'vorax', title: 'Vorax', head: 'move' }, dir)
+  const server = serveCards(0, dir)
+  try {
+    const get = async (q: string) => (await (await fetch(`http://127.0.0.1:${server.port}/cards${q}`)).json()) as { tool: string }[]
+    expect((await get('?tool=tracker')).map(c => c.tool)).toEqual(['tracker'])
+    expect((await get('')).map(c => c.tool)).toEqual(['tracker', 'vorax'])
+  } finally {
+    server.stop(true)
+  }
 })

@@ -35,6 +35,21 @@ A card with `corner` set (`bottom-left` or `bottom-right`; the loot tracker's, f
 is drawn in that corner on a mostly transparent background instead of in the main stack, and is masked out of captures
 like the others.
 
+## In OBS as its own source
+
+A PipeWire window capture of the game never has the card in it (the card is a separate surface), and a monitor
+capture has it fixed on top of the game. To use a card as a source of its own, serve it as a browser source:
+
+```
+bun run overlay:obs                  # http://127.0.0.1:7391, localhost only; --port=<n> to change
+```
+
+In OBS: Sources, Browser, URL `http://127.0.0.1:7391/?tool=tracker` (`tool` takes `tracker`, `vorax`, `warden`,
+comma-separated; without it every card shows). The page has a transparent background, so set the source's width and
+height as you like and clear the custom CSS. It shows the cards the tools publish, so the tracker's loot card has to be
+on (`o` in the tracker, or `--overlay=left|right`), which also draws it over the game. It is the same card text as
+the overlay, with the corner card's look; the main stack's frame and the outline are not drawn.
+
 ## The outline
 
 Warden also marks what to click: the advised cell, destination door, button or pick card gets a gold outline drawn on a

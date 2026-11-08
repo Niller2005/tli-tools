@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "bun scripts/start.ts",
+    "obs": "bun scripts/obs.ts",
     "test": "bun test",
     "typecheck": "tsc -p ."
   },
