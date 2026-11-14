@@ -185,11 +185,15 @@ describe('the age of the item-name table', () => {
 describe('refreshBaseline', () => {
   test('fetches the prices and keeps them where the readers look', async () => {
     const realFetch = globalThis.fetch
-    const answer = JSON.stringify({ items: [{ id: 100, price: 10 }, { id: 101, price: 5 }] })
+    const answer = JSON.stringify([
+      { config_base_id: 100, price_fe_median: 10 },
+      { config_base_id: 101, price_fe_median: 5 },
+    ])
     globalThis.fetch = (async () => new Response(answer)) as unknown as typeof fetch
     try {
       const path = await folder('baseline.json')
-      const data = await refreshBaseline(1000, path)
+      const data = await refreshBaseline(1000, path, 1601)
+      expect(data.season).toBe(1601)
       expect(data.prices).toEqual([
         [100, 10],
         [101, 5],
@@ -206,10 +210,11 @@ describe('refreshBaseline', () => {
 describe('refreshBaselineStatus', () => {
   test('hands back the prices it kept when the fetch works', async () => {
     const realFetch = globalThis.fetch
-    globalThis.fetch = (async () => new Response(JSON.stringify({ items: [{ id: 100, price: 10 }] }))) as unknown as typeof fetch
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify([{ config_base_id: 100, price_fe_median: 10 }]))) as unknown as typeof fetch
     try {
       const path = await folder('baseline.json')
-      const refresh = await refreshBaselineStatus(1000, path)
+      const refresh = await refreshBaselineStatus(1000, path, 1601)
       expect(refresh.ok).toBe(true)
       if (refresh.ok) expect(await readBaseline(path)).toEqual(refresh.data)
     } finally {
@@ -222,7 +227,7 @@ describe('refreshBaselineStatus', () => {
     globalThis.fetch = (async () => new Response('', { status: 503 })) as unknown as typeof fetch
     try {
       const path = await folder('baseline.json')
-      const refresh = await refreshBaselineStatus(1000, path)
+      const refresh = await refreshBaselineStatus(1000, path, 1601)
       expect(refresh.ok).toBe(false)
       expect(await readBaseline(path)).toBeNull()
     } finally {

@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { logTime, parseLine, zoneOf } from '../src/parse'
+import { Tracker } from '../src/engine'
+import { logTime, parseDumpSeason, parseLine, zoneOf } from '../src/parse'
 import {
   BACK_TO_HIDEOUT,
   BAG_SNAPSHOT,
@@ -156,5 +157,35 @@ describe('the lines that are not ours', () => {
 
   test('the lines of the exchange are not bag lines', () => {
     for (const line of EXCHANGE_SEARCH) expect(parseLine(line)).toBeNull()
+  })
+})
+
+describe('the season of the player', () => {
+  // the player's own fields in the dump the game writes when the character logs in
+  const PLAYER_DUMP = [
+    '|      +PlayerId [980032478075064320]',
+    '|      +Name [nillaDanki]',
+    '|      +Level [94]',
+    '|      +SeasonId [1601]',
+    '|      +ActualActiveTime [200082]',
+  ]
+
+  test('is read from the line of the player', () => {
+    expect(parseDumpSeason(PLAYER_DUMP[3] as string)).toBe(1601)
+    expect(parseDumpSeason(PLAYER_DUMP[2] as string)).toBeNull()
+  })
+
+  test('is not read from another field or another level of the dump', () => {
+    expect(parseDumpSeason('|      +HasSeasonId [false]')).toBeNull()
+    expect(parseDumpSeason('|       +HasSeasonId [false]')).toBeNull()
+    expect(parseDumpSeason('|      |      +SeasonId [1601]')).toBeNull()
+    expect(parseDumpSeason('|      +SeasonId [0]')).toBeNull()
+  })
+
+  test('is what the tracker knows after it read the dump', () => {
+    const tracker = new Tracker()
+    expect(tracker.season).toBeNull()
+    tracker.feed(PLAYER_DUMP)
+    expect(tracker.season).toBe(1601)
   })
 })

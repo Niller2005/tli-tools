@@ -145,17 +145,16 @@ tracker only reads the wiki's public pages for this; it asks for the page of the
 none under that name (the names in the tracker can be older than the wiki's), for the name the wiki gives the item's
 id. An item with no page of that name opens the wiki's search for it.
 
-Under both of them sits the community price: what players saw an item go for on the auction house,
-collected by [TLI Companion](https://tlicompanion.com). The tracker reads its public API (see [the
-docs](https://tlicompanion.com/api)) and uses the prices for the items nobody looked up. A price you set and a
-price learned from the exchange both win over the community price.
+Under both of them sits the community price: what players saw an item go for on the auction house, collected by the
+[TITrack](https://github.com/astockman99/TITrack) project. The tracker reads the prices of the season your log says
+you are in (until it has said, the newest ordinary season) and uses them for the items nobody looked up. A price you
+set and a price learned from the exchange both win over the community price.
 
 The *Prices* panel says where each price comes from: `*` for a price you set, `·` for one learned from the
 exchange and `~` for a community price. The footer says how many community prices there are, where they are from
-and how old they are. The site asks to be credited where its prices are shown, so the footer says *Prices:
-tlicompanion.com* with the link to it.
+and how old they are, and carries the credit *Prices: TITrack community* with the link to the project.
 
-The community prices are fetched at most once an hour and are kept in
+The community prices are fetched at most once an hour (and again when your log says another season) and are kept in
 `~/.local/share/tli-tracker/baseline.json`, so the tracker works the same without a network. Press `b` to fetch
 them again. To turn them off:
 
@@ -164,7 +163,8 @@ bun run tracker --no-baseline
 ```
 
 The community price is the middle of the prices players saw, and the tracker's own price is the tenth of the
-listings on the exchange, so the two can differ. Where they do, the tracker's own price wins.
+listings on the exchange, so the two can differ. Where they do, the tracker's own price wins. Some community
+prices come from a single player, so treat them as a floor, not as a quote.
 
 ## Search the bag and the prices
 

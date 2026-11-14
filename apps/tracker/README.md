@@ -232,7 +232,7 @@ The tracker knows three kinds of price, and the first one that is there wins:
 |------|----------------------------|
 | `*` | the price you set yourself (`e`) |
 | `·` | the price the exchange told the tracker, when you looked the item up in the game |
-| `~` | the community price, from [TLI Companion](https://tlicompanion.com) |
+| `~` | the community price, from the [TITrack](https://github.com/astockman99/TITrack) project |
 
 A price you set always wins. A price learned from the exchange wins over the community price. The
 community price is the floor under everything else: it is what an item nobody looked up is worth.
@@ -268,26 +268,27 @@ the community price). A base the log has not named keeps its own name and its ow
 
 ## The community prices
 
-The tracker can fill in the prices nobody looked up with the prices the community reports.
-[TLI Companion](https://tlicompanion.com) collects the prices players saw on the auction house
-and has a documented public API ([the docs](https://tlicompanion.com/api)); the tracker reads the
-prices from there.
+The tracker can fill in the prices nobody looked up with the prices the community reports. The
+[TITrack](https://github.com/astockman99/TITrack) project collects the prices its players saw on the
+auction house in a public database; the tracker reads the prices from there. The seasons are
+separate economies, so it asks for the season the log says the player is in (`SeasonId`), and for the
+newest ordinary season until the log has said.
 
-- The prices are fetched at most once an hour (the data changes at most every ten minutes), and are
-  kept in `~/.local/share/tli-tracker/baseline.json`, so the tracker works the same without a
-  network.
+- The prices are fetched at most once an hour, and are kept in
+  `~/.local/share/tli-tracker/baseline.json` with the season they are for, so the tracker works the
+  same without a network. They are fetched again when the log says another season.
 - `b` fetches them again. The footer says where they are from and how old they are.
 - `--no-baseline` turns them off: the tracker then only knows what it has seen.
 - A fetch that fails is only a message; the tracker carries on with what it has.
 
-The site asks to be credited where its prices are shown, so the footer says
-*Prices: tlicompanion.com* with the link to it.
+The footer says *Prices: TITrack community* with the link to the project.
 
 The community price is the middle of the prices players saw, and the tracker's own price is the
 tenth of the listings of the exchange, so the two can differ. Where they do, the tracker's own
-price wins.
+price wins. A price that only one player saw is in there too; it is a floor, so a price you looked
+up or set always replaces it.
 
-The site is by other people; see [`docs/third-party-data.md`](../../docs/third-party-data.md).
+The project is by other people; see [`docs/third-party-data.md`](../../docs/third-party-data.md).
 
 ## The tests
 

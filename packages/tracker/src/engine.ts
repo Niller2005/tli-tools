@@ -22,7 +22,7 @@ import {
 import { ExchangeParser, FE_ITEM, type Quote } from './exchange'
 import type { Inventory, Delta } from './inventory'
 import { ItemNames } from './items'
-import { parseDumpItem, parseDumpLegendary, parseLine, zoneOf, type Fact } from './parse'
+import { parseDumpItem, parseDumpLegendary, parseDumpSeason, parseLine, zoneOf, type Fact } from './parse'
 import { PriceStore } from './prices'
 import type { Run, RunKind, RunSegmenter } from './runs'
 import { durationOf, perHour, valueOf, type Value } from './valuation'
@@ -246,6 +246,8 @@ export class Tracker {
   private dumpItem: { uuid: string; base: number } | null = null
   /** the legendary the dump named for that item */
   private dumpUnique = 0
+  /** the season the log said the player is in, if it has said */
+  private seasonId: number | null = null
 
   constructor(opts: TrackerOptions = {}) {
     this.names = opts.names ?? new ItemNames({})
@@ -263,6 +265,11 @@ export class Tracker {
   /** The id of the character that is logged in; '' while the log has not said. */
   get character(): string {
     return this.here.id
+  }
+
+  /** The season the log said the player is in; null while it has not said. */
+  get season(): number | null {
+    return this.seasonId
   }
 
   /** The ids of the characters the tracker keeps something for. */
@@ -347,6 +354,8 @@ export class Tracker {
       this.flushDump()
       return
     }
+    const season = parseDumpSeason(line)
+    if (season !== null) this.seasonId = season
     if (line.includes('+Item+')) {
       this.flushDump()
       const legendary = parseDumpLegendary(line)

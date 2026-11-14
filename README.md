@@ -110,8 +110,8 @@ kept here (imported with `git subtree`).
   that gets changes. The Rust source stays in `apps/warden/src` (it is the only version with the Windows window) but is
   deprecated: it is no longer kept in step, and the TypeScript tests no longer have to match its output.
 - The shared packages (`png`, `capture`, `ocr`, `gamelog`) were factored out of code written for those two projects.
-- The loot tracker uses data other people made: community prices from [TLI Companion](https://tlicompanion.com)
-  (credit: **Prices: tlicompanion.com**) and item names from the
+- The loot tracker uses data other people made: community prices from the [TITrack](https://github.com/astockman99/TITrack)
+  project (credit: **Prices: TITrack community**) and item names from the
   [Torchlight: Infinite wiki](https://tlidb.com). Details in [`docs/third-party-data.md`](docs/third-party-data.md).
 
 Each app keeps its own licence (see the `LICENSE` file in its folder). The repository root has no licence of its own:

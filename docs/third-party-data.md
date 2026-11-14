@@ -6,20 +6,26 @@ the licence is, so it is clear what this repo is standing on.
 ## The community prices
 
 The loot tracker can value the items nobody looked up with the prices players saw on the auction house. They come
-from [TLI Companion](https://tlicompanion.com), a fan-made site for *Torchlight: Infinite*, through its public API
-([the docs](https://tlicompanion.com/api)).
+from the [TITrack](https://github.com/astockman99/TITrack) project (MIT), a loot tracker whose players can share the
+prices they see. It keeps them in a Supabase database, and the table of aggregated prices is public to read: its own
+app reads it with the publishable key that is in its source.
 
 | What | Where it comes from |
 |------|---------------------|
-| The site | [tlicompanion.com](https://tlicompanion.com), by the makers of TLI Companion |
-| The API | `GET https://tlicompanion.com/api/public/v1/prices`, read only, no key, open to every website |
+| The project | [github.com/astockman99/TITrack](https://github.com/astockman99/TITrack), by astockman99 |
+| The data | `aggregated_prices` and `get_available_seasons()` of the project's database, read only (`packages/tracker/src/baseline.ts`) |
 | The unit | FE (Flame Elementium), the same currency the in-game exchange prices things in |
-| The credit | *Prices: tlicompanion.com*, shown in the tracker and written down here |
+| The credit | *Prices: TITrack community*, shown in the tracker and written down here |
 
-The API is documented: it is version 1 and stays stable (fields are added, never taken away), it allows 60 requests
-a minute per address, and the data changes at most every ten minutes. The tracker asks for the prices at most once
-an hour, keeps them in `~/.local/share/tli-tracker/baseline.json`, and says where they are from and how old they
-are. `--no-baseline` turns them off, and a fetch that fails is only a message.
+Each row is the median of what players saw for an item in one season over the last day. The seasons are separate
+economies, so the tracker asks for the one the log says the player is in (`SeasonId`), and for the newest ordinary
+season until the log has said. Some rows come from a single player; the prices are only a floor under what the
+player looked up or set. The tracker asks for the prices at most once an hour (and again when the season changes),
+keeps them in `~/.local/share/tli-tracker/baseline.json`, and says where they are from and how old they are.
+`--no-baseline` turns them off, and a fetch that fails is only a message.
+
+The tracker used to read the prices from the public API of TLI Companion, which has closed it (it answers 410). Its
+README names TITrack as the base of its community prices.
 
 ## The names of the items
 

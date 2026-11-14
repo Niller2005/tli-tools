@@ -18,7 +18,7 @@ console.log(tracker.stats())
 
 | File | What it does |
 |------|--------------|
-| `src/parse.ts` | reads the log's lines: the level, the map's path, the bag, the pages the game opens, the blocks the game writes its item changes in, the experience bar, the modifiers of a map and the character that logged in |
+| `src/parse.ts` | reads the log's lines: the level, the map's path, the bag, the pages the game opens, the blocks the game writes its item changes in, the experience bar, the modifiers of a map, the character that logged in and the season the player is in |
 | `src/inventory.ts` | the bag: which items are in which slot, and how many of each the player has |
 | `src/runs.ts` | the runs: the time in each map, what was picked up in it, what it cost, the experience and the modifiers, and the visits to the Tartarus prison and the Vorax game |
 | `src/prices.ts` | the prices the exchange told it about, and the ones the player set |
@@ -56,18 +56,20 @@ set by hand, the price the exchange told the tracker when the player looked an i
 community price. `PriceStore.price()` gives the one that counts, and `PriceStore.source()` says
 where it came from.
 
-The community prices come from [TLI Companion](https://tlicompanion.com), the site that collects the
-prices players saw on the auction house. `src/baseline.ts` reads them from its public API (see
-[the docs](https://tlicompanion.com/api)), keeps them in `~/.local/share/tli-tracker/baseline.json`,
-and says how old they are. They are never mixed into what was learned: they have a file of their
-own, and the state that is saved does not carry them.
+The community prices come from the [TITrack](https://github.com/astockman99/TITrack) project, whose
+players share the prices they saw on the auction house. `src/baseline.ts` reads them from the
+project's public database, for the season the log says the player is in (`tracker.season`; the newest
+ordinary season until the log has said), keeps them in `~/.local/share/tli-tracker/baseline.json`
+with that season, and says how old they are. They are never mixed into what was learned: they have a
+file of their own, and the state that is saved does not carry them.
 
 ```ts
-import { baselineIsStale, readBaseline, refreshBaselineStatus } from '@tli/tracker'
+import { baselineFits, baselineIsStale, readBaseline, refreshBaselineStatus } from '@tli/tracker'
 
 const cached = await readBaseline()
-if (baselineIsStale(cached)) {
-  const refresh = await refreshBaselineStatus() // never throws; fetches and keeps the prices on disk
+if (baselineIsStale(cached) || !baselineFits(cached, tracker.season)) {
+  // never throws; fetches the prices of the season and keeps them on disk
+  const refresh = await refreshBaselineStatus(undefined, undefined, tracker.season)
   if (refresh.ok) tracker.prices.setBaseline(refresh.data.prices)
   console.log(refresh.message) // the line a status bar shows, for either outcome
 }

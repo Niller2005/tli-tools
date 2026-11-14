@@ -186,7 +186,7 @@ describe('the tracker screen', () => {
     const prices = column(frame, 72, 160)
     // the row of a community price ends in ~, the other two in * and ·
     expect(prices).toContain('~')
-    expect(frame).toContain('Prices: tlicompanion.com')
+    expect(frame).toContain('Prices: TITrack community')
     expect(frame).toContain('2 prices')
     expect(frame).toContain('1h 00m old')
     test.renderer.destroy()

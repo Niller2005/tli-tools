@@ -25,6 +25,7 @@ import {
   ItemNames,
   LogReader,
   Tracker,
+  baselineFits,
   baselineIsStale,
   findWikiPage,
   loadTracker,
@@ -78,10 +79,15 @@ const reader = new LogReader(logFile, usable?.log.offset ?? (flag('no-backfill')
 
 // The prices of the community (TITrack). They are the floor under everything the tracker knows:
 // a price set by hand and a price learned from the exchange both win over them. The prices that
-// were fetched last are on disk, so the tracker starts with them even without a network.
+// were fetched last are on disk, so the tracker starts with them even without a network. They are
+// the prices of one season, the one the log says the player is in.
 const baselineOn = !flag('no-baseline')
 const cached = baselineOn ? await readBaseline() : null
 if (cached !== null) tracker.prices.setBaseline(cached.prices)
+let baseline = cached
+let fetching = false
+/** the season the last fetch was for, so a failed one is not asked again on every tick */
+let askedSeason: number | null = null
 
 /* ---------- reading the log ---------- */
 
@@ -140,6 +146,11 @@ const terminal = await startApp({
   },
   onTick: () => {
     readLog()
+    // the log said which season the player is in, and the prices on disk are another one's
+    const season = tracker.season
+    if (baselineOn && !fetching && season !== null && season !== askedSeason && !baselineFits(baseline, season)) {
+      void refreshBaseline()
+    }
     syncOverlay()
     app.draw()
   },
@@ -208,10 +219,15 @@ if (cached !== null) {
 
 /* ---------- going round ---------- */
 
-/** Fetches the community prices and puts them under everything else. */
+/** Fetches the community prices of the player's season and puts them under everything else. */
 async function refreshBaseline(): Promise<void> {
-  const refresh = await refreshBaselineStatus()
+  if (fetching) return
+  fetching = true
+  askedSeason = tracker.season
+  const refresh = await refreshBaselineStatus(undefined, undefined, askedSeason)
+  fetching = false
   if (refresh.ok) {
+    baseline = refresh.data
     tracker.prices.setBaseline(refresh.data.prices)
     app.state.baselineAt = refresh.data.fetchedAt
     app.state.baselineCount = refresh.data.prices.length
@@ -259,8 +275,8 @@ async function save(): Promise<void> {
 readLog()
 app.draw()
 
-// the community prices: the ones on disk are used until they are old, then they are fetched again
-if (baselineOn && baselineIsStale(cached)) void refreshBaseline()
+// the community prices: the ones on disk are used until they are old or are another season's
+if (baselineOn && (baselineIsStale(cached) || !baselineFits(cached, tracker.season))) void refreshBaseline()
 
 
 await terminal.done

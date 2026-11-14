@@ -173,3 +173,18 @@ export function parseDumpLegendary(line: string): { scope: string; legendary: nu
   if (m === null) return null
   return { scope: dumpScope(line), legendary: +m[1] }
 }
+
+const RE_DUMP_SEASON = /^\|\s{6}\+SeasonId \[(\d+)\]/
+
+/**
+ * The season a line of the player's dump names; null for any other line.
+ *
+ * The game writes the player's own fields (name, level, season) one level in from the bar at the
+ * front; `+HasSeasonId` and the seasons of other objects are not the player's.
+ */
+export function parseDumpSeason(line: string): number | null {
+  const m = RE_DUMP_SEASON.exec(line)
+  if (m === null) return null
+  const season = +m[1]
+  return season > 0 ? season : null
+}
